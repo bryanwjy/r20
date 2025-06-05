@@ -1,0 +1,21 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"name": "rxx"
+		}
+	],
+	"settings":
+	{
+		"tab_size": 4,
+		"ClangFormat":
+		{
+			"format_on_save":true,
+			"style": "File"
+		}
+	},
+	"syntax_override": {
+		".*\\.(h|cpp)$": ["cpp-sublime-syntax", "C++20"]
+	}
+}

@@ -1,0 +1,353 @@
+// Copyright 2025 Bryan Wong
+#pragma once
+
+#include "rxx/details/adaptor_closure.h"
+#include "rxx/details/const_if.h"
+#include "rxx/details/movable_box.h"
+#include "rxx/details/referenceable.h"
+#include "rxx/details/simple_view.h"
+#include "rxx/primitives.h"
+#include "rxx/zip_view.h"
+
+#include <compare>
+#include <iterator>
+#include <ranges>
+#include <tuple>
+#include <utility>
+
+RXX_DEFAULT_NAMESPACE_BEGIN
+
+namespace ranges {
+namespace details {
+template <typename R, bool Const>
+using iterator_category_of = typename std::iterator_traits<
+    iterator_t<details::const_if<Const, R>>>::iterator_category;
+} // namespace details
+
+template <std::move_constructible F, std::ranges::input_range... Views>
+requires (... && std::ranges::view<Views>) &&
+    (sizeof...(Views) > 0) && std::is_object_v<F> &&
+    std::regular_invocable<F&, range_reference_t<Views>...> &&
+    details::referenceable<
+        std::invoke_result_t<F&, range_reference_t<Views>...>>
+class zip_transform_view :
+    std::ranges::view_interface<zip_transform_view<F, Views...>> {
+    using InnerView = zip_view<Views...>;
+    template <bool Const>
+    using ziperator = iterator_t<details::const_if<Const, InnerView>>;
+    template <bool Const>
+    using zentinel = sentinel_t<details::const_if<Const, InnerView>>;
+    template <bool Const>
+    using Base = details::const_if<Const, InnerView>;
+
+    template <bool Const>
+    class iterator;
+    template <bool Const>
+    class sentinel;
+
+public:
+    __RXX_HIDE_FROM_ABI constexpr zip_transform_view() noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr zip_transform_view(F func, Views... views)
+        : func_{std::move(func)}
+        , zip_{std::move(views)...} {}
+
+    __RXX_HIDE_FROM_ABI constexpr auto begin() {
+        return iterator<false>(*this, zip_.begin());
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr auto begin() const
+    requires std::ranges::range<InnerView const> &&
+        std::regular_invocable<F const&, range_reference_t<Views const>...>
+    {
+        return iterator<true>(*this, zip_.begin());
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr auto end() {
+        if constexpr (std::ranges::common_range<InnerView>)
+            return iterator<false>(*this, zip_.end());
+        else
+            return sentinel<false>(zip_.end());
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr auto end() const
+    requires std::ranges::range<InnerView const> &&
+        std::regular_invocable<F const&, range_reference_t<Views const>...>
+    {
+        if constexpr (std::ranges::common_range<InnerView const>)
+            return iterator<true>(*this, zip_.end());
+        else
+            return sentinel<true>(zip_.end());
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr auto size()
+    requires std::ranges::sized_range<InnerView>
+    {
+        return zip_.size();
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr auto size() const
+    requires std::ranges::sized_range<InnerView const>
+    {
+        return zip_.size();
+    }
+
+private:
+    template <bool Const>
+    struct iter_cat {};
+
+    template <bool Const>
+    requires std::ranges::forward_range<Base<Const>>
+    struct iter_cat<Const> {
+        using iterator_category = decltype([]() {
+            using Result = std::invoke_result_t<details::const_if<Const, F>&,
+                range_reference_t<details::const_if<Const, Views>>...>;
+
+            if constexpr (!std::is_reference_v<Result>) {
+                return std::input_iterator_tag{};
+            } else if constexpr ((... &&
+                                     std::derived_from<
+                                         details::iterator_category_of<Views,
+                                             Const>,
+                                         std::random_access_iterator_tag>)) {
+                return std::random_access_iterator_tag{};
+            } else if constexpr ((... &&
+                                     std::derived_from<
+                                         details::iterator_category_of<Views,
+                                             Const>,
+                                         std::bidirectional_iterator_tag>)) {
+                return std::bidirectional_iterator_tag{};
+            } else if constexpr ((... &&
+                                     std::derived_from<
+                                         details::iterator_category_of<Views,
+                                             Const>,
+                                         std::forward_iterator_tag>)) {
+                return std::forward_iterator_tag{};
+            } else {
+                return std::input_iterator_tag{};
+            }
+        }());
+    };
+
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) details::movable_box<F> func_;
+    InnerView zip_;
+};
+
+template <typename F, typename... Rs>
+zip_transform_view(F, Rs&&...)
+    -> zip_transform_view<F, std::views::all_t<Rs>...>;
+
+template <std::move_constructible F, std::ranges::input_range... Views>
+requires (... && std::ranges::view<Views>) &&
+    (sizeof...(Views) > 0) && std::is_object_v<F> &&
+    std::regular_invocable<F&, range_reference_t<Views>...> &&
+    details::referenceable<
+        std::invoke_result_t<F&, range_reference_t<Views>...>>
+template <bool Const>
+class zip_transform_view<F, Views...>::iterator :
+    public zip_transform_view::iter_cat<Const> {
+
+    template <bool>
+    friend class zip_transform_view<F, Views...>::iterator;
+
+    template <bool>
+    friend class zip_transform_view<F, Views...>::sentinel;
+
+    friend class zip_transform_view<F, Views...>;
+
+    using Parent = details::const_if<Const, zip_transform_view>;
+    using Base = details::const_if<Const, InnerView>;
+
+    __RXX_HIDE_FROM_ABI constexpr iterator(
+        Parent& parent, ziperator<Const> inner) noexcept(std::
+            is_nothrow_move_constructible_v<ziperator<Const>>)
+        : parent_{RXX_BUILTIN_addressof(parent)}
+        , inner_{std::move(inner)} {}
+
+public:
+    using iterator_concept = typename ziperator<Const>::iterator_concept;
+    using value_type = std::conditional_t<Const,
+        std::remove_cvref_t<
+            std::invoke_result_t<F const&, range_reference_t<Views const>...>>,
+        std::remove_cvref_t<
+            std::invoke_result_t<F&, range_reference_t<Views>...>>>;
+    using difference_type = range_difference_t<Base>;
+
+    __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
+        std::is_nothrow_default_constructible_v<ziperator<Const>>) = default;
+    __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other) noexcept(
+        std::is_nothrow_move_constructible_v<ziperator<Const>>)
+    requires Const && std::convertible_to<ziperator<false>, ziperator<Const>>
+        : parent_{other.parent_}
+        , inner_{std::move(other.inner_)} {}
+
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) operator*() const {
+        return std::apply(
+            [&](auto const&... iters) -> decltype(auto) {
+                return std::invoke(*parent_->func_, *iters...);
+            },
+            get_current(inner_));
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
+        ++inner_;
+        return *this;
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
+
+    __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
+    requires std::ranges::forward_range<Base>
+    {
+        auto previous = *this;
+        ++*this;
+        return previous;
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
+    requires std::ranges::bidirectional_range<Base>
+    {
+        --inner_;
+        return *this;
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
+    requires std::ranges::bidirectional_range<Base>
+    {
+        auto previous = *this;
+        --*this;
+        return previous;
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
+    requires std::ranges::random_access_range<Base>
+    {
+        inner_ += offset;
+        return *this;
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
+    requires std::ranges::random_access_range<Base>
+    {
+        inner_ -= offset;
+        return *this;
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
+        iterator const& left, iterator const& right)
+    requires std::equality_comparable<ziperator<Const>>
+    {
+        return left.inner_ == right.inner_;
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr auto operator<=>(
+        iterator const& left, iterator const& right)
+    requires std::ranges::random_access_range<Base>
+    {
+        return left.inner_ <=> right.inner_;
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
+        iterator const& self, difference_type offset)
+    requires std::ranges::random_access_range<Base>
+    {
+        return iterator(*self.parent_, self.inner_ + offset);
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
+        difference_type offset, iterator const& selft)
+    requires std::ranges::random_access_range<Base>
+    {
+        return iterator(*selft.parent_, selft.inner_ + offset);
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr iterator operator-(
+        iterator const& selft, difference_type offset)
+    requires std::ranges::random_access_range<Base>
+    {
+        return iterator(*selft.parent_, selft.inner_ - offset);
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+        iterator const& left, iterator const& right)
+    requires std::sized_sentinel_for<ziperator<Const>, ziperator<Const>>
+    {
+        return left.inner_ - right.inner_;
+    }
+
+private:
+    Parent* parent_;
+    ziperator<Const> inner_;
+};
+
+template <std::move_constructible F, std::ranges::input_range... Views>
+requires (... && std::ranges::view<Views>) &&
+    (sizeof...(Views) > 0) && std::is_object_v<F> &&
+    std::regular_invocable<F&, range_reference_t<Views>...> &&
+    details::referenceable<
+        std::invoke_result_t<F&, range_reference_t<Views>...>>
+template <bool Const>
+class zip_transform_view<F, Views...>::sentinel {
+    friend class zip_transform_view<F, Views...>;
+
+public:
+    __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
+        std::is_nothrow_default_constructible_v<zentinel<Const>>) {}
+
+    template <bool OtherConst>
+    requires std::sized_sentinel_for<zentinel<Const>, ziperator<OtherConst>>
+    __RXX_HIDE_FROM_ABI friend constexpr range_difference_t<
+        details::const_if<OtherConst, InnerView>>
+    operator-(iterator<OtherConst> const& iter, sentinel const& end) {
+        return iter.inner_ - end.inner_;
+    }
+
+    template <bool OtherConst>
+    requires std::sized_sentinel_for<zentinel<Const>, ziperator<OtherConst>>
+    __RXX_HIDE_FROM_ABI friend constexpr range_difference_t<
+        details::const_if<OtherConst, InnerView>>
+    operator-(sentinel const& end, iterator<OtherConst> const& iter) {
+        return end.inner_ - iter.inner_;
+    }
+
+private:
+    __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
+        zentinel<Const> inner) noexcept(std::
+            is_nothrow_move_constructible_v<zentinel<Const>>)
+        : inner_{std::move(inner)} {}
+    zentinel<Const> inner_;
+};
+
+namespace views {
+namespace details {
+struct zip_transform_t {
+    template <typename F>
+    requires std::move_constructible<std::decay_t<F>> &&
+        std::regular_invocable<std::decay_t<F>&> &&
+        std::is_object_v<std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>
+    __RXX_HIDE_FROM_ABI constexpr auto operator()(F&&) const noexcept {
+        return std::views::empty<
+            std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>;
+    }
+
+    template <typename F, typename... Rs>
+    requires (sizeof...(Rs) > 0) && requires {
+        zip_transform_view(std::declval<F>(), std::declval<Rs>()...);
+    }
+    __RXX_HIDE_FROM_ABI constexpr auto operator()(F&& func, Rs&&... views) const
+        noexcept(noexcept(
+            zip_transform_view(std::declval<F>(), std::declval<Rs>()...)))
+            -> decltype(zip_transform_view(
+                std::declval<F>(), std::declval<Rs>()...)) {
+        return zip_transform_view(
+            std::forward<F>(func), std::forward<Rs>(views)...);
+    }
+};
+} // namespace details
+
+inline namespace cpo {
+inline constexpr details::zip_transform_t zip_transform{};
+}
+} // namespace views
+} // namespace ranges
+
+RXX_DEFAULT_NAMESPACE_END

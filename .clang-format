@@ -1,0 +1,103 @@
+---
+# We'll use defaults from the LLVM style, but with 4 columns indentation.
+BasedOnStyle: LLVM
+---
+Language: Cpp
+AlignAfterOpenBracket: DontAlign
+AlignEscapedNewlines: Left
+AlignOperands: DontAlign
+AlignTrailingComments: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: All
+# AllowShortCompoundRequirementOnASingleLine: true
+AlignArrayOfStructures: Right
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom
+BreakInheritanceList: AfterColon
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+BreakStringLiterals: true
+# BreakTemplateDeclarations: MultiLine
+AlwaysBreakTemplateDeclarations: true
+IndentRequiresClause: false
+ColumnLimit: 80
+CompactNamespaces: false
+PackConstructorInitializers: CurrentLine
+Cpp11BracedListStyle: true
+EmptyLineBeforeAccessModifier: LogicalBlock
+IndentAccessModifiers: false
+IndentCaseBlocks: false
+IndentCaseLabels: false
+IndentPPDirectives: AfterHash
+IndentWidth: 4
+AccessModifierOffset: -4
+IndentWrappedFunctionNames: false
+NamespaceIndentation: None
+DerivePointerAlignment: false
+PointerAlignment: Left
+QualifierAlignment: Right
+SortIncludes: CaseSensitive
+SpaceBeforeCaseColon: false
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterForeachMacros: false
+  AfterFunctionDeclarationName: false
+  AfterFunctionDefinitionName: false
+  AfterIfMacros: false
+  AfterOverloadedOperator: false
+  AfterRequiresInClause: true
+  AfterRequiresInExpression: false
+  BeforeNonEmptyParentheses: false
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+FixNamespaceComments: true
+PPIndentWidth: 2
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:           '.*\.generated\.h'
+    Priority:        100
+  - Regex:           '"rxx/config.h"'
+    Priority:        0
+  - Regex:           '"configuration/.*"'
+    Priority:        0
+  - Regex:           '"preprocessor/.*"'
+    Priority:        5
+  - Regex:           '".*/fwd.h"'
+    Priority:        6
+  - Regex:           '".*"'
+    Priority:        10
+  - Regex:           '^<.*\.(h)>'
+    Priority:        30
+  - Regex:           '^<.*>'
+    Priority:        40
+
+IfMacros: ['RXX_TRY','RXX_IF_CONSTEVAL','RXX_IF_CONSTEXPR']
+AttributeMacros: []
+StatementMacros: ['RXX_DEFAULT_NAMESPACE_BEGIN', 'RXX_DEFAULT_NAMESPACE_END']
+Macros:
+- '__RXX=::rxx::'
+
