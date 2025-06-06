@@ -37,6 +37,9 @@ inline constexpr bool is_iota_view = false;
 template <typename W, typename Bound>
 inline constexpr bool is_iota_view<std::ranges::iota_view<W, Bound>> = true;
 
+template <typename R>
+inline constexpr bool is_repeat_view = false;
+
 } // namespace details
 } // namespace ranges
 

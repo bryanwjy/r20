@@ -13,6 +13,7 @@ template <typename T>
 using iter_const_reference_t =
     std::common_reference_t<iter_value_t<T> const&&, iter_reference_t<T>>;
 using std::iter_common_reference_t;
+using std::iter_difference_t;
 using std::iter_rvalue_reference_t;
 
 namespace ranges {

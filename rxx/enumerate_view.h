@@ -324,7 +324,7 @@ public:
 
 private:
     __RXX_HIDE_FROM_ABI constexpr explicit sentinel(sentinel_t<Base> end)
-        : end_{std::move(end_)} {}
+        : end_{std::move(end)} {}
     sentinel_t<Base> end_{};
 };
 
