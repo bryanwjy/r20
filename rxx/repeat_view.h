@@ -9,7 +9,6 @@
 
 #include <cassert>
 #include <compare>
-#include <functional>
 #include <iterator>
 #include <ranges>
 #include <tuple>

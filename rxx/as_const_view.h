@@ -33,49 +33,57 @@ public:
         std::is_nothrow_move_constructible_v<View>)
         : base_{std::move(base)} {}
 
-    __RXX_HIDE_FROM_ABI constexpr View base() const& noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr View base() const& noexcept(
         std::is_nothrow_copy_constructible_v<View>)
     requires std::copy_constructible<View>
     {
         return base_;
     }
 
-    __RXX_HIDE_FROM_ABI constexpr View base() && noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr View base() && noexcept(
         std::is_nothrow_move_constructible_v<View>) {
         return std::move(base_);
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto begin()
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto begin()
     requires (!details::simple_view<View>)
     {
         return std::ranges::cbegin(base_);
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto begin() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto begin() const
     requires std::ranges::range<View const>
     {
         return std::ranges::cbegin(base_);
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto end()
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto end()
     requires (!details::simple_view<View>)
     {
         return std::ranges::cend(base_);
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto end() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto end() const
     requires std::ranges::range<View const>
     {
         return std::ranges::cend(base_);
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto size()
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto size()
     requires std::ranges::sized_range<View>
     {
         return std::ranges::size(base_);
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto size() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto size() const
     requires std::ranges::sized_range<View const>
     {
         return std::ranges::size(base_);
@@ -100,8 +108,8 @@ inline constexpr bool is_constable_ref_view<std::ranges::ref_view<R>> =
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
     template <std::ranges::viewable_range R>
     requires requires { as_const_view(std::declval<R>()); }
-    __RXX_HIDE_FROM_ABI constexpr auto operator()(R&& arg) const
-        noexcept(noexcept(as_const_view(std::declval<R>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        R&& arg) const noexcept(noexcept(as_const_view(std::declval<R>()))) {
         using Type = std::remove_cvref_t<R>;
         using Element = std::remove_reference_t<range_reference_t<R>>;
         if constexpr (constant_range<std::views::all_t<R>>) {

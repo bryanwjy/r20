@@ -26,23 +26,27 @@ template <size_t I>
 struct get_element_t {
 private:
     template <typename T>
-    __RXX_HIDE_FROM_ABI static consteval auto nothrow_member_get() noexcept {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static consteval auto nothrow_member_get() noexcept {
         return false;
     }
 
     template <typename T>
     requires requires { std::declval<T>().template get<I>(); }
-    __RXX_HIDE_FROM_ABI static consteval auto nothrow_member_get() noexcept {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI,
+        NODISCARD) static consteval auto nothrow_member_get() noexcept {
         return noexcept(std::declval<T>().template get<I>());
     }
 
     template <typename T>
-    __RXX_HIDE_FROM_ABI static consteval auto nothrow_adl_get() noexcept {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static consteval auto nothrow_adl_get() noexcept {
         return false;
     }
     template <typename T>
     requires requires { get<I>(std::declval<T>()); }
-    __RXX_HIDE_FROM_ABI static consteval auto nothrow_adl_get() noexcept {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI,
+        NODISCARD) static consteval auto nothrow_adl_get() noexcept {
         return noexcept(get<I>(std::declval<T>()));
     }
 
@@ -50,7 +54,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr explicit get_element_t() noexcept = default;
 
     template <has_adl_get<I> T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
     inline constexpr decltype(auto) operator()(T&& t RXX_LIFETIMEBOUND) const
         noexcept(nothrow_adl_get<T>()) {
         return get<I>(std::forward<T>(t));
@@ -58,8 +62,8 @@ public:
 
     template <has_member_get<I> T>
     requires (!has_adl_get<T, I>)
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, ALWAYS_INLINE) inline constexpr decltype(auto)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE,
+        NODISCARD) inline constexpr decltype(auto)
     operator()(T&& t RXX_LIFETIMEBOUND) const
         noexcept(nothrow_member_get<T>()) {
         return std::forward<T>(t).template get<I>();

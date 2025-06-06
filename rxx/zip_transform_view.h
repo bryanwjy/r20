@@ -51,25 +51,27 @@ public:
         : func_{std::move(func)}
         , zip_{std::move(views)...} {}
 
-    __RXX_HIDE_FROM_ABI constexpr auto begin() {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto begin() {
         return iterator<false>(*this, zip_.begin());
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto begin() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto begin() const
     requires std::ranges::range<InnerView const> &&
         std::regular_invocable<F const&, range_reference_t<Views const>...>
     {
         return iterator<true>(*this, zip_.begin());
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto end() {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
         if constexpr (std::ranges::common_range<InnerView>)
             return iterator<false>(*this, zip_.end());
         else
             return sentinel<false>(zip_.end());
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto end() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto end() const
     requires std::ranges::range<InnerView const> &&
         std::regular_invocable<F const&, range_reference_t<Views const>...>
     {
@@ -79,13 +81,15 @@ public:
             return sentinel<true>(zip_.end());
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto size()
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto size()
     requires std::ranges::sized_range<InnerView>
     {
         return zip_.size();
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto size() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto size() const
     requires std::ranges::sized_range<InnerView const>
     {
         return zip_.size();
@@ -180,7 +184,8 @@ public:
         : parent_{other.parent_}
         , inner_{std::move(other.inner_)} {}
 
-    __RXX_HIDE_FROM_ABI constexpr decltype(auto) operator*() const {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) operator*() const {
         return std::apply(
             [&](auto const&... iters) -> decltype(auto) {
                 return std::invoke(*parent_->func_, *iters...);
@@ -232,42 +237,48 @@ public:
         return *this;
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         iterator const& left, iterator const& right)
     requires std::equality_comparable<ziperator<Const>>
     {
         return left.inner_ == right.inner_;
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr auto operator<=>(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto operator<=>(
         iterator const& left, iterator const& right)
     requires std::ranges::random_access_range<Base>
     {
         return left.inner_ <=> right.inner_;
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr iterator operator+(
         iterator const& self, difference_type offset)
     requires std::ranges::random_access_range<Base>
     {
         return iterator(*self.parent_, self.inner_ + offset);
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr iterator operator+(
         difference_type offset, iterator const& selft)
     requires std::ranges::random_access_range<Base>
     {
         return iterator(*selft.parent_, selft.inner_ + offset);
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr iterator operator-(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr iterator operator-(
         iterator const& selft, difference_type offset)
     requires std::ranges::random_access_range<Base>
     {
         return iterator(*selft.parent_, selft.inner_ - offset);
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr difference_type operator-(
         iterator const& left, iterator const& right)
     requires std::sized_sentinel_for<ziperator<Const>, ziperator<Const>>
     {
@@ -295,16 +306,18 @@ public:
 
     template <bool OtherConst>
     requires std::sized_sentinel_for<zentinel<Const>, ziperator<OtherConst>>
-    __RXX_HIDE_FROM_ABI friend constexpr range_difference_t<
-        details::const_if<OtherConst, InnerView>>
+    RXX_ATTRIBUTES(
+        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
+            const_if<OtherConst, InnerView>>
     operator-(iterator<OtherConst> const& iter, sentinel const& end) {
         return iter.inner_ - end.inner_;
     }
 
     template <bool OtherConst>
     requires std::sized_sentinel_for<zentinel<Const>, ziperator<OtherConst>>
-    __RXX_HIDE_FROM_ABI friend constexpr range_difference_t<
-        details::const_if<OtherConst, InnerView>>
+    RXX_ATTRIBUTES(
+        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
+            const_if<OtherConst, InnerView>>
     operator-(sentinel const& end, iterator<OtherConst> const& iter) {
         return end.inner_ - iter.inner_;
     }
@@ -324,7 +337,8 @@ struct zip_transform_t {
     requires std::move_constructible<std::decay_t<F>> &&
         std::regular_invocable<std::decay_t<F>&> &&
         std::is_object_v<std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>
-    __RXX_HIDE_FROM_ABI constexpr auto operator()(F&&) const noexcept {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        F&&) const noexcept {
         return std::views::empty<
             std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>;
     }
@@ -333,11 +347,11 @@ struct zip_transform_t {
     requires (sizeof...(Rs) > 0) && requires {
         zip_transform_view(std::declval<F>(), std::declval<Rs>()...);
     }
-    __RXX_HIDE_FROM_ABI constexpr auto operator()(F&& func, Rs&&... views) const
-        noexcept(noexcept(
-            zip_transform_view(std::declval<F>(), std::declval<Rs>()...)))
-            -> decltype(zip_transform_view(
-                std::declval<F>(), std::declval<Rs>()...)) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
+    operator()(F&& func, Rs&&... views) const noexcept(
+        noexcept(zip_transform_view(std::declval<F>(), std::declval<Rs>()...)))
+        -> decltype(zip_transform_view(
+            std::declval<F>(), std::declval<Rs>()...)) {
         return zip_transform_view(
             std::forward<F>(func), std::forward<Rs>(views)...);
     }
