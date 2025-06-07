@@ -284,6 +284,127 @@ public:
     }
 
 private:
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(std::declval<T&>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(std::declval<T&>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n))))
+    requires std::ranges::sized_range<repeat_view> &&
+        std::convertible_to<N, difference_type>
+    {
+        return repeat_view<T, difference_type>(*self.value_,
+            std::min<difference_type>(
+                self.end() - self.begin(), std::forward<N>(n)));
+    }
+
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view const& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(std::declval<T const&>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(std::declval<T const&>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n))))
+    requires std::ranges::sized_range<repeat_view> &&
+        std::convertible_to<N, difference_type>
+    {
+        return repeat_view<T, difference_type>(*self.value_,
+            std::min<difference_type>(
+                self.end() - self.begin(), std::forward<N>(n)));
+    }
+
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view&& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(std::declval<T>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(std::declval<T>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n))))
+    requires std::ranges::sized_range<repeat_view> &&
+        std::convertible_to<N, difference_type>
+    {
+
+        auto const dist = self.end() - self.begin();
+        return repeat_view<T, difference_type>(std::move(*self.value_),
+            std::min<difference_type>(dist, std::forward<N>(n)));
+    }
+
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view const&& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(std::declval<T const>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(std::declval<T const>(),
+            std::min<difference_type>(
+                std::declval<difference_type>(), std::forward<N>(n))))
+    requires std::ranges::sized_range<repeat_view> &&
+        std::convertible_to<N, difference_type>
+    {
+        auto const dist = self.end() - self.begin();
+        return repeat_view<T, difference_type>(std::move(*self.value_),
+            std::min<difference_type>(dist, std::forward<N>(n)));
+    }
+
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(
+            *self.value_, static_cast<difference_type>(std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(
+            *self.value_, static_cast<difference_type>(std::forward<N>(n))))
+    requires std::convertible_to<N, difference_type>
+    {
+        return repeat_view<T, difference_type>(
+            *self.value_, static_cast<difference_type>(std::forward<N>(n)));
+    }
+
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view const& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(
+            *self.value_, static_cast<difference_type>(std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(
+            *self.value_, static_cast<difference_type>(std::forward<N>(n))))
+    requires std::convertible_to<N, difference_type>
+    {
+        return repeat_view<T, difference_type>(
+            *self.value_, static_cast<difference_type>(std::forward<N>(n)));
+    }
+
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view&& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(std::move(*self.value_),
+            static_cast<difference_type>(std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(std::move(*self.value_),
+            static_cast<difference_type>(std::forward<N>(n))))
+    requires std::convertible_to<N, difference_type>
+    {
+        return repeat_view<T, difference_type>(std::move(*self.value_),
+            static_cast<difference_type>(std::forward<N>(n)));
+    }
+
+    template <typename N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto take(repeat_view const&& self, N&& n) noexcept(
+        noexcept(repeat_view<T, difference_type>(std::move(*self.value_),
+            static_cast<difference_type>(std::forward<N>(n)))))
+        -> decltype(repeat_view<T, difference_type>(std::move(*self.value_),
+            static_cast<difference_type>(std::forward<N>(n))))
+    requires std::convertible_to<N, difference_type>
+    {
+        return repeat_view<T, difference_type>(std::move(*self.value_),
+            static_cast<difference_type>(std::forward<N>(n)));
+    }
+
     T const* value_ = nullptr;
     index_type current_{};
 };

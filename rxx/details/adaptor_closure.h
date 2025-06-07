@@ -15,9 +15,14 @@ template <typename Derived>
 using adaptor_closure RXX_NODEBUG = std::ranges::_Pipe::_Base<Derived>;
 
 #elif RXX_LIBCXX
-
+#  if RXX_LIBCXX_AT_LEAST(19, 01, 00)
+template <typename Derived>
+using adaptor_closure RXX_NODEBUG =
+    std::ranges::__range_adaptor_closure<Derived>;
+#  else
 template <typename Derived>
 using adaptor_closure RXX_NODEBUG = std::__range_adaptor_closure<Derived>;
+#  endif
 
 #elif RXX_LIBSTDCXX
 
