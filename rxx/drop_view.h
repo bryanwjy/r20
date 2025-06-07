@@ -11,25 +11,26 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
-using std::ranges::take_view;
+using std::ranges::drop_view;
+
 namespace views {
 namespace details {
-struct take_t {
+struct drop_t {
     template <typename... Args>
-    requires requires { std::views::take(std::declval<Args>()...); }
+    requires requires { std::views::drop(std::declval<Args>()...); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr decltype(auto)
     operator()(Args&&... args) const
-        noexcept(noexcept(std::views::take(std::declval<Args>()...))) {
-        return std::views::take(std::forward<Args>(args)...);
+        noexcept(noexcept(std::views::drop(std::declval<Args>()...))) {
+        return std::views::drop(std::forward<Args>(args)...);
     }
 
     template <typename V, typename N>
     requires __RXX ranges::details::is_repeat_view<V> &&
-        requires { take(std::declval<V>(), std::declval<N>()); }
+        requires { drop(std::declval<V>(), std::declval<N>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr decltype(auto)
     operator()(V&& view, N&& num) const
-        noexcept(noexcept(take(std::declval<V>(), std::declval<N>()))) {
-        return take(std::forward<V>(view), std::forward<N>(num));
+        noexcept(noexcept(drop(std::declval<V>(), std::declval<N>()))) {
+        return drop(std::forward<V>(view), std::forward<N>(num));
     }
 
     /**
@@ -50,9 +51,9 @@ struct take_t {
         N&& num) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<N>, N>) {
         return __RXX ranges::details::make_pipeable(
-            [taker = *this, num = std::forward<N>(num)]<typename V>(
+            [droper = *this, num = std::forward<N>(num)]<typename V>(
                 V&& arg) mutable {
-                return taker(std::forward<V>(arg), std::forward<N>(num));
+                return droper(std::forward<V>(arg), std::forward<N>(num));
             });
     }
 #elif RXX_MSVC_STL
@@ -70,7 +71,7 @@ struct take_t {
 };
 } // namespace details
 inline namespace cpo {
-inline constexpr details::take_t take{};
+inline constexpr details::drop_t drop{};
 }
 } // namespace views
 } // namespace ranges

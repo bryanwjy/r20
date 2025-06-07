@@ -1,5 +1,6 @@
 
 #include "rxx/as_const_view.h"
+#include "rxx/drop_view.h"
 #include "rxx/enumerate_view.h"
 #include "rxx/repeat_view.h"
 #include "rxx/take_view.h"
@@ -30,6 +31,10 @@ int main() {
     }
 
     for (auto val : rxx::views::repeat(37) | rxx::views::take(13)) {
+        printf("%d\n", val);
+    }
+
+    for (auto val : rxx::views::repeat(23, 15) | rxx::views::drop(13)) {
         printf("%d\n", val);
     }
 
