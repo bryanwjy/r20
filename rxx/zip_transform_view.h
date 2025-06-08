@@ -31,7 +31,7 @@ requires (... && std::ranges::view<Views>) &&
     details::referenceable<
         std::invoke_result_t<F&, range_reference_t<Views>...>>
 class zip_transform_view :
-    std::ranges::view_interface<zip_transform_view<F, Views...>> {
+    public std::ranges::view_interface<zip_transform_view<F, Views...>> {
     using InnerView = zip_view<Views...>;
     template <bool Const>
     using ziperator = iterator_t<details::const_if<Const, InnerView>>;
@@ -150,16 +150,9 @@ template <bool Const>
 class zip_transform_view<F, Views...>::iterator :
     public zip_transform_view::iter_cat<Const> {
 
-    template <bool>
-    friend class zip_transform_view<F, Views...>::iterator;
-
-    template <bool>
-    friend class zip_transform_view<F, Views...>::sentinel;
-
-    friend class zip_transform_view<F, Views...>;
+    friend class zip_transform_view;
 
     using Parent = details::const_if<Const, zip_transform_view>;
-    using Base = details::const_if<Const, InnerView>;
 
     __RXX_HIDE_FROM_ABI constexpr iterator(
         Parent& parent, ziperator<Const> inner) noexcept(std::
@@ -174,7 +167,7 @@ public:
             std::invoke_result_t<F const&, range_reference_t<Views const>...>>,
         std::remove_cvref_t<
             std::invoke_result_t<F&, range_reference_t<Views>...>>>;
-    using difference_type = range_difference_t<Base>;
+    using difference_type = range_difference_t<Base<Const>>;
 
     __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
         std::is_nothrow_default_constructible_v<ziperator<Const>>) = default;
@@ -201,7 +194,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::ranges::forward_range<Base>
+    requires std::ranges::forward_range<Base<Const>>
     {
         auto previous = *this;
         ++*this;
@@ -209,14 +202,14 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<Base>
+    requires std::ranges::bidirectional_range<Base<Const>>
     {
         --inner_;
         return *this;
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<Base>
+    requires std::ranges::bidirectional_range<Base<Const>>
     {
         auto previous = *this;
         --*this;
@@ -224,17 +217,29 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires std::ranges::random_access_range<Base<Const>>
     {
         inner_ += offset;
         return *this;
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires std::ranges::random_access_range<Base<Const>>
     {
         inner_ -= offset;
         return *this;
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) operator[](difference_type offset) const
+    requires std::ranges::random_access_range<Base<Const>>
+    {
+        return std::apply(
+            [&]<typename... It>(It const&... iters) -> decltype(auto) {
+                return std::invoke(
+                    *parent_->func_, iters[iter_difference_t<It>(offset)]...);
+            },
+            get_current(inner_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -248,7 +253,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto operator<=>(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires std::ranges::random_access_range<Base<Const>>
     {
         return left.inner_ <=> right.inner_;
     }
@@ -256,7 +261,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         iterator const& self, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires std::ranges::random_access_range<Base<Const>>
     {
         return iterator(*self.parent_, self.inner_ + offset);
     }
@@ -264,7 +269,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         difference_type offset, iterator const& selft)
-    requires std::ranges::random_access_range<Base>
+    requires std::ranges::random_access_range<Base<Const>>
     {
         return iterator(*selft.parent_, selft.inner_ + offset);
     }
@@ -272,7 +277,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator-(
         iterator const& selft, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires std::ranges::random_access_range<Base<Const>>
     {
         return iterator(*selft.parent_, selft.inner_ - offset);
     }
@@ -298,11 +303,17 @@ requires (... && std::ranges::view<Views>) &&
         std::invoke_result_t<F&, range_reference_t<Views>...>>
 template <bool Const>
 class zip_transform_view<F, Views...>::sentinel {
-    friend class zip_transform_view<F, Views...>;
+
+    friend class zip_transform_view;
+
+    __RXX_HIDE_FROM_ABI explicit constexpr sentinel(
+        zentinel<Const> inner) noexcept(std::
+            is_nothrow_move_constructible_v<zentinel<Const>>)
+        : inner_{std::move(inner)} {}
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
-        std::is_nothrow_default_constructible_v<zentinel<Const>>) {}
+        std::is_nothrow_default_constructible_v<zentinel<Const>>) = default;
 
     template <bool OtherConst>
     requires std::sized_sentinel_for<zentinel<Const>, ziperator<OtherConst>>
@@ -323,10 +334,6 @@ public:
     }
 
 private:
-    __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
-        zentinel<Const> inner) noexcept(std::
-            is_nothrow_move_constructible_v<zentinel<Const>>)
-        : inner_{std::move(inner)} {}
     zentinel<Const> inner_;
 };
 

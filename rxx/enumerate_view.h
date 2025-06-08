@@ -117,13 +117,7 @@ template <bool Const>
 class enumerate_view<V>::iterator {
     using Base = details::const_if<Const, V>;
 
-    template <bool>
-    friend class enumerate_view<V>::iterator;
-
-    template <bool>
-    friend class enumerate_view<V>::sentinel;
-
-    friend class enumerate_view<V>;
+    friend class enumerate_view;
 
 public:
     using iterator_category = std::input_iterator_tag;
@@ -294,19 +288,16 @@ template <bool Const>
 class enumerate_view<V>::sentinel {
     using Base = details::const_if<Const, V>;
 
-    friend class enumerate_view<V>;
-    template <bool>
-    friend class enumerate_view<V>::sentinel;
+    friend class enumerate_view;
 
-    template <bool OtherConst>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    static constexpr decltype(auto)
-        get_current(enumerate_view<V>::iterator<OtherConst> const& iter) {
-        return (iter.current_); // parenthesized to return reference
-    }
+    __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
+        sentinel_t<Base> end) noexcept(std::
+            is_nothrow_move_constructible_v<sentinel_t<Base>>)
+        : end_{std::move(end)} {}
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr sentinel() = default;
+    __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
+        std::is_nothrow_default_constructible_v<sentinel_t<Base>>) = default;
 
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other)
     requires Const && std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
@@ -320,7 +311,7 @@ public:
         iterator_t<details::const_if<OtherConst, V>>>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
         iterator<OtherConst> const& iter, sentinel const& self) {
-        return get_current(iter) == self.end_;
+        return iter.current_ == self.end_;
     }
 
     template <bool OtherConst>
@@ -330,7 +321,7 @@ public:
         _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
             const_if<OtherConst, V>>
     operator-(iterator<OtherConst> const& iter, sentinel const& self) {
-        return get_current(iter) - self.end_;
+        return iter.current_ - self.end_;
     }
 
     template <bool OtherConst>
@@ -344,8 +335,6 @@ public:
     }
 
 private:
-    __RXX_HIDE_FROM_ABI constexpr explicit sentinel(sentinel_t<Base> end)
-        : end_{std::move(end)} {}
     sentinel_t<Base> end_{};
 };
 

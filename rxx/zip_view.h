@@ -3,6 +3,7 @@
 
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
+#include "rxx/details/tuple_functions.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
 
@@ -25,29 +26,6 @@ concept zip_common =
         ... && std::ranges::common_range<Rs>)) ||
     ((... && std::ranges::random_access_range<Rs>)&&(
         ... && std::ranges::sized_range<Rs>));
-
-template <typename F, typename TupleLike>
-requires tuple_like<std::remove_cvref_t<TupleLike>>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto transform(
-    F&& callable, TupleLike&& tuple) {
-    return std::apply(
-        [&]<typename... Ts>(Ts&&... elements) {
-            return std::tuple<std::invoke_result_t<F&, Ts>...>(
-                std::invoke(callable, std::forward<Ts>(elements))...);
-        },
-        std::forward<TupleLike>(tuple));
-}
-
-template <typename F, typename TupleLike>
-__RXX_HIDE_FROM_ABI constexpr void for_each(F&& callable, TupleLike&& tuple) {
-    std::apply(
-        [&]<typename... Ts>(Ts&&... elements) {
-            (static_cast<void>(
-                 std::invoke(callable, std::forward<Ts>(elements))),
-                ...);
-        },
-        std::forward<TupleLike>(tuple));
-}
 
 template <size_t N>
 inline constexpr std::make_index_sequence<N> make_index_sequence_v{};
@@ -434,11 +412,8 @@ requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::sentinel {
     using end_type = std::tuple<sentinel_t<details::const_if<Const, Rs>>...>;
-    template <bool OtherConst>
-    __RXX_HIDE_FROM_ABI static constexpr decltype(auto) get_current(
-        zip_view<Rs...>::iterator<OtherConst> const& iter) {
-        return (iter.current_); // parenthesized to return reference
-    }
+
+    friend class zip_view;
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() = default;
@@ -448,7 +423,7 @@ public:
         (... &&
             std::convertible_to<sentinel_t<Rs>,
                 sentinel_t<details::const_if<Const, Rs>>>)
-        : end_{std::move(other)} {}
+        : end_{std::move(other.end_)} {}
 
     template <bool OtherConst>
     requires (... &&
