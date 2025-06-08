@@ -8,8 +8,6 @@
 
 #define RXX_NAMESPACE_END(NAME) }
 
-#include <stddef.h>
-
 #ifdef _LIBCPP_ABI_NAMESPACE
 #  define RXX_STD_ABI_NAMESPACE_BEGIN inline namespace _LIBCPP_ABI_NAMESPACE {
 #  define RXX_STD_ABI_NAMESPACE_END }

@@ -14,6 +14,8 @@
 
 #ifdef RXX_CXX
 
+#  include <cstddef> // IWYU pragma: export
+
 #  if RXX_CXX < 201103L
 #    error "C++11 is required"
 #  endif /* RXX_CXX < 201103L */
