@@ -1,5 +1,6 @@
 // Copyright 2025 Bryan Wong
 
+#include "rxx/adjacent_transform_view.h"
 #include "rxx/adjacent_view.h"
 #include "rxx/as_const_view.h"
 #include "rxx/drop_view.h"
@@ -27,12 +28,19 @@ int main() {
         printf("%ld: %d\n", idx, val);
     }
 
-    puts("pair");
+    puts("adjacent pair");
     for (auto const [first, second] : a | rxx::views::adjacent<2>) {
         printf("{%d, %d}\n", first, second);
     }
 
-    puts("triple");
+    puts("transfor adjacent pair");
+    for (auto const val : a |
+            rxx::views::adjacent_transform<2>(
+                [](auto l, auto r) { return l + r; })) {
+        printf("{%d}\n", val);
+    }
+
+    puts("adjacent triple");
     for (auto const [first, second, third] : a | rxx::views::adjacent<3>) {
         printf("{%d, %d, %d}\n", first, second, third);
     }

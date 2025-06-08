@@ -58,6 +58,18 @@ public:
         : base_{std::move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
+    requires std::copy_constructible<V>
+    {
+        return base_;
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
+        return std::move(base_);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
@@ -170,6 +182,11 @@ class adjacent_view<V, N>::iterator {
         iterator_t<Base> begin,
         iterator_t<Base> end) noexcept(noexcept(build(tag, begin, end)))
         : current_{build(tag, begin, end)} {}
+
+    __RXX_HIDE_FROM_ABI friend constexpr decltype(auto) get_current(
+        iterator const& iter) noexcept {
+        return (iter.current_);
+    }
 
 public:
     using iterator_category = std::input_iterator_tag;
@@ -345,12 +362,6 @@ requires std::ranges::view<V> && (N > 0)
 template <bool Const>
 class adjacent_view<V, N>::sentinel {
     using Base = details::const_if<Const, V>;
-
-    template <bool OtherConst>
-    __RXX_HIDE_FROM_ABI static constexpr decltype(auto) get_current(
-        adjacent_view<V, N>::iterator<OtherConst> const& iter) {
-        return (iter.current_); // parenthesized to return reference
-    }
 
     friend class adjacent_view;
 

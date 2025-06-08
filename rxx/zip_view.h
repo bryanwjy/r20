@@ -412,11 +412,6 @@ requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::sentinel {
     using end_type = std::tuple<sentinel_t<details::const_if<Const, Rs>>...>;
-    template <bool OtherConst>
-    __RXX_HIDE_FROM_ABI static constexpr decltype(auto) get_current(
-        zip_view<Rs...>::iterator<OtherConst> const& iter) {
-        return (iter.current_); // parenthesized to return reference
-    }
 
     friend class zip_view;
 
