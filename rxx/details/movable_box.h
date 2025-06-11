@@ -3,348 +3,55 @@
 
 #include "rxx/config.h"
 
-#include "overlappable_if.h"
-
-#include <initializer_list>
-#include <type_traits>
-#include <utility>
-
-#if RXX_COMPILER_MSVC
-
-#  include <new>
-
-RXX_DEFAULT_NAMESPACE_BEGIN
-namespace ranges::details {
-template <typename T, typename... Args>
-__RXX_HIDE_FROM_ABI constexpr T* construct_at(
-    T* location, Args&&... args) noexcept(noexcept(::new((void*)0)
-        T{std::declval<Args>()...})) {
-    [[msvc::constexpr]] return ::new (location) T{std::forward<Args>(args)...};
-}
-} // namespace ranges::details
-
-RXX_DEFAULT_NAMESPACE_END
-
-#elif RXX_COMPILER_CLANG | RXX_COMPILER_GCC
-
-#  if __has_include(<bits/stl_construct.h>)
-// libstdc++
-#    include <bits/stl_construct.h>
-#  elif __has_include(<__memory/construct_at.h>)
-// libc++
-#    include <__memory/construct_at.h>
-#  else
-#    include <memory>
-#  endif
-
-RXX_DEFAULT_NAMESPACE_BEGIN
-namespace ranges::details {
-using std::construct_at;
-}
-RXX_DEFAULT_NAMESPACE_END
-
-#else
-#  error "Unsupported"
-#endif
+#include "rxx/details/optional_base.h"
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges::details {
-template <typename T>
-__RXX_HIDE_FROM_ABI constexpr void destroy_at(T* ptr) noexcept {
-    if constexpr (std::is_array_v<T>) {
-        for (auto& element : *ptr) {
-            (destroy_at)(RXX_BUILTIN_addressof(element));
-        }
-    } else {
-        ptr->~T();
-    }
-}
-
-template <typename T, typename U>
-__RXX_HIDE_FROM_ABI constexpr auto&& forward_like(U&& x) noexcept {
-    constexpr bool is_adding_const =
-        std::is_const_v<std::remove_reference_t<T>>;
-    if constexpr (std::is_lvalue_reference_v<T&&>) {
-        if constexpr (is_adding_const)
-            return std::as_const(x);
-        else
-            return static_cast<U&>(x);
-    } else if constexpr (is_adding_const)
-        return std::move(std::as_const(x));
-    else
-        return std::move(x);
-}
-
-struct nothing_t {};
-
-template <typename T>
-union box_union {
-    __RXX_HIDE_FROM_ABI constexpr box_union(box_union const&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr box_union(box_union const&) noexcept(
-        std::is_nothrow_copy_constructible_v<T>)
-    requires std::is_copy_constructible_v<T> &&
-        std::is_trivially_copy_constructible_v<T>
-    = default;
-    __RXX_HIDE_FROM_ABI constexpr box_union(box_union&&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr box_union(box_union&&) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
-    requires std::is_move_constructible_v<T> &&
-        std::is_trivially_move_constructible_v<T>
-    = default;
-    __RXX_HIDE_FROM_ABI constexpr box_union& operator=(
-        box_union const&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr box_union& operator=(
-        box_union const&) noexcept(std::is_nothrow_copy_assignable_v<T>)
-    requires std::is_copy_assignable_v<T> &&
-        std::is_trivially_copy_assignable_v<T>
-    = default;
-    __RXX_HIDE_FROM_ABI constexpr box_union& operator=(box_union&&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr box_union& operator=(box_union&&) noexcept(
-        std::is_nothrow_move_assignable_v<T>)
-    requires std::is_move_assignable_v<T> &&
-        std::is_trivially_move_assignable_v<T>
-    = default;
-
-    template <typename... Args>
-    requires std::constructible_from<T, Args...>
-    __RXX_HIDE_FROM_ABI constexpr explicit box_union(std::in_place_t,
-        Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
-        : value{std::forward<Args>(args)...} {}
-
-    __RXX_HIDE_FROM_ABI constexpr explicit box_union(decltype(nullptr)) noexcept
-        : nothing{} {}
-
-    __RXX_HIDE_FROM_ABI constexpr ~box_union() noexcept
-    requires std::is_trivially_destructible_v<T>
-    = default;
-    __RXX_HIDE_FROM_ABI constexpr ~box_union() noexcept {}
-
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) T value;
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) nothing_t nothing;
-};
-
-template <typename T, typename U>
-__RXX_HIDE_FROM_ABI constexpr T make_from_union(
-    bool has_value, U&& arg) noexcept(std::is_nothrow_constructible_v<T,
-    std::in_place_t, decltype(std::declval<U>().value)>) {
-    return has_value ? T{std::in_place, forward_like<U>(arg.value)}
-                     : T{nullptr};
-}
-
-template <typename T>
-inline constexpr bool is_movable_box_v = false;
-template <typename T>
-inline constexpr bool is_movable_box_v<T const> = is_movable_box_v<T>;
-template <typename T>
-inline constexpr bool is_movable_box_v<T volatile> = is_movable_box_v<T>;
-template <typename T>
-inline constexpr bool is_movable_box_v<T const volatile> = is_movable_box_v<T>;
 
 template <typename T>
 requires std::move_constructible<T> && std::is_object_v<T>
-class movable_box {
-    using union_type = box_union<T>;
-    static constexpr bool place_flag_in_tail =
-        fits_in_tail_padding_v<union_type, bool>;
-    static constexpr bool allow_external_overlap = !place_flag_in_tail;
+class movable_box : private optional_base<T> {
 
-    struct container {
-        template <typename... Args>
-        requires std::constructible_from<T, Args...>
-        __RXX_HIDE_FROM_ABI constexpr explicit container(std::in_place_t tag,
-            Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
-            Args...>)
-            : union_{tag, tag, std::forward<Args>(args)...}
-            , has_value_{true} {}
-
-        template <typename... Args>
-        requires std::constructible_from<T, Args...>
-        __RXX_HIDE_FROM_ABI constexpr explicit container(
-            decltype(nullptr)) noexcept
-            : union_{std::in_place, nullptr}
-            , has_value_{false} {}
-
-        template <typename U>
-        __RXX_HIDE_FROM_ABI constexpr explicit container(generating_t tag,
-            bool has_value,
-            U&& u) noexcept(noexcept(make_from_union<union_type>(has_value,
-            std::declval<U>())))
-        requires (allow_external_overlap)
-            : union_{tag,
-                  [&]() {
-                      return make_from_union<union_type>(
-                          has_value, std::forward<U>(u));
-                  }}
-            , has_value_(has_value) {}
-
-        __RXX_HIDE_FROM_ABI constexpr container(container const&) = delete;
-        __RXX_HIDE_FROM_ABI constexpr container(container const&) noexcept
-        requires std::is_copy_constructible_v<T> &&
-            std::is_trivially_copy_constructible_v<T>
-        = default;
-        __RXX_HIDE_FROM_ABI constexpr container(container&&) = delete;
-        __RXX_HIDE_FROM_ABI constexpr container(container&&) noexcept
-        requires std::is_move_constructible_v<T> &&
-            std::is_trivially_move_constructible_v<T>
-        = default;
-        __RXX_HIDE_FROM_ABI constexpr container& operator=(
-            container const&) = delete;
-        __RXX_HIDE_FROM_ABI constexpr container& operator=(
-            container const&) noexcept
-        requires std::is_copy_assignable_v<T> &&
-            std::is_trivially_copy_assignable_v<T>
-        = default;
-        __RXX_HIDE_FROM_ABI constexpr container& operator=(
-            container&&) = delete;
-        __RXX_HIDE_FROM_ABI constexpr container& operator=(container&&) noexcept
-        requires std::is_move_assignable_v<T> &&
-            std::is_trivially_move_assignable_v<T>
-        = default;
-
-        __RXX_HIDE_FROM_ABI constexpr ~container() noexcept
-        requires std::is_trivially_destructible_v<T>
-        = default;
-        __RXX_HIDE_FROM_ABI constexpr ~container() noexcept {
-            destroy_member();
-        }
-
-        __RXX_HIDE_FROM_ABI constexpr void destroy_union() noexcept
-        requires allow_external_overlap && std::is_trivially_destructible_v<T>
-        {
-            destroy_at(RXX_BUILTIN_addressof(union_.data));
-        }
-
-        __RXX_HIDE_FROM_ABI constexpr void destroy_union() noexcept
-        requires allow_external_overlap
-        {
-            destroy_member();
-            destroy_at(RXX_BUILTIN_addressof(union_.data));
-        }
-
-        template <typename... Args>
-        __RXX_HIDE_FROM_ABI constexpr void
-        construct_union(std::in_place_t, Args&&... args) noexcept(
-            std::is_nothrow_constructible_v<T, Args...>)
-        requires allow_external_overlap
-        {
-            construct_at(RXX_BUILTIN_addressof(union_.data), std::in_place,
-                std::forward<Args>(args)...);
-            has_value_ = true;
-        }
-
-        __RXX_HIDE_FROM_ABI inline constexpr void construct_union(
-            decltype(nullptr)) noexcept
-        requires allow_external_overlap
-        {
-            construct_at(RXX_BUILTIN_addressof(union_.data), nullptr);
-            has_value_ = false;
-        }
-
-        RXX_ATTRIBUTES(NO_UNIQUE_ADDRESS)
-        overlappable_if<place_flag_in_tail, union_type> union_;
-        RXX_ATTRIBUTES(NO_UNIQUE_ADDRESS) bool has_value_;
-
-    private:
-        __RXX_HIDE_FROM_ABI constexpr void destroy_member() noexcept {
-            if (has_value_) {
-                destroy_at(RXX_BUILTIN_addressof(union_.data.value));
-            }
-        }
-    };
-
-    template <typename U>
-    __RXX_HIDE_FROM_ABI static constexpr container make_container(
-        bool has_value,
-        U&& u) noexcept(std::is_nothrow_constructible_v<container,
-        std::in_place_t, decltype(std::declval<U>().value)>)
-    requires (place_flag_in_tail)
-    {
-        return has_value ? container{std::in_place, forward_like<U>(u.value)}
-                         : container{nullptr};
-    }
-
-    template <typename U>
-    static consteval bool can_convert() noexcept {
-        return std::is_same_v<std::remove_cv_t<T>, bool> ||
-            (!std::is_constructible_v<T, movable_box<U>&> &&
-                !std::is_constructible_v<T, movable_box<U> const&> &&
-                !std::is_constructible_v<T, movable_box<U>&&> &&
-                !std::is_constructible_v<T, movable_box<U> const&&> &&
-                !std::is_convertible_v<movable_box<U>&, T> &&
-                !std::is_convertible_v<movable_box<U> const&, T> &&
-                !std::is_convertible_v<movable_box<U>&&, T> &&
-                !std::is_convertible_v<movable_box<U> const&&, T>);
-    }
-
-    template <typename U>
-    static consteval bool can_assign() noexcept {
-        return !std::is_constructible_v<T, movable_box<U>&> &&
-            !std::is_constructible_v<T, movable_box<U> const&> &&
-            !std::is_constructible_v<T, movable_box<U>&&> &&
-            !std::is_constructible_v<T, movable_box<U> const&&> &&
-            !std::is_convertible_v<movable_box<U>&, T> &&
-            !std::is_convertible_v<movable_box<U> const&, T> &&
-            !std::is_convertible_v<movable_box<U>&&, T> &&
-            !std::is_convertible_v<movable_box<U> const&&, T> &&
-            !std::is_assignable_v<T&, movable_box<U>&> &&
-            !std::is_assignable_v<T&, movable_box<U> const&> &&
-            !std::is_assignable_v<T&, movable_box<U>&&> &&
-            !std::is_assignable_v<T&, movable_box<U> const&&>;
-    }
+    using base_type = optional_base<T>;
 
 public:
     __RXX_HIDE_FROM_ABI constexpr ~movable_box() noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr movable_box() = delete;
 
     __RXX_HIDE_FROM_ABI constexpr movable_box() noexcept(
         std::is_nothrow_default_constructible_v<T>)
     requires std::default_initializable<T>
-        : container_{std::in_place} {}
+        : base_type{std::in_place} {}
 
-    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box const&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box const&) noexcept
-    requires std::is_copy_constructible_v<T> &&
-        std::is_trivially_copy_constructible_v<T>
-    = default;
-
-    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box const&
-            other) noexcept(std::is_nothrow_copy_constructible_v<T>)
-    requires (std::is_copy_constructible_v<T> &&
-        !std::is_trivially_copy_constructible_v<T>)
-        : movable_box(generating, other.has_value(), *other) {}
-
-    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box&&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box&&) noexcept
-    requires std::is_move_constructible_v<T> &&
-        std::is_trivially_move_constructible_v<T>
-    = default;
-
-    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box&& other) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
-    requires (std::is_move_constructible_v<T> &&
-        !std::is_trivially_move_constructible_v<T>)
-        : movable_box(generating, other.has_value(), std::move(*other)) {}
+    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box const&) noexcept(
+        std::is_nothrow_copy_constructible_v<base_type>) = default;
+    __RXX_HIDE_FROM_ABI constexpr movable_box(movable_box&&) noexcept(
+        std::is_nothrow_move_constructible_v<base_type>) = default;
 
     template <typename U>
-    requires std::constructible_from<T, U const&> && (can_convert<U>())
-    __RXX_HIDE_FROM_ABI
-        explicit(!std::is_convertible_v<U const&, T>) constexpr movable_box(
-            movable_box<U> const&
-                other) noexcept(std::is_nothrow_constructible_v<T, U const&>)
-        : movable_box(generating, other.has_value(), *other) {}
+    requires std::constructible_from<base_type, optional_base<U> const&> &&
+        std::is_base_of_v<optional_base<U>, movable_box<U>>
+    __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U const&,
+                                 T>) constexpr movable_box(movable_box<U> const&
+            other) noexcept(std::is_nothrow_constructible_v<base_type,
+        optional_base<U> const&>)
+        : base_type((optional_base<U> const&)other) {}
 
     template <typename U>
-    requires std::constructible_from<T, U> && (can_convert<U>())
+    requires std::constructible_from<base_type, optional_base<U>> &&
+        std::is_base_of_v<optional_base<U>, movable_box<U>>
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr movable_box(movable_box<U>&&
-            other) noexcept(std::is_nothrow_constructible_v<T, U>)
-        : movable_box(generating, other.has_value(), std::move(*other)) {}
+            other) noexcept(std::is_nothrow_constructible_v<base_type,
+        optional_base<U>>)
+        : base_type((optional_base<U>&&)std::move(other)) {}
 
     template <typename... Args>
     requires std::constructible_from<T, Args...>
     __RXX_HIDE_FROM_ABI explicit constexpr movable_box(std::in_place_t tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
-        : container_(tag, tag, std::forward<Args>(args)...) {}
+        : base_type(tag, std::forward<Args>(args)...) {}
 
     template <typename U, typename... Args>
     requires std::constructible_from<T, std::initializer_list<U>&, Args...>
@@ -352,22 +59,15 @@ public:
         std::initializer_list<U> list,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
         std::initializer_list<U>&, Args...>)
-        : container_(tag, tag, list, std::forward<Args>(args)...) {}
+        : base_type(tag, list, std::forward<Args>(args)...) {}
 
     template <typename U = std::remove_cv_t<T>>
-    requires std::constructible_from<T, U> &&
-        (!std::same_as<std::remove_cvref_t<U>, std::in_place_t> &&
-            !std::same_as<std::remove_cvref_t<U>, movable_box<T>> &&
-            (!std::same_as<std::remove_cv_t<T>, bool> ||
-                !is_movable_box_v<std::remove_cvref_t<U>>))
-    __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U, T>)
-        movable_box(U&& other) noexcept(std::is_nothrow_constructible_v<T, U>)
-        : container_(std::in_place, std::in_place, std::forward<U>(other)) {}
+    requires std::constructible_from<base_type, U>
+    __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U, T>) movable_box(
+        U&& other) noexcept(std::is_nothrow_constructible_v<base_type, U>)
+        : base_type(std::forward<U>(other)) {}
 
-    __RXX_HIDE_FROM_ABI movable_box& operator=(decltype(nullptr)) noexcept {
-        reset();
-        return *this;
-    }
+    using base_type::operator=;
 
     __RXX_HIDE_FROM_ABI movable_box&
     operator=(movable_box const& other) noexcept(
@@ -380,32 +80,6 @@ public:
             } else {
                 reset();
             }
-        }
-
-        return *this;
-    }
-
-    __RXX_HIDE_FROM_ABI movable_box&
-    operator=(movable_box const& other) noexcept(
-        std::is_nothrow_copy_constructible_v<T>)
-    requires std::copyable<T> && std::is_trivially_copy_constructible_v<T> &&
-        std::is_trivially_copy_assignable_v<T> &&
-        std::is_trivially_destructible_v<T>
-    = default;
-
-    __RXX_HIDE_FROM_ABI movable_box&
-    operator=(movable_box const& other) noexcept(
-        std::is_nothrow_copy_constructible_v<T>)
-    requires std::copyable<T>
-    {
-        if (this->has_value() != other.has_value()) {
-            if (other.has_value()) {
-                this->emplace(*other);
-            } else {
-                this->reset();
-            }
-        } else if (other.has_value()) {
-            **this = *other;
         }
 
         return *this;
@@ -426,187 +100,33 @@ public:
         return *this;
     }
 
-    __RXX_HIDE_FROM_ABI movable_box& operator=(movable_box&& other) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
-    requires std::movable<T> && std::is_trivially_move_constructible_v<T> &&
-        std::is_trivially_move_assignable_v<T> &&
-        std::is_trivially_destructible_v<T>
-    = default;
-
-    __RXX_HIDE_FROM_ABI movable_box& operator=(movable_box&& other) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
-    requires std::movable<T>
-    {
-        if (this->has_value() != other.has_value()) {
-            if (other.has_value()) {
-                this->emplace(std::move(*other));
-            } else {
-                this->reset();
-            }
-        } else if (other.has_value()) {
-            **this = *other;
-        }
-
-        return *this;
-    }
-
     template <typename U>
-    requires std::constructible_from<T, U const&> &&
-        std::assignable_from<T&, U const&> && (can_assign<U>())
+    requires std::assignable_from<base_type&, optional_base<U> const&> &&
+        std::is_base_of_v<optional_base<U>, movable_box<U>>
     __RXX_HIDE_FROM_ABI movable_box&
     operator=(movable_box<U> const& other) noexcept(
-        std::is_nothrow_constructible_v<T, U const&> &&
-        std::is_nothrow_assignable_v<T&, U const&>) {
-        if (this->has_value() != other.has_value()) {
-            if (other.has_value()) {
-                this->emplace(*other);
-            } else {
-                this->reset();
-            }
-        } else if (other.has_value()) {
-            **this = *other;
-        }
-
+        std::is_nothrow_assignable_v<base_type&, optional_base<U> const&>) {
+        base_type::operator=((optional_base<U> const&)other);
         return *this;
     }
 
     template <typename U>
-    requires std::constructible_from<T, U> && std::assignable_from<T&, U> &&
-        (can_assign<U>())
+    requires std::assignable_from<base_type&, optional_base<U>> &&
+        std::is_base_of_v<optional_base<U>, movable_box<U>>
     __RXX_HIDE_FROM_ABI movable_box& operator=(movable_box<U>&& other) noexcept(
-        std::is_nothrow_constructible_v<T, U> &&
-        std::is_nothrow_assignable_v<T&, U>) {
-        if (this->has_value() != other.has_value()) {
-            if (other.has_value()) {
-                this->emplace(std::move(*other));
-            } else {
-                this->reset();
-            }
-        } else if (other.has_value()) {
-            **this = std::move(*other);
-        }
-
+        std::is_nothrow_assignable_v<base_type&, optional_base<U>>) {
+        base_type::operator=((optional_base<U>&&)std::move(other));
         return *this;
     }
 
-    template <typename U = std::remove_cv_t<T>>
-    requires std::constructible_from<T, U> && std::assignable_from<T&, U> &&
-        (!std::same_as<std::remove_cvref_t<U>, movable_box<T>> &&
-            (!std::same_as<std::decay_t<U>, T> || !std::is_scalar_v<T>))
-    __RXX_HIDE_FROM_ABI movable_box& operator=(U&& other) noexcept(
-        std::is_nothrow_constructible_v<T, U> &&
-        std::is_nothrow_assignable_v<T&, U>) {
-        if (this->has_value() != other.has_value()) {
-            if (other.has_value()) {
-                this->emplace(std::forward<U>(other));
-            } else {
-                this->reset();
-            }
-        } else if (other.has_value()) {
-            **this = std::forward<U>(other);
-        }
-
-        return *this;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr bool has_value() const noexcept {
-        return container_.data.has_value_;
-    }
-
-    __RXX_HIDE_FROM_ABI explicit constexpr operator bool() const noexcept {
-        return has_value();
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr T const* operator->() const noexcept {
-        return RXX_BUILTIN_addressof(container_.data.union_.data.value);
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr T* operator->() noexcept {
-        return RXX_BUILTIN_addressof(container_.data.union_.data.value);
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr T const& operator*() const& noexcept {
-        return container_.data.union_.data.value;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr T& operator*() & noexcept {
-        return container_.data.union_.data.value;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr T const&& operator*() const&& noexcept {
-        return std::move(container_.data.union_.data.value);
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr T&& operator*() && noexcept {
-        return std::move(container_.data.union_.data.value);
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr void reset() noexcept {
-        if constexpr (place_flag_in_tail) {
-            auto* ptr = RXX_BUILTIN_addressof(container_.data);
-            destroy_at(ptr);
-            construct_at(ptr, nullptr);
-        } else {
-            container_.data.destroy_union();
-            container_.data.construct_union(nullptr);
-        }
-    }
-
-    template <typename... Args>
-    requires std::constructible_from<T, Args...>
-    __RXX_HIDE_FROM_ABI constexpr T& emplace(Args&&... args) noexcept(
-        std::is_nothrow_constructible_v<T, Args...>) {
-        if constexpr (place_flag_in_tail) {
-            auto* ptr = RXX_BUILTIN_addressof(container_.data);
-            destroy_at(ptr);
-            return *construct_at(
-                ptr, std::in_place, std::forward<Args>(args)...);
-        } else {
-            container_.data.destroy_union();
-            container_.data.construct_union(
-                std::in_place, std::forward<Args>(args)...);
-        }
-    }
-
-    template <typename U, typename... Args>
-    requires std::constructible_from<T, std::initializer_list<U>&, Args...>
-    __RXX_HIDE_FROM_ABI constexpr T& emplace(std::initializer_list<U> list,
-        Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
-        std::initializer_list<U>&, Args...>) {
-        if constexpr (place_flag_in_tail) {
-            auto* ptr = RXX_BUILTIN_addressof(container_.data);
-            destroy_at(ptr);
-            return *construct_at(
-                ptr, std::in_place, list, std::forward<Args>(args)...);
-        } else {
-            container_.data.destroy_union();
-            container_.data.construct_union(
-                std::in_place, list, std::forward<Args>(args)...);
-        }
-    }
-
-private:
-    template <typename U>
-    __RXX_HIDE_FROM_ABI constexpr movable_box(generating_t tag, bool has_value,
-        U&& u) noexcept(std::is_nothrow_constructible_v<container, generating_t,
-        bool, U>)
-    requires allow_external_overlap
-        : container_{std::in_place, tag, has_value, std::forward<U>(u)} {}
-
-    template <typename U>
-    __RXX_HIDE_FROM_ABI constexpr movable_box(generating_t tag, bool has_value,
-        U&& u) noexcept(noexcept(make_container(has_value, std::declval<U>())))
-    requires place_flag_in_tail
-        : container_{tag,
-              [&]() { return make_container(has_value, std::forward<U>(u)); }} {
-    }
-
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)
-    overlappable_if<allow_external_overlap, container> container_;
+    using base_type::has_value;
+    using base_type::operator bool;
+    using base_type::operator->;
+    using base_type::operator*;
+    using base_type::emplace;
+    using base_type::reset;
 };
 
-template <typename T>
-inline constexpr bool is_movable_box_v<movable_box<T>> = true;
 } // namespace ranges::details
 
 RXX_DEFAULT_NAMESPACE_END

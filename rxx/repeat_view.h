@@ -4,6 +4,7 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/simple_view.h"
+#include "rxx/details/to_unsigned_like.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
 
@@ -77,24 +78,6 @@ struct repeat_view_iterator_difference<T> {
 template <typename T>
 using repeat_view_iterator_difference_t RXX_NODEBUG =
     typename repeat_view_iterator_difference<T>::type;
-
-#if RXX_LIBCXX | RXX_LIBSTDCXX
-template <typename T>
-requires requires(T arg) { std::__to_unsigned_like(arg); }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN,
-    NODISCARD) inline constexpr auto to_unsigned_like(T arg) noexcept {
-    return std::__to_unsigned_like(arg);
-}
-#elif RXX_MSVC_STL
-template <typename T>
-requires requires(T arg) { std::_To_unsigned_like(arg); }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto to_unsigned_like(
-    T arg) noexcept {
-    return std::_To_unsigned_like(arg);
-}
-#else
-#  error "Unsupported"
-#endif
 } // namespace details
 
 template <std::move_constructible T,
