@@ -56,6 +56,8 @@ constexpr bool test01() {
 }
 
 #if 0
+// std::views::join is only available on libc++19
+
 template <typename wrapper>
 void test02() {
     int x[] = {1, 2, 3, 4, 5, 6, 7, 8};
