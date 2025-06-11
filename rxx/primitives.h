@@ -1,6 +1,8 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
 #include <iterator>
 #include <ranges>
 #include <type_traits>
