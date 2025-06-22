@@ -52,7 +52,7 @@ public:
     template <typename I>
     requires requires(I const& it) { T(*it); }
     __RXX_HIDE_FROM_ABI constexpr T& emplace_deref(I const& it) {
-        return this->generate([&]() { return T(*it); });
+        return base_type::generate([&]() { return T(*it); });
     }
 
     template <typename U>
@@ -82,6 +82,8 @@ public:
     using base_type::emplace;
     using base_type::reset;
 };
+
+struct empty_cache {};
 
 } // namespace ranges::details
 
