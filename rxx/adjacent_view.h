@@ -426,7 +426,7 @@ inline namespace cpo {
 template <size_t N>
 inline constexpr details::adjacent_t<N> adjacent{};
 
-inline constexpr details::adjacent_t<2> pariwise{};
+inline constexpr details::adjacent_t<2> pairwise{};
 
 } // namespace cpo
 } // namespace views
