@@ -1,6 +1,28 @@
+// Copyright 2025 Bryan Wong
+// Adapted from GCC testsuite
+
+// Copyright (C) 2020-2025 Free Software Foundation, Inc.
+//
+// This file is part of the GNU ISO C++ Library.  This library is free
+// software; you can redistribute it and/or modify it under the
+// terms of the GNU General Public License as published by the
+// Free Software Foundation; either version 3, or (at your option)
+// any later version.
+
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License along
+// with this library; see the file COPYING3.  If not see
+// <http://www.gnu.org/licenses/>.
+
+// { dg-do run { target c++20 } }
 
 #include "rxx/chunk_view.h"
 
+#include "rxx/join_view.h"
 #include "rxx/zip_view.h"
 
 #include <cassert>
@@ -55,9 +77,9 @@ constexpr bool test01() {
     return true;
 }
 
-#if 0
 // std::views::join is only available on libc++19
 
+#if 0
 template <typename wrapper>
 void test02() {
     int x[] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -75,6 +97,7 @@ void test02() {
     for (int i = 1; i <= 10; ++i)
         VERIFY(ranges::equal(wrapper(x) | views::chunk(i) | views::join, x));
 }
+#endif
 
 void test03() {
     // LWG 3851 - chunk_view::inner-iterator missing custom iter_move and
@@ -88,15 +111,14 @@ void test03() {
         std::back_inserter(res));
     VERIFY(vs.front().empty());
 }
-#endif
 
 int main() {
     static_assert(test01());
 #if 0
     test02<__gnu_test::test_input_range<int>>();
     test02<__gnu_test::test_forward_range<int>>();
-    test03();
 #endif
+    test03();
 
     return 0;
 }

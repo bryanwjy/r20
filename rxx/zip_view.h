@@ -30,15 +30,34 @@ concept zip_common =
 template <size_t N>
 inline constexpr std::make_index_sequence<N> make_index_sequence_v{};
 
+template <typename F, typename Tuple, size_t... Is>
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr auto zip_transform(
+    F&& callable, Tuple&& t1, std::index_sequence<Is...>) {
+    return std::tuple<std::invoke_result_t<F&,
+        std::invoke_result_t<decltype(get_element<Is>), Tuple>>...>{
+        std::invoke(callable, get_element<Is>(std::forward<Tuple>(t1)))...};
+}
+
+template <typename F, typename Tuple>
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr auto zip_transform(F&& callable, Tuple&& t1) {
+
+    return __RXX ranges::details::zip_transform(std::forward<F>(callable),
+        std::forward<Tuple>(t1),
+        make_index_sequence_v<std::tuple_size_v<std::remove_cvref_t<Tuple>>>);
+}
+
 template <typename F, typename Tuple1, typename Tuple2, size_t... Is>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr std::tuple<std::invoke_result_t<F&,
-    typename std::tuple_element_t<Is, std::remove_cvref_t<Tuple1>>,
-    typename std::tuple_element_t<Is,
-        std::remove_cvref_t<Tuple2>>>...> zip_transform(F&& callable,
-    Tuple1&& t1, Tuple2&& t2, std::index_sequence<Is...>) {
-    return {std::invoke(callable, get_element<Is>(std::forward<Tuple1>(t1)),
-        get_element<Is>(std::forward<Tuple2>(t2)))...};
+constexpr auto zip_transform(
+    F&& callable, Tuple1&& t1, Tuple2&& t2, std::index_sequence<Is...>) {
+    return std::tuple<std::invoke_result_t<F&,
+        std::invoke_result_t<decltype(get_element<Is>), Tuple1>,
+        std::invoke_result_t<decltype(get_element<Is>), Tuple2>>...>{
+        std::invoke(std::forward<F>(callable),
+            get_element<Is>(std::forward<Tuple1>(t1)),
+            get_element<Is>(std::forward<Tuple2>(t2)))...};
 }
 
 template <typename F, typename Tuple1, typename Tuple2>
@@ -47,6 +66,13 @@ constexpr auto zip_transform(F&& callable, Tuple1&& t1, Tuple2&& t2) {
     return ranges::details::zip_transform(callable, std::forward<Tuple1>(t1),
         std::forward<Tuple2>(t2),
         make_index_sequence_v<std::tuple_size_v<std::remove_cvref_t<Tuple1>>>);
+}
+
+template <typename F, typename Tuple>
+__RXX_HIDE_FROM_ABI constexpr void zip_for_each(F&& callable, Tuple&& t1) {
+    [&]<size_t... Is>(std::index_sequence<Is...>) {
+        (..., std::invoke(callable, get_element<Is>(std::forward<Tuple>(t1))));
+    }(make_index_sequence_v<std::tuple_size_v<std::remove_cvref_t<Tuple>>>);
 }
 
 template <typename F, typename Tuple1, typename Tuple2, size_t... Is>
@@ -60,7 +86,7 @@ __RXX_HIDE_FROM_ABI constexpr void zip_for_each(
 template <typename F, typename Tuple1, typename Tuple2>
 __RXX_HIDE_FROM_ABI constexpr auto zip_for_each(
     F&& callable, Tuple1&& t1, Tuple2&& t2) {
-    return ranges::details::zip_transform(callable, std::forward<Tuple1>(t1),
+    ranges::details::zip_for_each(callable, std::forward<Tuple1>(t1),
         std::forward<Tuple2>(t2),
         make_index_sequence_v<std::tuple_size_v<std::remove_cvref_t<Tuple1>>>);
 }
@@ -100,14 +126,16 @@ public:
     constexpr auto begin()
     requires (!(... && details::simple_view<Rs>))
     {
-        return iterator<false>{details::transform(std::ranges::begin, views_)};
+        return iterator<false>{
+            details::zip_transform(std::ranges::begin, views_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires (... && std::ranges::range<Rs const>)
     {
-        return iterator<true>(details::transform(std::ranges::begin, views_));
+        return iterator<true>(
+            details::zip_transform(std::ranges::begin, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -116,12 +144,12 @@ public:
     {
         if constexpr (!details::zip_common<Rs...>) {
             return sentinel<false>(
-                details::transform(std::ranges::end, views_));
+                details::zip_transform(std::ranges::end, views_));
         } else if constexpr ((... && std::ranges::random_access_range<Rs>)) {
             return begin() + iter_difference_t<iterator<false>>(size());
         } else {
             return iterator<false>(
-                details::transform(std::ranges::end, views_));
+                details::zip_transform(std::ranges::end, views_));
         }
     }
 
@@ -130,12 +158,14 @@ public:
     requires (... && std::ranges::range<Rs const>)
     {
         if constexpr (!details::zip_common<Rs const...>) {
-            return sentinel<true>(details::transform(std::ranges::end, views_));
+            return sentinel<true>(
+                details::zip_transform(std::ranges::end, views_));
         } else if constexpr ((... &&
                                  std::ranges::random_access_range<Rs const>)) {
             return begin() + std::iter_difference_t<iterator<true>>(size());
         } else {
-            return iterator<true>(details::transform(std::ranges::end, views_));
+            return iterator<true>(
+                details::zip_transform(std::ranges::end, views_));
         }
     }
 
@@ -149,7 +179,7 @@ public:
                     std::common_type_t<decltype(sizes)...>>;
                 return std::ranges::min({common(sizes)...});
             },
-            details::transform(std::ranges::size, views_));
+            details::zip_transform(std::ranges::size, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -162,7 +192,7 @@ public:
                     std::common_type_t<decltype(sizes)...>>;
                 return std::ranges::min({common(sizes)...});
             },
-            details::transform(std::ranges::size, views_));
+            details::zip_transform(std::ranges::size, views_));
     }
 
 private:
@@ -247,12 +277,12 @@ public:
         : current_{std::move(other.current_)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator*() const {
-        return details::transform(
+        return details::zip_transform(
             [](auto& iter) -> decltype(auto) { return *iter; }, current_);
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
-        details::for_each(
+        details::zip_for_each(
             [](auto& iter) -> decltype(auto) { return ++iter; }, current_);
         return *this;
     }
@@ -267,10 +297,10 @@ public:
         return prev;
     }
 
-    __RXX_HIDE_FROM_ABI constexpr iterator operator--()
+    __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
     requires details::all_bidirectional<Const, Rs...>
     {
-        details::for_each(
+        details::zip_for_each(
             [](auto& iter) -> decltype(auto) { return --iter; }, current_);
         return *this;
     }
@@ -286,7 +316,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
     requires details::all_random_access<Const, Rs...>
     {
-        details::for_each(
+        details::zip_for_each(
             [&]<typename Iter>(
                 Iter& iter) { iter += std::iter_difference_t<Iter>(offset); },
             current_);
@@ -296,7 +326,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
     requires details::all_random_access<Const, Rs...>
     {
-        details::for_each(
+        details::zip_for_each(
             [&]<typename Iter>(
                 Iter& iter) { iter -= std::iter_difference_t<Iter>(offset); },
             current_);
@@ -307,7 +337,7 @@ public:
     constexpr auto operator[](difference_type idx) const
     requires details::all_random_access<Const, Rs...>
     {
-        return details::transform(
+        return details::zip_transform(
             [&]<typename Iter>(Iter& iter) -> decltype(auto) {
                 return iter[std::iter_difference_t<Iter>(idx)];
             },
@@ -384,10 +414,10 @@ public:
     friend constexpr auto iter_move(iterator const& self) noexcept(
         (...&& noexcept(std::ranges::iter_move(std::declval<
             iterator_t<details::const_if<Const, Rs>> const&>()))) &&
-        (std::is_nothrow_move_constructible_v<std::ranges::
-                 range_rvalue_reference_t<details::const_if<Const, Rs>>> &&
+        (std::is_nothrow_move_constructible_v<
+             range_rvalue_reference_t<details::const_if<Const, Rs>>> &&
             ...)) {
-        return details::transform(std::ranges::iter_move, self.current_);
+        return details::zip_transform(std::ranges::iter_move, self.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
@@ -399,7 +429,7 @@ public:
     requires (... &&
         std::indirectly_swappable<iterator_t<details::const_if<Const, Rs>>>)
     {
-        details::for_each(
+        details::zip_for_each(
             std::ranges::iter_swap, left.current_, right.current_);
     }
 
@@ -414,6 +444,10 @@ class zip_view<Rs...>::sentinel {
     using end_type = std::tuple<sentinel_t<details::const_if<Const, Rs>>...>;
 
     friend class zip_view;
+
+    __RXX_HIDE_FROM_ABI constexpr explicit sentinel(end_type end) noexcept(
+        std::is_nothrow_move_constructible_v<end_type>)
+        : end_(std::move(end)) {}
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() = default;
