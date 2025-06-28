@@ -26,6 +26,24 @@ struct generating_t {
 
 inline constexpr generating_t generating{};
 
+template <size_t I>
+struct generating_index_t {
+    __RXX_HIDE_FROM_ABI constexpr explicit generating_index_t() noexcept =
+        default;
+};
+
+template <size_t I>
+inline constexpr generating_index_t<I> generating_index{};
+
+template <typename T>
+struct generating_type_t {
+    __RXX_HIDE_FROM_ABI constexpr explicit generating_type_t() noexcept =
+        default;
+};
+
+template <typename T>
+inline constexpr generating_type_t<T> generating_type{};
+
 template <typename T>
 concept explicit_default_constructible =
     std::default_initializable<T> && !requires(void (*func)(T)) { func({}); };

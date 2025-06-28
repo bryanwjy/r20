@@ -3,78 +3,18 @@
 
 #include "rxx/config.h"
 
-#include "overlappable_if.h"
+#include "rxx/details/construct_at.h"
+#include "rxx/details/destroy_at.h"
+#include "rxx/details/forward_like.h"
+#include "rxx/details/overlappable_if.h"
 
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
 
-#if RXX_COMPILER_MSVC
-
-#  include <new>
-
-RXX_DEFAULT_NAMESPACE_BEGIN
-namespace ranges::details {
-template <typename T, typename... Args>
-__RXX_HIDE_FROM_ABI constexpr T* construct_at(
-    T* location, Args&&... args) noexcept(noexcept(::new((void*)0)
-        T{std::declval<Args>()...})) {
-    [[msvc::constexpr]] return ::new (location) T{std::forward<Args>(args)...};
-}
-} // namespace ranges::details
-
-RXX_DEFAULT_NAMESPACE_END
-
-#elif RXX_COMPILER_CLANG | RXX_COMPILER_GCC
-
-#  if __has_include(<bits/stl_construct.h>)
-// libstdc++
-#    include <bits/stl_construct.h>
-#  elif __has_include(<__memory/construct_at.h>)
-// libc++
-#    include <__memory/construct_at.h>
-#  else
-#    include <memory>
-#  endif
-
-RXX_DEFAULT_NAMESPACE_BEGIN
-namespace ranges::details {
-using std::construct_at;
-}
-RXX_DEFAULT_NAMESPACE_END
-
-#else
-#  error "Unsupported"
-#endif
-
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges::details {
-template <typename T>
-__RXX_HIDE_FROM_ABI constexpr void destroy_at(T* ptr) noexcept {
-    if constexpr (std::is_array_v<T>) {
-        for (auto& element : *ptr) {
-            (destroy_at)(RXX_BUILTIN_addressof(element));
-        }
-    } else {
-        ptr->~T();
-    }
-}
-
-template <typename T, typename U>
-__RXX_HIDE_FROM_ABI constexpr auto&& forward_like(U&& x) noexcept {
-    constexpr bool is_adding_const =
-        std::is_const_v<std::remove_reference_t<T>>;
-    if constexpr (std::is_lvalue_reference_v<T&&>) {
-        if constexpr (is_adding_const)
-            return std::as_const(x);
-        else
-            return static_cast<U&>(x);
-    } else if constexpr (is_adding_const)
-        return std::move(std::as_const(x));
-    else
-        return std::move(x);
-}
 
 struct nothing_t {};
 

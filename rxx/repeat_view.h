@@ -100,7 +100,8 @@ class repeat_view : public std::ranges::view_interface<repeat_view<T, Bound>> {
     };
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr repeat_view() noexcept
+    __RXX_HIDE_FROM_ABI constexpr repeat_view() noexcept(
+        std::is_nothrow_default_constructible_v<T>)
     requires std::default_initializable<T>
     = default;
 

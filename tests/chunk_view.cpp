@@ -24,6 +24,7 @@
 
 #include "rxx/join_view.h"
 #include "rxx/zip_view.h"
+#include "test_iterators.h"
 
 #include <cassert>
 #include <sstream>
@@ -79,7 +80,6 @@ constexpr bool test01() {
 
 // std::views::join is only available on libc++19
 
-#if 0
 template <typename wrapper>
 void test02() {
     int x[] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -97,7 +97,6 @@ void test02() {
     for (int i = 1; i <= 10; ++i)
         VERIFY(ranges::equal(wrapper(x) | views::chunk(i) | views::join, x));
 }
-#endif
 
 void test03() {
     // LWG 3851 - chunk_view::inner-iterator missing custom iter_move and
@@ -114,10 +113,8 @@ void test03() {
 
 int main() {
     static_assert(test01());
-#if 0
-    test02<__gnu_test::test_input_range<int>>();
-    test02<__gnu_test::test_forward_range<int>>();
-#endif
+    test02<rxx::tests::test_input_range<int>>();
+    test02<rxx::tests::test_forward_range<int>>();
     test03();
 
     return 0;

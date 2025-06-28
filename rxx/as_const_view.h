@@ -25,7 +25,8 @@ template <std::ranges::view View>
 requires std::ranges::input_range<View>
 class as_const_view : public std::ranges::view_interface<as_const_view<View>> {
 public:
-    __RXX_HIDE_FROM_ABI constexpr as_const_view() noexcept
+    __RXX_HIDE_FROM_ABI constexpr as_const_view() noexcept(
+        std::is_nothrow_default_constructible_v<View>)
     requires std::default_initializable<View>
     = default;
 
