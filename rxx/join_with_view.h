@@ -4,7 +4,7 @@
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
-#include "rxx/details/non_propogating_cache.h"
+#include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/variant_base.h"
@@ -160,10 +160,10 @@ public:
 
 private:
     using OuterItType = std::conditional_t<std::ranges::forward_range<V>,
-        details::empty_cache, details::non_propogating_cache<iterator_t<V>>>;
+        details::empty_cache, details::non_propagating_cache<iterator_t<V>>>;
     using InnerType = std::conditional_t<std::is_reference_v<InnerRange>,
         details::empty_cache,
-        details::non_propogating_cache<std::remove_cv_t<InnerRange>>>;
+        details::non_propagating_cache<std::remove_cv_t<InnerRange>>>;
 
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterItType outer_;
@@ -574,10 +574,10 @@ struct join_with_t : __RXX ranges::details::adaptor_closure<join_with_t> {
     }
 
 #if RXX_LIBSTDCXX
+    using std::views::__adaptor::_RangeAdaptor<join_with_t>::operator();
     template <typename T>
     static constexpr bool _S_has_simple_extra_args = std::is_scalar_v<T> ||
         (std::ranges::view<T> && std::copy_constructible<T>);
-
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX
     template <typename D>
@@ -595,9 +595,9 @@ struct join_with_t : __RXX ranges::details::adaptor_closure<join_with_t> {
 #elif RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(D&& delimiter) noexcept(
-        std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        D&& delimiter) const
+        noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return std::ranges::_Range_closure<join_with_t, std::decay_t<D>>{
             std::forward<D>(delimiter)};
     }
