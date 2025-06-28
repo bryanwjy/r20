@@ -4,7 +4,7 @@
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
-#include "rxx/details/non_propogating_cache.h"
+#include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
@@ -89,7 +89,7 @@ private:
     V base_;
     range_difference_t<V> size_;
     range_difference_t<V> remainder_ = 0;
-    details::non_propogating_cache<iterator_t<V>> current_;
+    details::non_propagating_cache<iterator_t<V>> current_;
 };
 
 template <typename R>

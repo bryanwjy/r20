@@ -4,7 +4,7 @@
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
-#include "rxx/details/non_propogating_cache.h"
+#include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
@@ -103,13 +103,13 @@ private:
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_;
     static constexpr bool use_outer_cache = !std::ranges::forward_range<V>;
     using OuterCache RXX_NODEBUG = std::conditional_t<use_outer_cache,
-        details::non_propogating_cache<iterator_t<V>>, details::empty_cache>;
+        details::non_propagating_cache<iterator_t<V>>, details::empty_cache>;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterCache outer_;
 
     using InnerRange _LIBCPP_NODEBUG = range_reference_t<V>;
     static constexpr bool use_inner_cache = !std::is_reference_v<InnerRange>;
     using InnerCache RXX_NODEBUG = std::conditional_t<use_inner_cache,
-        details::non_propogating_cache<std::remove_cvref_t<InnerRange>>,
+        details::non_propagating_cache<std::remove_cvref_t<InnerRange>>,
         details::empty_cache>;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) InnerCache inner_;
 };
