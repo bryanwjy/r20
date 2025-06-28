@@ -38,9 +38,9 @@ struct take_t {
      * mechanism that works with all the STL
      */
 #if RXX_LIBSTDCXX
-    template <typename _Tp>
+    template <typename T>
     static constexpr bool _S_has_simple_extra_args =
-        std::ranges::__detail::__is_integer_like<_Tp>;
+        std::ranges::__detail::__is_integer_like<T>;
 
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX

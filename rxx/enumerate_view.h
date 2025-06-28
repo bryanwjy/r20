@@ -33,9 +33,11 @@ class enumerate_view : public std::ranges::view_interface<enumerate_view<V>> {
     class sentinel;
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr enumerate_view()
+    __RXX_HIDE_FROM_ABI constexpr enumerate_view() noexcept(
+        std::is_nothrow_default_constructible_v<V>)
     requires std::default_initializable<V>
     = default;
+
     __RXX_HIDE_FROM_ABI explicit constexpr enumerate_view(V view)
         : view_{view} {}
 
@@ -105,7 +107,7 @@ public:
     }
 
 private:
-    V view_;
+    V view_{};
 };
 
 template <typename R>

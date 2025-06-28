@@ -30,7 +30,8 @@ class join_view : public std::ranges::view_interface<join_view<V>> {
     class sentinel;
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr join_view() noexcept
+    __RXX_HIDE_FROM_ABI constexpr join_view() noexcept(
+        std::is_nothrow_default_constructible_v<V>)
     requires std::default_initializable<V>
     = default;
 
@@ -365,15 +366,16 @@ class join_view<V>::sentinel {
 private:
     template <bool>
     friend class sentinel;
+    friend join_view;
 
     using Parent RXX_NODEBUG = details::const_if<Const, join_view>;
     using Base RXX_NODEBUG = details::const_if<Const, V>;
 
-public:
-    __RXX_HIDE_FROM_ABI sentinel() = default;
-
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(Parent& parent)
         : end_(std::ranges::end(parent.base_)) {}
+
+public:
+    __RXX_HIDE_FROM_ABI constexpr sentinel() = default;
 
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other)
     requires Const && std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
@@ -402,6 +404,10 @@ struct join_t : __RXX ranges::details::adaptor_closure<join_t> {
             -> decltype(join_view<std::views::all_t<R&&>>(std::declval<R>())) {
         return join_view<std::views::all_t<R&&>>(std::forward<R>(arg));
     }
+
+#if RXX_LIBSTDCXX
+    static constexpr bool _S_has_simple_call_op = true;
+#endif
 };
 } // namespace details
 

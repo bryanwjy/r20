@@ -49,7 +49,8 @@ class adjacent_view : public std::ranges::view_interface<adjacent_view<V, N>> {
     class sentinel;
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr adjacent_view() noexcept
+    __RXX_HIDE_FROM_ABI constexpr adjacent_view() noexcept(
+        std::is_nothrow_default_constructible_v<V>)
     requires std::default_initializable<V>
     = default;
 
