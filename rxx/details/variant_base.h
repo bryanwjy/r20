@@ -335,12 +335,8 @@ __RXX_HIDE_FROM_ABI inline constexpr T make_from_multi_union(size_t index,
     static_assert(template_size_v<T> == template_size_v<U>);
     return jump_table_for<U>(
         [&]<size_t I>(size_constant<I>) {
-            if constexpr (I < template_size_v<T>) {
-                return T{std::in_place_index<I>,
-                    std::forward<U>(arg).template get<I>()};
-            } else {
-                RXX_BUILTIN_unreachable();
-            }
+            return T{
+                std::in_place_index<I>, std::forward<U>(arg).template get<I>()};
         },
         index);
 }
@@ -487,12 +483,8 @@ class variant_base {
         __RXX_HIDE_FROM_ABI inline constexpr void destroy_member() noexcept {
             jump_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
-                    if constexpr (I <= sizeof...(Ts)) {
-                        destroy_at(RXX_BUILTIN_addressof(
-                            union_.data.template get<I>()));
-                    } else {
-                        RXX_BUILTIN_unreachable();
-                    }
+                    destroy_at(
+                        RXX_BUILTIN_addressof(union_.data.template get<I>()));
                 },
                 static_cast<size_t>(index_));
         }
@@ -512,12 +504,8 @@ class variant_base {
         static_assert(template_size_v<union_type> == template_size_v<U>);
         return jump_table_for<union_type>(
             [&]<size_t I>(size_constant<I>) -> container {
-                if constexpr (I <= sizeof...(Ts)) {
-                    return container{std::in_place_index<I>,
-                        std::forward<U>(arg).template get<I>()};
-                } else {
-                    RXX_BUILTIN_unreachable();
-                }
+                return container{std::in_place_index<I>,
+                    std::forward<U>(arg).template get<I>()};
             },
             index);
     }
@@ -576,23 +564,14 @@ public:
         if (this->index() != other.index()) {
             jump_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
-                    if constexpr (I <= sizeof...(Ts)) {
-                        this->reinitialize_value<I>(
-                            other.template value_ref<I>());
-                    } else {
-                        RXX_BUILTIN_unreachable();
-                    }
+                    this->reinitialize_value<I>(other.template value_ref<I>());
                 },
                 other.index());
         } else {
             jump_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
-                    if constexpr (I <= sizeof...(Ts)) {
-                        this->template value_ref<I>() =
-                            other.template value_ref<I>();
-                    } else {
-                        RXX_BUILTIN_unreachable();
-                    }
+                    this->template value_ref<I>() =
+                        other.template value_ref<I>();
                 },
                 other.index());
         }
@@ -617,23 +596,15 @@ public:
         if (this->index() != other.index()) {
             jump_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
-                    if constexpr (I <= sizeof...(Ts)) {
-                        this->reinitialize_value<I>(
-                            std::move(other).template value_ref<I>());
-                    } else {
-                        RXX_BUILTIN_unreachable();
-                    }
+                    this->reinitialize_value<I>(
+                        std::move(other).template value_ref<I>());
                 },
                 other.index());
         } else {
             jump_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
-                    if constexpr (I <= sizeof...(Ts)) {
-                        this->template value_ref<I>() =
-                            std::move(other).template value_ref<I>();
-                    } else {
-                        RXX_BUILTIN_unreachable();
-                    }
+                    this->template value_ref<I>() =
+                        std::move(other).template value_ref<I>();
                 },
                 other.index());
         }
@@ -782,32 +753,32 @@ public:
                 self.index());
     }
 
-    // __RXX_HIDE_FROM_ABI friend constexpr std::common_comparison_category<
-    //     std::compare_three_way_result_t<index_type>,
-    //     std::compare_three_way_result_t<Ts>...>
-    // operator<=>(variant_base const& self, variant_base const& right) noexcept
-    // requires (... && std::three_way_comparable<Ts>)
-    // {
-    //     auto cmp = self.index() <=> right.index();
-    //     if (cmp != 0) {
-    //         return cmp;
-    //     }
+    __RXX_HIDE_FROM_ABI friend constexpr std::common_comparison_category<
+        std::compare_three_way_result_t<index_type>,
+        std::compare_three_way_result_t<Ts>...>
+    operator<=>(variant_base const& self, variant_base const& right) noexcept
+    requires (... && std::three_way_comparable<Ts>)
+    {
+        auto cmp = self.index() <=> right.index();
+        if (cmp != 0) {
+            return cmp;
+        }
 
-    //     using result = std::common_comparison_category<
-    //         std::compare_three_way_result_t<index_type>,
-    //         std::compare_three_way_result_t<Ts>...>;
+        using result = std::common_comparison_category<
+            std::compare_three_way_result_t<index_type>,
+            std::compare_three_way_result_t<Ts>...>;
 
-    //     return jump_table_for<union_type>(
-    //         [&]<size_t I>(size_constant<I>) -> result {
-    //             if constexpr (I >= sizeof...(Ts)) {
-    //                 return 0 <=> 0;
-    //             } else {
-    //                 return self.template value_ref<I>() <=>
-    //                     right.template value_ref<I>();
-    //             }
-    //         },
-    //         self.index());
-    // }
+        return jump_table_for<union_type>(
+            [&]<size_t I>(size_constant<I>) -> result {
+                if constexpr (I >= sizeof...(Ts)) {
+                    return 0 <=> 0;
+                } else {
+                    return self.template value_ref<I>() <=>
+                        right.template value_ref<I>();
+                }
+            },
+            self.index());
+    }
 
 private:
     template <typename U>

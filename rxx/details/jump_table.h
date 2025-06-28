@@ -206,7 +206,6 @@ private:
                 __RXX_JT_CASE(15);
                 __RXX_JT_DEFAULT(16);
             }
-            RXX_BUILTIN_unreachable();
         } else if constexpr (size >= 8 + O) {
             switch (value) {
                 __RXX_JT_CASE(0);
@@ -219,8 +218,37 @@ private:
                 __RXX_JT_CASE(7);
                 __RXX_JT_DEFAULT(8);
             }
-            RXX_BUILTIN_unreachable();
-        } else if constexpr (size >= 4 + O) {
+        } else if constexpr (size == 7 + O) {
+            switch (value) {
+                __RXX_JT_CASE(0);
+                __RXX_JT_CASE(1);
+                __RXX_JT_CASE(2);
+                __RXX_JT_CASE(3);
+                __RXX_JT_CASE(4);
+                __RXX_JT_CASE(5);
+                __RXX_JT_CASE(6);
+                __RXX_JT_DEFAULT(7);
+            }
+        } else if constexpr (size == 6 + O) {
+            switch (value) {
+                __RXX_JT_CASE(0);
+                __RXX_JT_CASE(1);
+                __RXX_JT_CASE(2);
+                __RXX_JT_CASE(3);
+                __RXX_JT_CASE(4);
+                __RXX_JT_CASE(5);
+                __RXX_JT_DEFAULT(6);
+            }
+        } else if constexpr (size == 5 + O) {
+            switch (value) {
+                __RXX_JT_CASE(0);
+                __RXX_JT_CASE(1);
+                __RXX_JT_CASE(2);
+                __RXX_JT_CASE(3);
+                __RXX_JT_CASE(4);
+                __RXX_JT_DEFAULT(5);
+            }
+        } else if constexpr (size == 4 + O) {
             switch (value) {
                 __RXX_JT_CASE(0);
                 __RXX_JT_CASE(1);
@@ -228,8 +256,14 @@ private:
                 __RXX_JT_CASE(3);
                 __RXX_JT_DEFAULT(4);
             }
-            RXX_BUILTIN_unreachable();
-        } else if constexpr (size >= 2 + O) {
+        } else if constexpr (size == 3 + O) {
+            switch (value) {
+                __RXX_JT_CASE(0);
+                __RXX_JT_CASE(1);
+                __RXX_JT_CASE(2);
+                __RXX_JT_DEFAULT(3);
+            }
+        } else if constexpr (size == 2 + O) {
             switch (value) {
                 __RXX_JT_CASE(0);
                 __RXX_JT_CASE(1);
@@ -240,11 +274,9 @@ private:
                 __RXX_JT_CASE(0);
                 __RXX_JT_DEFAULT(1);
             }
-            RXX_BUILTIN_unreachable();
-        } else {
-            RXX_BUILTIN_unreachable();
         }
 
+        RXX_BUILTIN_unreachable();
 #undef __RXX_JT_CASE
 #undef __RXX_JT_DEFAULT
     }
