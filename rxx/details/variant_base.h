@@ -753,20 +753,18 @@ public:
                 self.index());
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr std::common_comparison_category<
-        std::compare_three_way_result_t<index_type>,
-        std::compare_three_way_result_t<Ts>...>
-    operator<=>(variant_base const& self, variant_base const& right) noexcept
+    __RXX_HIDE_FROM_ABI friend constexpr auto operator<=>(
+        variant_base const& self, variant_base const& right) noexcept
     requires (... && std::three_way_comparable<Ts>)
     {
-        auto cmp = self.index() <=> right.index();
-        if (cmp != 0) {
-            return cmp;
-        }
-
         using result = std::common_comparison_category<
             std::compare_three_way_result_t<index_type>,
             std::compare_three_way_result_t<Ts>...>;
+
+        auto cmp = self.index() <=> right.index();
+        if (cmp != 0) {
+            return [&]() -> result { return cmp; }();
+        }
 
         return jump_table_for<union_type>(
             [&]<size_t I>(size_constant<I>) -> result {
