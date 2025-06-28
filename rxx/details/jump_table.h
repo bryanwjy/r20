@@ -149,19 +149,7 @@ private:
             return 8;
         }
 
-        if (size >= 4 + idx) {
-            return 4;
-        }
-
-        if (size >= 3 + idx) {
-            return 3;
-        }
-
-        if (size >= 2 + idx) {
-            return 2;
-        }
-
-        return 1;
+        return size - idx;
     }
 
     template <size_t O, typename F, typename... Args>
