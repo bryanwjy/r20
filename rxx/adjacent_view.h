@@ -31,8 +31,7 @@ __RXX_HIDE_FROM_ABI auto repeat(std::index_sequence<Is...>) noexcept
     -> std::tuple<always_type<Is, T>...>;
 
 template <size_t N, typename T>
-using repeat_type_t RXX_NODEBUG =
-    decltype(repeat<T>(std::make_index_sequence<N>{}));
+using repeat_type_t RXX_NODEBUG = decltype(repeat<T>(make_index_sequence_v<N>));
 
 } // namespace details
 
