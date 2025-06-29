@@ -3,8 +3,8 @@
 
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
-#include "rxx/details/non_propagating_cache.h"
 #include "rxx/primitives.h"
 
 #include <cassert>
@@ -15,13 +15,13 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
+namespace ranges {
+
 namespace details {
 template <typename Pred, typename V>
 concept chunk_by_predicate = std::ranges::view<V> && std::is_object_v<Pred> &&
     std::indirect_binary_predicate<Pred, iterator_t<V>, iterator_t<V>>;
 }
-
-namespace ranges {
 
 template <std::ranges::forward_range V, details::chunk_by_predicate<V> Pred>
 class chunk_by_view :
@@ -60,10 +60,10 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr iterator begin() {
         auto first = std::ranges::begin(base_);
         if (!cached_begin_) {
-            cached_begin_.emplace(find_next(first));
+            cached_begin_.set(base_, find_next(first));
         }
 
-        return iterator{*this, std::move(first), *cached_begin_};
+        return iterator{*this, std::move(first), cached_begin_.get(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
@@ -78,12 +78,14 @@ public:
 private:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<V> find_next(iterator_t<V> current) {
+        auto const pred = [this]<typename T, typename U>(
+                              T&& left, U&& right) -> bool {
+            return !std::invoke(
+                *pred_, std::forward<T>(left), std::forward<U>(right));
+        };
+
         return std::ranges::next(
-            std::ranges::adjacent_find(current, std::ranges::end(base_),
-                [this]<typename T, typename U>(T&& left, U&& right) -> bool {
-                    return !std::invoke(
-                        *pred_, std::forward<T>(left), std::forward<U>(right));
-                }),
+            std::ranges::adjacent_find(current, std::ranges::end(base_), pred),
             1, std::ranges::end(base_));
     }
 
@@ -92,24 +94,24 @@ private:
     requires std::ranges::bidirectional_range<V>
     {
         auto first = std::ranges::begin(base_);
-        std::views::reverse_view reversed{
+        std::ranges::reverse_view reversed{
             std::ranges::subrange{first, current}
         };
 
+        auto const pred = [this]<typename T, typename U>(
+                              T&& left, U&& right) -> bool {
+            return !std::invoke(
+                *pred_, std::forward<U>(right), std::forward<T>(left));
+        };
+
         return std::ranges::prev(
-            std::ranges::adjacent_find(reversed,
-                [this]<typename T, typename U>(T&& left, U&& right) -> bool {
-                    return !std::invoke(
-                        *pred_, std::forward<U>(right), std::forward<T>(left));
-                })
-                .base(),
-            1, std::move(first));
+            std::ranges::adjacent_find(reversed, pred).base(), 1,
+            std::move(first));
     }
 
-    using Cache RXX_NODEBUG = details::non_propagating_cache<iterator_t<V>>;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) details::movable_box<Pred> pred_;
-    Cache cached_begin_;
+    details::cached_position<V> cached_begin_;
 };
 
 template <typename R, typename Pred>
@@ -145,7 +147,8 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
-        current_ = std::exchange(next_, parent_->find_next(current_));
+        current_ = next_;
+        next_ = parent_->find_next(current_);
         return *this;
     }
 
@@ -235,7 +238,7 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
 } // namespace details
 
 inline namespace cpo {
-inline constexpr details::chunk_by_t chunk{};
+inline constexpr details::chunk_by_t chunk_by{};
 }
 } // namespace views
 

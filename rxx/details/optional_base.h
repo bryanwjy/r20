@@ -320,8 +320,9 @@ public:
             !std::same_as<std::remove_cvref_t<U>, optional_base<T>> &&
             (!std::same_as<std::remove_cv_t<T>, bool> ||
                 !is_optional_base_v<std::remove_cvref_t<U>>))
-    __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U, T>)
-        optional_base(U&& other) noexcept(std::is_nothrow_constructible_v<T, U>)
+    __RXX_HIDE_FROM_ABI
+        explicit(!std::is_convertible_v<U, T>) constexpr optional_base(
+            U&& other) noexcept(std::is_nothrow_constructible_v<T, U>)
         : container_(std::in_place, std::in_place, std::forward<U>(other)) {}
 
     __RXX_HIDE_FROM_ABI inline constexpr optional_base& operator=(
