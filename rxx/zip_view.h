@@ -2,6 +2,7 @@
 #pragma once
 
 #include "rxx/details/const_if.h"
+#include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/tuple_functions.h"
 #include "rxx/get_element.h"
@@ -134,17 +135,6 @@ template <typename... Rs>
 zip_view(Rs&&...) -> zip_view<std::views::all_t<Rs>...>;
 
 namespace details {
-
-template <bool Const, typename... Rs>
-concept all_random_access =
-    (... && std::ranges::random_access_range<const_if<Const, Rs>>);
-
-template <bool Const, typename... Rs>
-concept all_bidirectional =
-    (... && std::ranges::bidirectional_range<const_if<Const, Rs>>);
-
-template <bool Const, typename... Rs>
-concept all_forward = (... && std::ranges::forward_range<const_if<Const, Rs>>);
 
 template <bool Const, typename... Rs>
 struct zip_view_iterator_category {};
