@@ -353,6 +353,10 @@ struct enumerate_t : __RXX ranges::details::adaptor_closure<enumerate_t> {
         -> decltype(enumerate_view<std::views::all_t<R>>(std::declval<R>())) {
         return enumerate_view<std::views::all_t<R>>(std::forward<R>(arg));
     }
+
+#if RXX_LIBSTDCXX
+    static constexpr bool _S_has_simple_call_op = true;
+#endif
 };
 } // namespace details
 
