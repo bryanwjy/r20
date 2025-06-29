@@ -361,19 +361,37 @@ namespace views {
 namespace details {
 
 template <size_t N>
-struct adjacent_transform_t
-#if RXX_LIBSTDCXX
-    :
-    std::views::__adaptor::_RangeAdaptor<adjacent_transform_t<N>>
-#endif
-{
+struct adjacent_transform_t :
+    ranges::details::adaptor_non_closure<adjacent_transform_t<N>> {
+
+    template <std::ranges::viewable_range V, typename F>
+    requires requires {
+        adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
+            std::declval<V>(), std::declval<F>());
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        V&& arg, F&& func) const
+        noexcept(noexcept(
+            adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
+                std::declval<V>(), std::declval<F>()))) {
+        return adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>,
+            N>(std::forward<V>(arg), std::forward<F>(func));
+    }
+
+    template <std::ranges::viewable_range V, typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto operator()(V&& arg, F&& func) const
+        noexcept(noexcept(zip_transform(std::declval<F>())))
+    requires (N == 0)
+    {
+        return zip_transform(std::forward<F>(func));
+    }
 
 #if RXX_LIBSTDCXX
-    using std::views::__adaptor::_RangeAdaptor<
-        adjacent_transform_t>::operator();
-    template <typename T>
-    static constexpr bool _S_has_simple_extra_args = true;
+    using ranges::details::adaptor_non_closure<
+        adjacent_transform_t<N>>::operator();
     static constexpr int _S_arity = 2;
+    static constexpr bool _S_has_simple_extra_args = true;
 #elif RXX_LIBCXX
     template <typename F>
     requires std::constructible_from<std::decay_t<F>, F>
@@ -399,29 +417,6 @@ struct adjacent_transform_t
 #else
 #  error "Unsupported"
 #endif
-
-    template <std::ranges::viewable_range V, typename F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto operator()(V&& arg, F&& func) const
-        noexcept(noexcept(zip_transform(std::declval<F>())))
-    requires (N == 0)
-    {
-        return zip_transform(std::forward<F>(func));
-    }
-
-    template <std::ranges::viewable_range V, typename F>
-    requires requires {
-        adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
-            std::declval<V>(), std::declval<F>());
-    }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        V&& arg, F&& func) const
-        noexcept(noexcept(
-            adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
-                std::declval<V>(), std::declval<F>()))) {
-        return adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>,
-            N>(std::forward<V>(arg), std::forward<F>(func));
-    }
 };
 } // namespace details
 

@@ -563,7 +563,7 @@ private:
 
 namespace views {
 namespace details {
-struct join_with_t : __RXX ranges::details::adaptor_closure<join_with_t> {
+struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
     template <typename R, typename P>
     requires requires { join_with_view(std::declval<R>(), std::declval<P>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
@@ -574,7 +574,7 @@ struct join_with_t : __RXX ranges::details::adaptor_closure<join_with_t> {
     }
 
 #if RXX_LIBSTDCXX
-    using std::views::__adaptor::_RangeAdaptor<join_with_t>::operator();
+    using ranges::details::adaptor_non_closure<join_with_t>::operator();
     template <typename T>
     static constexpr bool _S_has_simple_extra_args = std::is_scalar_v<T> ||
         (std::ranges::view<T> && std::copy_constructible<T>);

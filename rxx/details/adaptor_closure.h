@@ -11,10 +11,23 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges::details {
 
 #if RXX_MSVC_STL
+template <typename Cpo>
+struct adaptor_non_closure_type {};
+
+template <typename Cpo>
+using adaptor_non_closure RXX_NODEBUG = adaptor_non_closure_type<Cpo>;
+
 template <typename Derived>
 using adaptor_closure RXX_NODEBUG = std::ranges::_Pipe::_Base<Derived>;
 
 #elif RXX_LIBCXX
+
+template <typename Cpo>
+struct adaptor_non_closure_type {};
+
+template <typename Cpo>
+using adaptor_non_closure RXX_NODEBUG = adaptor_non_closure_type<Cpo>;
+
 #  if RXX_LIBCXX_AT_LEAST(19, 01, 00)
 template <typename Derived>
 using adaptor_closure RXX_NODEBUG =
@@ -41,6 +54,9 @@ constexpr auto make_pipeable(F&& func) noexcept(
 }
 
 #elif RXX_LIBSTDCXX
+
+template <typename Cpo>
+using adaptor_non_closure = std::views::__adaptor::_RangeAdaptor<Cpo>;
 
 template <typename Derived>
 using adaptor_closure RXX_NODEBUG =

@@ -25,11 +25,11 @@ template <typename Char, typename Traits>
 inline constexpr bool
     is_basic_string_view<std::basic_string_view<Char, Traits>> = true;
 
-template <typename T>
-concept span_type = requires {
-    typename T::element_type;
-    requires std::same_as<std::span<typename T::element_type, T::extent>, T>;
-};
+template <typename R>
+inline constexpr bool is_span = false;
+
+template <typename T, size_t N>
+inline constexpr bool is_span<std::span<T, N>> = true;
 
 template <typename R>
 inline constexpr bool is_iota_view = false;

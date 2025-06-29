@@ -497,7 +497,7 @@ private:
 
 namespace views {
 namespace details {
-struct slide_t : __RXX ranges::details::adaptor_closure<slide_t> {
+struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
     template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
     requires requires { slide_view(std::declval<R>(), std::declval<D>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
@@ -507,7 +507,7 @@ struct slide_t : __RXX ranges::details::adaptor_closure<slide_t> {
     }
 
 #if RXX_LIBSTDCXX
-    using std::views::__adaptor::_RangeAdaptor<slide_t>::operator();
+    using ranges::details::adaptor_non_closure<slide_t>::operator();
     static constexpr int _S_arity = 2;
     static constexpr bool _S_has_simple_extra_args = true;
 #elif RXX_LIBCXX

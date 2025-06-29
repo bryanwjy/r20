@@ -573,16 +573,16 @@ private:
 
 namespace views {
 namespace details {
-struct chunk_t
-#if RXX_LIBSTDCXX
-    :
-    std::views::__adaptor::_RangeAdaptor<chunk_t>
-#endif
-{
+struct chunk_t : ranges::details::adaptor_non_closure<chunk_t> {
+
+    template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
+    requires requires { chunk_view(std::declval<R>(), std::declval<D>()); }
+    constexpr auto operator()(R&& arg, std::type_identity_t<D> size) const {
+        return chunk_view(std::forward<R>(arg), size);
+    }
 
 #if RXX_LIBSTDCXX
-    using std::views::__adaptor::_RangeAdaptor<
-        adjacent_transform_t>::operator();
+    using ranges::details::adaptor_non_closure<chunk_t>::operator();
     template <typename T>
     static constexpr bool _S_has_simple_extra_args = true;
     static constexpr int _S_arity = 2;
@@ -611,12 +611,6 @@ struct chunk_t
 #else
 #  error "Unsupported"
 #endif
-
-    template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
-    requires requires { chunk_view(std::declval<R>(), std::declval<D>()); }
-    constexpr auto operator()(R&& arg, std::type_identity_t<D> size) const {
-        return chunk_view(std::forward<R>(arg), size);
-    }
 };
 } // namespace details
 
