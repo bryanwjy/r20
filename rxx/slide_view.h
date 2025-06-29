@@ -3,8 +3,8 @@
 
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/cached_position.h"
 #include "rxx/details/const_if.h"
-#include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
@@ -31,89 +31,6 @@ concept slide_caches_last = !slide_caches_nothing<V> &&
 template <typename V>
 concept slide_caches_first = !slide_caches_nothing<V> && !slide_caches_last<V>;
 
-template <std::ranges::range R>
-class cached_position {
-public:
-    __RXX_HIDE_FROM_ABI explicit constexpr operator bool() const noexcept {
-        return false;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr iterator_t<R> get(R const&) const noexcept {
-        assert(false);
-        RXX_BUILTIN_unreachable();
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr void set(
-        R const&, iterator_t<R> const&) const noexcept {}
-};
-
-template <std::ranges::forward_range R>
-class cached_position<R> : protected non_propagating_cache<iterator_t<R>> {
-public:
-    using non_propagating_cache<iterator_t<R>>::operator bool;
-
-    __RXX_HIDE_FROM_ABI constexpr iterator_t<R> get(R const&) const
-        noexcept(std::is_nothrow_copy_constructible_v<iterator_t<R>>) {
-        assert(*this);
-        return **this;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr void
-    set(R const&, iterator_t<R> const& it) noexcept(
-        std::is_nothrow_copy_constructible_v<iterator_t<R>>) {
-        assert(!*this);
-        this->emplace(it);
-    }
-};
-
-template <std::ranges::random_access_range R>
-requires (sizeof(range_difference_t<R>) <= sizeof(iterator_t<R>))
-class cached_position<R> {
-public:
-    __RXX_HIDE_FROM_ABI constexpr cached_position() noexcept = default;
-
-    __RXX_HIDE_FROM_ABI constexpr cached_position(
-        cached_position const&) noexcept = default;
-
-    __RXX_HIDE_FROM_ABI constexpr cached_position(
-        cached_position&& other) noexcept
-        : offset_{other.offset_} {
-        other.offset_ = -1;
-    }
-
-    __RXX_HIDE_FROM_ABI explicit constexpr operator bool() const noexcept {
-        return offset_ >= 0;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr cached_position& operator=(
-        cached_position const&) noexcept = default;
-
-    __RXX_HIDE_FROM_ABI constexpr cached_position& operator=(
-        cached_position&& other) noexcept {
-        // Propagate the cached offset, but invalidate the source.
-        offset_ = other.offset_;
-        other.offset_ = -1;
-        return *this;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr iterator_t<R> get(R& src) const
-        noexcept(noexcept(std::declval<iterator_t<R>>() +
-            std::declval<range_difference_t<R> const&>())) {
-        assert(*this);
-        return std::ranges::begin(src) + offset_;
-    }
-
-    __RXX_HIDE_FROM_ABI constexpr void
-    set(R& src, iterator_t<R> const& it) noexcept(
-        noexcept(std::declval<range_difference_t<R> const&>() -
-            std::declval<iterator_t<R>>())) {
-        assert(!*this);
-        offset_ = it - std::ranges::begin(src);
-    }
-
-private:
-    range_difference_t<R> offset_ = -1;
-};
 } // namespace details
 
 template <std::ranges::forward_range V>
@@ -497,7 +414,7 @@ private:
 
 namespace views {
 namespace details {
-struct slide_t : __RXX ranges::details::adaptor_closure<slide_t> {
+struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
     template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
     requires requires { slide_view(std::declval<R>(), std::declval<D>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
@@ -507,7 +424,7 @@ struct slide_t : __RXX ranges::details::adaptor_closure<slide_t> {
     }
 
 #if RXX_LIBSTDCXX
-    using std::views::__adaptor::_RangeAdaptor<slide_t>::operator();
+    using ranges::details::adaptor_non_closure<slide_t>::operator();
     static constexpr int _S_arity = 2;
     static constexpr bool _S_has_simple_extra_args = true;
 #elif RXX_LIBCXX

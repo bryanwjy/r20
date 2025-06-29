@@ -107,15 +107,7 @@ constexpr bool test04() {
     return true;
 }
 
-#include <iostream>
-
 int main() {
-    // std::string_view rs[] = {"the", "quick", "brown", "fox"};
-    // auto v = rs | views::transform([](auto x) { return x; }) |
-    //     views::filter([](auto) { return true; });
-    // for (auto val : v | rxx::views::join_with(views::empty<char>)) {
-    //     std::cout << val << std::endl;
-    // }
     static_assert(test01());
     static_assert(test02());
     static_assert(test03());

@@ -18,8 +18,6 @@
 // with this library; see the file COPYING3.  If not see
 // <http://www.gnu.org/licenses/>.
 
-// { dg-do run { target c++20 } }
-
 #include "rxx/chunk_view.h"
 
 #include "rxx/join_view.h"

@@ -1,7 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
-#include "rxx/details/view_match.h"
+#include "rxx/details/view_traits.h"
 
 #include <functional>
 #include <iterator>
@@ -14,7 +14,8 @@ namespace ranges {
 using std::ranges::take_view;
 namespace views {
 namespace details {
-struct take_t {
+
+struct take_t : ranges::details::adaptor_non_closure<take_t> {
     template <typename... Args>
     requires requires { std::views::take(std::declval<Args>()...); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr decltype(auto)
@@ -24,7 +25,7 @@ struct take_t {
     }
 
     template <typename V, typename N>
-    requires __RXX ranges::details::is_repeat_view<V> &&
+    requires __RXX ranges::details::is_repeat_view<std::remove_cvref_t<V>> &&
         requires { take(std::declval<V>(), std::declval<N>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr decltype(auto)
     operator()(V&& view, N&& num) const
@@ -32,16 +33,11 @@ struct take_t {
         return take(std::forward<V>(view), std::forward<N>(num));
     }
 
-    /**
-     * TODO: This is really umaintainable, especially if libc++ keep
-     * updating, should look into implementing a custom pipelining
-     * mechanism that works with all the STL
-     */
 #if RXX_LIBSTDCXX
+    using ranges::details::adaptor_non_closure<take_t>::operator();
     template <typename T>
     static constexpr bool _S_has_simple_extra_args =
         std::ranges::__detail::__is_integer_like<T>;
-
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX
     template <typename N>
