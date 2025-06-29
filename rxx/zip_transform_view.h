@@ -3,6 +3,7 @@
 
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
+#include "rxx/details/iterator_category_of.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/referenceable.h"
 #include "rxx/details/simple_view.h"
@@ -18,11 +19,6 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
-namespace details {
-template <typename R, bool Const>
-using iterator_category_of = typename std::iterator_traits<
-    iterator_t<details::const_if<Const, R>>>::iterator_category;
-} // namespace details
 
 template <std::move_constructible F, std::ranges::input_range... Views>
 requires (... && std::ranges::view<Views>) &&
@@ -110,20 +106,20 @@ private:
                 return std::input_iterator_tag{};
             } else if constexpr ((... &&
                                      std::derived_from<
-                                         details::iterator_category_of<Views,
-                                             Const>,
+                                         details::iterator_category_of<Const,
+                                             Views>,
                                          std::random_access_iterator_tag>)) {
                 return std::random_access_iterator_tag{};
             } else if constexpr ((... &&
                                      std::derived_from<
-                                         details::iterator_category_of<Views,
-                                             Const>,
+                                         details::iterator_category_of<Const,
+                                             Views>,
                                          std::bidirectional_iterator_tag>)) {
                 return std::bidirectional_iterator_tag{};
             } else if constexpr ((... &&
                                      std::derived_from<
-                                         details::iterator_category_of<Views,
-                                             Const>,
+                                         details::iterator_category_of<Const,
+                                             Views>,
                                          std::forward_iterator_tag>)) {
                 return std::forward_iterator_tag{};
             } else {
