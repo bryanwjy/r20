@@ -3,8 +3,11 @@
 	[
 		{
 			"path": ".",
-			"name": "rxx"
-		}
+			"name": "rxx",
+		},
+		{
+			"path": "/Users/bryanwong/dev/ranges/tests"
+		},
 	],
 	"settings":
 	{
@@ -12,10 +15,10 @@
 		"ClangFormat":
 		{
 			"format_on_save":true,
-			"style": "File"
-		}
+			"style": "File",
+		},
 	},
 	"syntax_override": {
-		".*\\.(h|cpp)$": ["cpp-sublime-syntax", "C++20"]
-	}
+		".*\\.(h|cpp)$": ["cpp-sublime-syntax", "C++20"],
+	},
 }
