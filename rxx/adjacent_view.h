@@ -412,7 +412,8 @@ struct adjacent_t : __RXX ranges::details::adaptor_closure<adjacent_t<N>> {
     template <std::ranges::viewable_range R>
     requires (N == 0) ||
         requires { adjacent_view<std::views::all_t<R>, N>(std::declval<R>()); }
-    __RXX_HIDE_FROM_ABI constexpr auto operator()(R&& arg) const {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        R&& arg) const {
         if constexpr (N == 0) {
             return std::views::empty<std::tuple<>>;
         } else {

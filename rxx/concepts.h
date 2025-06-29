@@ -15,7 +15,7 @@ namespace details {
 template <typename T>
 concept constant_iterator = std::input_iterator<T> &&
     std::same_as<iter_const_reference_t<T>, iter_reference_t<T>>;
-}
+} // namespace details
 
 template <typename T>
 concept constant_range =

@@ -3,6 +3,7 @@
 
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/ceil_div.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
@@ -19,15 +20,6 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
-
-namespace details {
-
-template <typename I>
-__RXX_HIDE_FROM_ABI constexpr I ceil_div(I num, I denom) noexcept {
-    return (num + denom - 1) / denom;
-}
-
-} // namespace details
 
 template <std::ranges::view V>
 requires std::ranges::input_range<V>
@@ -577,7 +569,8 @@ struct chunk_t : ranges::details::adaptor_non_closure<chunk_t> {
 
     template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
     requires requires { chunk_view(std::declval<R>(), std::declval<D>()); }
-    constexpr auto operator()(R&& arg, std::type_identity_t<D> size) const {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        R&& arg, std::type_identity_t<D> size) const {
         return chunk_view(std::forward<R>(arg), size);
     }
 
