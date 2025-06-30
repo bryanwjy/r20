@@ -63,13 +63,14 @@ public:
 
     template <typename U = std::remove_cv_t<T>>
     requires std::constructible_from<base_type, U>
-    __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U, T>) movable_box(
-        U&& other) noexcept(std::is_nothrow_constructible_v<base_type, U>)
+    __RXX_HIDE_FROM_ABI explicit(
+        !std::is_convertible_v<U, T>) constexpr movable_box(U&&
+            other) noexcept(std::is_nothrow_constructible_v<base_type, U>)
         : base_type(std::forward<U>(other)) {}
 
     using base_type::operator=;
 
-    __RXX_HIDE_FROM_ABI movable_box&
+    __RXX_HIDE_FROM_ABI constexpr movable_box&
     operator=(movable_box const& other) noexcept(
         std::is_nothrow_copy_constructible_v<T>)
     requires (!std::copyable<T>) && std::copy_constructible<T>
@@ -85,8 +86,8 @@ public:
         return *this;
     }
 
-    __RXX_HIDE_FROM_ABI movable_box& operator=(movable_box&& other) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
+    __RXX_HIDE_FROM_ABI constexpr movable_box& operator=(
+        movable_box&& other) noexcept(std::is_nothrow_move_constructible_v<T>)
     requires (!std::movable<T>)
     {
         if (this != RXX_BUILTIN_addressof(other)) {
@@ -103,7 +104,7 @@ public:
     template <typename U>
     requires std::assignable_from<base_type&, optional_base<U> const&> &&
         std::is_base_of_v<optional_base<U>, movable_box<U>>
-    __RXX_HIDE_FROM_ABI movable_box&
+    __RXX_HIDE_FROM_ABI constexpr movable_box&
     operator=(movable_box<U> const& other) noexcept(
         std::is_nothrow_assignable_v<base_type&, optional_base<U> const&>) {
         base_type::operator=((optional_base<U> const&)other);
@@ -113,7 +114,8 @@ public:
     template <typename U>
     requires std::assignable_from<base_type&, optional_base<U>> &&
         std::is_base_of_v<optional_base<U>, movable_box<U>>
-    __RXX_HIDE_FROM_ABI movable_box& operator=(movable_box<U>&& other) noexcept(
+    __RXX_HIDE_FROM_ABI constexpr movable_box&
+    operator=(movable_box<U>&& other) noexcept(
         std::is_nothrow_assignable_v<base_type&, optional_base<U>>) {
         base_type::operator=((optional_base<U>&&)std::move(other));
         return *this;

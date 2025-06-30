@@ -5,6 +5,7 @@
 #include "rxx/details/movable_box.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
+#include "rxx/details/view_traits.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
 

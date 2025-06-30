@@ -55,7 +55,7 @@ concept cartesian_is_sized_sentinel =
     (std::sized_sentinel_for<FirstSent<details::const_if<Const, First>>,
          iterator_t<details::const_if<Const, First>>> &&
         ... &&
-        (ranges::sized_range<details::const_if<Const, Vs>> &&
+        (std::ranges::sized_range<details::const_if<Const, Vs>> &&
             std::sized_sentinel_for<iterator_t<details::const_if<Const, Vs>>,
                 iterator_t<details::const_if<Const, Vs>>>));
 
@@ -72,7 +72,7 @@ __RXX_HIDE_FROM_ABI constexpr auto cartesian_product_common_arg_end(R& range) {
 template <std::ranges::input_range First, std::ranges::forward_range... Vs>
 requires (std::ranges::view<First> && ... && std::ranges::view<Vs>)
 class cartesian_product_view :
-    public ranges::view_interface<cartesian_product_view<First, Vs...>> {
+    public std::ranges::view_interface<cartesian_product_view<First, Vs...>> {
 
     template <bool>
     class iterator;
@@ -98,7 +98,8 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<First> || ... || !details::simple_view<Vs>)
     {
-        return iterator<false>(details::transform(std::ranges::begin, bases_));
+        return iterator<false>(
+            *this, details::transform(std::ranges::begin, bases_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -106,7 +107,8 @@ public:
     requires (
         std::ranges::range<First const> && ... && std::ranges::range<Vs const>)
     {
-        return iterator<true>(details::transform(std::ranges::begin, bases_));
+        return iterator<true>(
+            *this, details::transform(std::ranges::begin, bases_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -115,9 +117,9 @@ public:
         (!details::simple_view<First> || ... || !details::simple_view<Vs>) &&
         details::cartesian_product_is_common<First, Vs...>)
     {
-        auto const is_empty =
-            std::apply([](bool head, bool... tail) { return (... || tail); },
-                details::transform(std::ranges::empty, bases_));
+        auto const is_empty = [&]<size_t... Is>(std::index_sequence<0, Is...>) {
+            return (... || std::ranges::empty(get_element<Is>(bases_)));
+        }(details::make_index_sequence_v<sizeof...(Vs) + 1>);
 
         auto const begin_or_first_end = [&](auto& range) {
             return is_empty ? std::ranges::begin(range)
@@ -125,29 +127,30 @@ public:
         };
 
         return iterator<false>(
-            [&]<size_t... Is>(std::index_sequence<0, Is...>) {
-                return std::tuple{std::ranges::begin(get_element<0>(bases_)),
-                    begin_or_first_end(get_element<Is>(bases_))...};
+            *this, [&]<size_t... Is>(std::index_sequence<0, Is...>) {
+                return std::tuple{begin_or_first_end(get_element<0>(bases_)),
+                    std::ranges::begin(get_element<Is>(bases_))...};
             }(details::make_index_sequence_v<sizeof...(Vs) + 1>));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires details::cartesian_product_is_common<First, Vs...>
+    requires details::cartesian_product_is_common<First const, Vs const...>
     {
-        auto const is_empty =
-            std::apply([](bool head, bool... tail) { return (... || tail); },
-                details::transform(std::ranges::empty, bases_));
+        auto const is_empty = [&]<size_t... Is>(std::index_sequence<0, Is...>) {
+            return (... || std::ranges::empty(get_element<Is>(bases_)));
+        }(details::make_index_sequence_v<sizeof...(Vs) + 1>);
 
         auto const begin_or_first_end = [&](auto& range) {
             return is_empty ? std::ranges::begin(range)
                             : details::cartesian_product_common_arg_end(range);
         };
 
-        return iterator<true>([&]<size_t... Is>(std::index_sequence<0, Is...>) {
-            return std::tuple{std::ranges::begin(get_element<0>(bases_)),
-                begin_or_first_end(get_element<Is>(bases_))...};
-        }(details::make_index_sequence_v<sizeof...(Vs) + 1>));
+        return iterator<true>(
+            *this, [&]<size_t... Is>(std::index_sequence<0, Is...>) {
+                return std::tuple{begin_or_first_end(get_element<0>(bases_)),
+                    std::ranges::begin(get_element<Is>(bases_))...};
+            }(details::make_index_sequence_v<sizeof...(Vs) + 1>));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -219,10 +222,11 @@ public:
     using difference_type = typename cartesian_product_view::difference_type;
 
     __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
-        (std::is_nothrow_default_constructible_v<iterator_t<Const, First>> &&
+        (std::is_nothrow_default_constructible_v<
+             iterator_t<details::const_if<Const, First>>> &&
             ... &&
-            std::is_nothrow_default_constructible_v<iterator_t<Const, Vs>>)) =
-        default;
+            std::is_nothrow_default_constructible_v<
+                iterator_t<details::const_if<Const, Vs>>>)) = default;
 
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other)
     requires Const &&
@@ -289,24 +293,21 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    friend constexpr iterator operator+(
-        iterator const& iter, difference_type offset)
+    friend constexpr iterator operator+(iterator iter, difference_type offset)
     requires details::cartesian_product_is_random_access<Const, First, Vs...>
     {
         return iter += offset;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    friend constexpr iterator operator+(
-        difference_type offset, iterator const& iter)
+    friend constexpr iterator operator+(difference_type offset, iterator iter)
     requires details::cartesian_product_is_random_access<Const, First, Vs...>
     {
         return iter += offset;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    friend constexpr iterator operator-(
-        iterator const& iter, difference_type offset)
+    friend constexpr iterator operator-(iterator iter, difference_type offset)
     requires details::cartesian_product_is_random_access<Const, First, Vs...>
     {
         return iter -= offset;
@@ -327,7 +328,7 @@ public:
     requires details::cartesian_is_sized_sentinel<Const, sentinel_t, First,
         Vs...>
     {
-        auto output = [&]<size_t... Is>(index_sequence<Is...>) {
+        auto output = [&]<size_t... Is>(std::index_sequence<Is...>) {
             return std::tuple{
                 std::ranges::end(get_element<0>(iter.parent_->bases_)),
                 std::ranges::begin(
@@ -358,11 +359,11 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator==(
         iterator const& iter, std::default_sentinel_t) {
-        return [&]<size_t... Is>(index_sequence<Is...>) {
+        return [&]<size_t... Is>(std::index_sequence<Is...>) {
             return (... ||
                 (get_element<Is>(iter.current_) ==
                     std::ranges::end(get_element<Is>(iter.parent_->bases_))));
-        }(make_index_sequence<1 + sizeof...(Vs)>{});
+        }(details::make_index_sequence_v<1 + sizeof...(Vs)>);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -373,14 +374,35 @@ public:
         return left.current_ <=> right.current_;
     }
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto iter_move(iterator const& iter) {
+        return details::transform(std::ranges::iter_move, iter.current_);
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr void iter_swap(
+        iterator const& left, iterator const& right)
+    requires (std::indirectly_swappable<
+                  iterator_t<details::const_if<Const, First>>> &&
+        ... &&
+        std::indirectly_swappable<iterator_t<details::const_if<Const, Vs>>>)
+    {
+        [&]<size_t... Is>(std::index_sequence<Is...>) {
+            (std::ranges::iter_swap(get_element<Is>(left.current_),
+                 get_element<Is>(right.current_)),
+                ...);
+        }(details::make_index_sequence_v<1 + sizeof...(Vs)>);
+    }
+
 private:
     __RXX_HIDE_FROM_ABI constexpr iterator(Parent& parent,
         std::tuple<iterator_t<details::const_if<Const, First>>,
             iterator_t<details::const_if<Const, Vs>>...>
             current) noexcept((std::
-                                   is_nothrow_move_constructible_v<
-                                       iterator_t<Const, First>> &&
-        ... && std::is_nothrow_move_constructible_v<iterator_t<Const, Vs>>))
+                                   is_nothrow_move_constructible_v<iterator_t<
+                                       details::const_if<Const, First>>> &&
+        ... &&
+        std::is_nothrow_move_constructible_v<
+            iterator_t<details::const_if<Const, Vs>>>))
         : parent_{RXX_BUILTIN_addressof(parent)}
         , current_{std::move(current)} {}
 
@@ -401,7 +423,7 @@ private:
         auto& iter = get_element<I>(current_);
         if constexpr (I > 0) {
             if (iter == std::ranges::begin(get_element<I>(parent_->bases_))) {
-                iter = details::cartesian_common_arg_end(
+                iter = details::cartesian_product_common_arg_end(
                     get_element<I>(parent_->bases_));
                 this->template prev<I - 1>();
             }
@@ -444,7 +466,7 @@ private:
     constexpr difference_type distance_from(Tuple const& tup) const {
         return [&]<size_t... Is>(std::index_sequence<Is...>) {
             return static_cast<difference_type>(
-                this->template scaled_distance<Is>(tup) + ...);
+                (... + this->template scaled_distance<Is>(tup)));
         }(details::make_index_sequence_v<1 + sizeof...(Vs)>);
     }
 
@@ -472,6 +494,35 @@ private:
         iterator_t<details::const_if<Const, Vs>>...>
         current_;
 };
+
+namespace views {
+namespace details {
+struct cartesian_product_t {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto operator()() const noexcept {
+        return std::views::single(std::tuple{});
+    }
+
+    template <typename... Rs>
+    requires requires {
+        cartesian_product_view<std::views::all_t<Rs>...>(std::declval<Rs>()...);
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        Rs&&... args) const
+        noexcept(noexcept(cartesian_product_view<std::views::all_t<Rs>...>(
+            std::declval<Rs>()...)))
+            -> decltype(cartesian_product_view<std::views::all_t<Rs>...>(
+                std::declval<Rs>()...)) {
+        return cartesian_product_view<std::views::all_t<Rs>...>(
+            std::forward<Rs>(args)...);
+    }
+};
+} // namespace details
+
+inline namespace cpo {
+inline constexpr details::cartesian_product_t cartesian_product{};
+}
+} // namespace views
 } // namespace ranges
 
 RXX_DEFAULT_NAMESPACE_END
