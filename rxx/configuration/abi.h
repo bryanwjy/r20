@@ -33,8 +33,7 @@
 #  define __RXX_PUBLIC_TEMPLATE_DATA
 #else
 
-#  if !RXX_HAS_GNU_ATTRIBUTE(__visibility__) || \
-      !RXX_HAS_GNU_ATTRIBUTE(__visibility__)
+#  if !RXX_HAS_GNU_ATTRIBUTE(__visibility__)
 #    error "Unrecognized compiler"
 #  endif
 
@@ -69,12 +68,11 @@
 #  endif
 #endif
 
-#define __RXX_ODR_SIGNATURE_1(_0, _1, _2, _3, _4) _0##_1##_2##_3##_4
-#define __RXX_ODR_SIGNATURE_0(_0, _1, _2, _3, _4) \
-    __RXX_ODR_SIGNATURE_1(_0, _1, _2, _3, _4)
-#define __RXX_ODR_SIGNATURE                                                 \
-    RXX_TO_STRING(__RXX_ODR_SIGNATURE_0(CXX, RXX_CXX, __RXX_HARDENING_MODE, \
-        __RXX_ABI_EXCEPTION_TAG, RXX_COMPILER_TAG))
+#define __RXX_ODR_SIGNATURE_1(_0, _1, _2) _0##_1##_2
+#define __RXX_ODR_SIGNATURE_0(_0, _1, _2) __RXX_ODR_SIGNATURE_1(_0, _1, _2)
+#define __RXX_ODR_SIGNATURE              \
+    RXX_TO_STRING(__RXX_ODR_SIGNATURE_0( \
+        CXX, __RXX_HARDENING_MODE, __RXX_ABI_EXCEPTION_TAG))
 
 #if RXX_HAS_GNU_ATTRIBUTE(__exclude_from_explicit_instantiation__)
 #  define __RXX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION \

@@ -407,7 +407,8 @@ struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
 
     template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
     requires requires { stride_view(std::declval<R>(), std::declval<D>()); }
-    constexpr auto operator()(R&& arg, std::type_identity_t<D> size) const {
+    constexpr auto operator()(R&& arg, std::type_identity_t<D> size) const
+        noexcept(noexcept(stride_view(std::declval<R>(), std::declval<D>()))) {
         return stride_view(std::forward<R>(arg), size);
     }
 
