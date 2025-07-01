@@ -72,13 +72,13 @@
 #    define RXX_CXX23 1
 #    define RXX_CONSTEXPR_CXX23 constexpr
 #    define RXX_CONSTEVAL_CXX23 consteval
-#    define RXX_STATIC_CXX23 static
+#    define RXX_STATIC_CALL static
 #    define RXX_CONST_CALL
 #    define RXX_IF_CONSTEVAL(...) if consteval
 #  else /* RXX_CXX >= 202302L */
 #    define RXX_CONSTEXPR_CXX23
 #    define RXX_CONSTEVAL_CXX23 constexpr
-#    define RXX_STATIC_CXX23
+#    define RXX_STATIC_CALL
 #    define RXX_CONST_CALL const
 #    define RXX_IF_CONSTEVAL(...) \
         if (RXX_CONSTANT_P(       \
