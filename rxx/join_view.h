@@ -4,6 +4,7 @@
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
+#include "rxx/details/iterator_category_of.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
@@ -35,7 +36,7 @@ public:
     requires std::default_initializable<V>
     = default;
 
-    __RXX_HIDE_FROM_ABI constexpr explicit join_view(V base) noexcept(
+    __RXX_HIDE_FROM_ABI explicit constexpr join_view(V base) noexcept(
         std::is_nothrow_move_constructible_v<V>)
         : base_{std::move(base)} {}
 
@@ -76,11 +77,12 @@ public:
             std::is_reference_v<InnerRange> &&
             std::ranges::forward_range<InnerRange> &&
             std::ranges::common_range<V> &&
-            std::ranges::common_range<InnerRange>)
+            std::ranges::common_range<InnerRange>) {
             return iterator<details::simple_view<V>>{
                 *this, std::ranges::end(base_)};
-        else
+        } else {
             return sentinel<details::simple_view<V>>{*this};
+        }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -100,18 +102,19 @@ public:
     }
 
 private:
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_;
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
     static constexpr bool use_outer_cache = !std::ranges::forward_range<V>;
     using OuterCache RXX_NODEBUG = std::conditional_t<use_outer_cache,
         details::non_propagating_cache<iterator_t<V>>, details::empty_cache>;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterCache outer_;
 
-    using InnerRange _LIBCPP_NODEBUG = range_reference_t<V>;
-    static constexpr bool use_inner_cache = !std::is_reference_v<InnerRange>;
-    using InnerCache RXX_NODEBUG = std::conditional_t<use_inner_cache,
-        details::non_propagating_cache<std::remove_cvref_t<InnerRange>>,
-        details::empty_cache>;
+    using InnerRange RXX_NODEBUG = range_reference_t<V>;
+    // InnerCache -> empty class if InnerRange is a reference (not an object)
+    using InnerCache RXX_NODEBUG =
+        details::non_propagating_cache<std::remove_cv_t<InnerRange>>;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) InnerCache inner_;
+    static_assert(
+        !std::is_reference_v<InnerRange> || std::is_empty_v<InnerCache>);
 };
 
 template <typename R>
@@ -119,28 +122,33 @@ explicit join_view(R&&) -> join_view<std::views::all_t<R>>;
 
 namespace details {
 
-template <typename>
+template <bool, typename>
 struct join_view_iterator_category {};
 
-template <typename V>
-requires std::is_reference_v<range_reference_t<V>> &&
-    std::ranges::forward_range<V> &&
-    std::ranges::forward_range<range_reference_t<V>>
-struct join_view_iterator_category<V> {
-    using outer_type RXX_NODEBUG =
-        typename std::iterator_traits<iterator_t<V>>::iterator_category;
-    using inner_type RXX_NODEBUG = typename std::iterator_traits<
-        iterator_t<range_reference_t<V>>>::iterator_category;
+template <bool Const, typename V>
+requires std::is_reference_v<range_reference_t<details::const_if<Const, V>>> &&
+    std::ranges::forward_range<details::const_if<Const, V>> &&
+    std::ranges::forward_range<range_reference_t<details::const_if<Const, V>>>
+struct join_view_iterator_category<Const, V> {
+    using outer_type RXX_NODEBUG = details::iterator_category_of<Const, V>;
+    using inner_type RXX_NODEBUG =
+        details::iterator_category_of<Const, range_reference_t<V>>;
 
-    using iterator_category = std::conditional_t<
-        std::derived_from<outer_type, std::bidirectional_iterator_tag> &&
+    using iterator_category = decltype([]() {
+        if constexpr (std::derived_from<outer_type,
+                          std::bidirectional_iterator_tag> &&
             std::derived_from<inner_type, std::bidirectional_iterator_tag> &&
-            std::ranges::common_range<range_reference_t<V>>,
-        std::bidirectional_iterator_tag,
-        std::conditional_t<
-            std::derived_from<outer_type, std::forward_iterator_tag> &&
-                std::derived_from<inner_type, std::forward_iterator_tag>,
-            std::forward_iterator_tag, std::input_iterator_tag>>;
+            std::ranges::common_range<
+                range_reference_t<details::const_if<Const, V>>>) {
+            return std::bidirectional_iterator_tag{};
+        } else if constexpr (std::derived_from<outer_type,
+                                 std::forward_iterator_tag> &&
+            std::derived_from<inner_type, std::forward_iterator_tag>) {
+            return std::forward_iterator_tag{};
+        } else {
+            return std::input_iterator_tag{};
+        }
+    }());
 };
 
 template <typename T>
@@ -157,7 +165,7 @@ template <std::ranges::input_range V>
 requires std::ranges::view<V> && std::ranges::input_range<range_reference_t<V>>
 template <bool Const>
 class join_view<V>::iterator final :
-    public details::join_view_iterator_category<V> {
+    public details::join_view_iterator_category<Const, V> {
     struct empty_outer {};
     using Parent RXX_NODEBUG = details::const_if<Const, join_view>;
     using Base RXX_NODEBUG = details::const_if<Const, V>;
@@ -167,7 +175,8 @@ class join_view<V>::iterator final :
 
     friend join_view;
 
-    __RXX_HIDE_FROM_ABI constexpr OuterIter& get_outer() {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr OuterIter& get_outer() noexcept {
         if constexpr (std::ranges::forward_range<Base>) {
             return outer_;
         } else {
@@ -175,7 +184,8 @@ class join_view<V>::iterator final :
         }
     }
 
-    __RXX_HIDE_FROM_ABI constexpr OuterIter const& get_outer() const {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr OuterIter const& get_outer() const noexcept {
         if constexpr (std::ranges::forward_range<Base>) {
             return outer_;
         } else {
@@ -234,7 +244,8 @@ public:
     using iterator_concept = decltype([]() {
         if constexpr (std::is_reference_v<range_reference_t<Base>> &&
             std::ranges::bidirectional_range<Base> &&
-            std::ranges::bidirectional_range<range_reference_t<Base>>) {
+            std::ranges::bidirectional_range<range_reference_t<Base>> &&
+            std::ranges::common_range<range_reference_t<Base>>) {
             return std::bidirectional_iterator_tag{};
         } else if constexpr (std::is_reference_v<range_reference_t<Base>> &&
             std::ranges::forward_range<Base> &&
@@ -262,10 +273,14 @@ public:
         , parent_{other.parent_} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr decltype(auto) operator*() const { return **inner_; }
+    constexpr auto operator*() const noexcept(
+        noexcept(*std::declval<InnerIter const&>())) -> decltype(auto) {
+        return **inner_;
+    }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr InnerIter operator->() const
+        noexcept(std::is_nothrow_copy_constructible_v<InnerIter>)
     requires details::has_arrow<InnerIter> && std::copyable<InnerIter>
     {
         return *inner_;

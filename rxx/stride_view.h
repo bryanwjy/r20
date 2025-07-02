@@ -407,14 +407,14 @@ struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
 
     template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
     requires requires { stride_view(std::declval<R>(), std::declval<D>()); }
-    constexpr auto operator()(R&& arg, std::type_identity_t<D> size) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        R&& arg, std::type_identity_t<D> size) const
         noexcept(noexcept(stride_view(std::declval<R>(), std::declval<D>()))) {
         return stride_view(std::forward<R>(arg), size);
     }
 
 #if RXX_LIBSTDCXX
     using ranges::details::adaptor_non_closure<stride_t>::operator();
-    template <typename T>
     static constexpr bool _S_has_simple_extra_args = true;
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX
