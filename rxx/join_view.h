@@ -113,6 +113,23 @@ private:
     using InnerCache RXX_NODEBUG =
         details::non_propagating_cache<std::remove_cv_t<InnerRange>>;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) InnerCache inner_;
+
+    /**
+     * Note to self/whomever that sees this:
+     *
+     * When using the following:
+     *
+     * using InnerCache = std::conditional_t<!std::is_reference_v<InnerRange>,
+     * details::non_propagating_cache<std::remove_cv_t<InnerRange>>,
+     * details::empty_cache>;
+     *
+     * It somehow breaks the code generated and causes GCC's join_view test05 to
+     * fail as the range in that specific test becomes unbounded. The same issue
+     * is seemingly also happening in libc++20. What is also strange is that
+     * when another empty struct with a different name, e.g. nothing_t, is
+     * defined and `details::empty_cache` is replaced with it, the issue
+     * disappears.
+     */
     static_assert(
         !std::is_reference_v<InnerRange> || std::is_empty_v<InnerCache>);
 };
