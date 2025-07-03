@@ -1,6 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/details/bind_back.h"
 #include "rxx/details/view_traits.h"
 
 #include <functional>
@@ -39,26 +40,14 @@ struct take_t : ranges::details::adaptor_non_closure<take_t> {
     static constexpr bool _S_has_simple_extra_args =
         std::ranges::__detail::__is_integer_like<T>;
     static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX
+#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename N>
     requires std::constructible_from<std::decay_t<N>, N>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         N&& num) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<N>, N>) {
         return __RXX ranges::details::make_pipeable(
-            [taker = *this, num = std::forward<N>(num)]<typename V>(
-                V&& arg) mutable {
-                return taker(std::forward<V>(arg), std::forward<N>(num));
-            });
-    }
-#elif RXX_MSVC_STL
-    template <typename N>
-    requires std::constructible_from<std::decay_t<N>, N>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        N&& num) const
-        noexcept(std::is_nothrow_constructible_v<std::decay_t<N>, N>) {
-        return std::ranges::_Range_closure<take_t, std::decay_t<N>>{
-            std::forward<N>(num)};
+            set_arity<2>(*this), std::forward<N>(num));
     }
 #else
 #  error "Unsupported"

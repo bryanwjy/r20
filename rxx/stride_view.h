@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/bind_back.h"
 #include "rxx/details/ceil_div.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/iterator_category_of.h"
@@ -417,27 +418,14 @@ struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
     using ranges::details::adaptor_non_closure<stride_t>::operator();
     static constexpr bool _S_has_simple_extra_args = true;
     static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX
+#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         D&& size) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            [transformer = *this,
-                size = std::forward<D>(size)]<std::ranges::viewable_range V>(
-                V&& arg) mutable {
-                return transformer(std::forward<V>(arg), std::forward<D>(size));
-            });
-    }
-#elif RXX_MSVC_STL
-    template <typename D>
-    requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        D&& size) const
-        noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
-        return std::ranges::_Range_closure<stride_t, std::decay_t<D>>{
-            std::forward<D>(size)};
+            set_arity<2>(*this), std::forward<D>(size));
     }
 #else
 #  error "Unsupported"

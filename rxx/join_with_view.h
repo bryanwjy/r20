@@ -3,6 +3,7 @@
 
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
@@ -579,27 +580,14 @@ struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
     static constexpr bool _S_has_simple_extra_args = std::is_scalar_v<T> ||
         (std::ranges::view<T> && std::copy_constructible<T>);
     static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX
+#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         D&& delimiter) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            [joiner = *this,
-                delimiter = std::forward<D>(delimiter)]<typename V>(
-                V&& arg) mutable {
-                return joiner(std::forward<V>(arg), std::forward<D>(delimiter));
-            });
-    }
-#elif RXX_MSVC_STL
-    template <typename D>
-    requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        D&& delimiter) const
-        noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
-        return std::ranges::_Range_closure<join_with_t, std::decay_t<D>>{
-            std::forward<D>(delimiter)};
+            set_arity<2>(*this), std::forward<D>(delimiter));
     }
 #else
 #  error "Unsupported"

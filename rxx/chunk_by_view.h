@@ -3,6 +3,7 @@
 
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/bind_back.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/primitives.h"
@@ -210,26 +211,14 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
     using ranges::details::adaptor_non_closure<chunk_by_t>::operator();
     static constexpr int _S_arity = 2;
     static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX
+#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename Pred>
     requires std::constructible_from<std::decay_t<Pred>, Pred>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         Pred&& pred) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<Pred>, Pred>) {
         return __RXX ranges::details::make_pipeable(
-            [chunker = *this, pred = std::forward<Pred>(pred)]<typename V>(
-                V&& arg) mutable {
-                return chunker(std::forward<V>(arg), std::forward<Pred>(pred));
-            });
-    }
-#elif RXX_MSVC_STL
-    template <typename Pred>
-    requires std::constructible_from<std::decay_t<Pred>, Pred>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        Pred&& pred) const
-        noexcept(std::is_nothrow_constructible_v<std::decay_t<Pred>, Pred>) {
-        return std::ranges::_Range_closure<chunk_by_t, std::decay_t<Pred>>{
-            std::forward<Pred>(pred)};
+            set_arity<2>(*this), std::forward<Pred>(pred));
     }
 #else
 #  error "Unsupported"

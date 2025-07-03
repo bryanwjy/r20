@@ -3,6 +3,7 @@
 
 #include "rxx/adjacent_view.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/referenceable.h"
@@ -392,27 +393,14 @@ struct adjacent_transform_t :
         adjacent_transform_t<N>>::operator();
     static constexpr int _S_arity = 2;
     static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX
+#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename F>
     requires std::constructible_from<std::decay_t<F>, F>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         F&& func) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
         return __RXX ranges::details::make_pipeable(
-            [transformer = *this,
-                func = std::forward<F>(func)]<std::ranges::viewable_range V>(
-                V&& arg) mutable {
-                return transformer(std::forward<V>(arg), std::forward<F>(func));
-            });
-    }
-#elif RXX_MSVC_STL
-    template <typename F>
-    requires std::constructible_from<std::decay_t<F>, F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        F&& func) const
-        noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
-        return std::ranges::_Range_closure<adjacent_transform_t,
-            std::decay_t<F>>{std::forward<F>(func)};
+            set_arity<2>(*this), std::forward<F>(func));
     }
 #else
 #  error "Unsupported"
