@@ -3,6 +3,7 @@
 
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/iterator_category_of.h"
 #include "rxx/details/non_propagating_cache.h"
@@ -55,8 +56,8 @@ public:
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         V base, P pattern) noexcept(std::is_nothrow_move_constructible_v<V> &&
         std::is_nothrow_move_constructible_v<P>)
-        : base_(std::move(base))
-        , pattern_(std::move(pattern)) {}
+        : base_{std::move(base)}
+        , pattern_{std::move(pattern)} {}
 
     template <std::ranges::input_range R>
     requires std::constructible_from<V, std::views::all_t<R>> &&
@@ -64,8 +65,8 @@ public:
                      std::ranges::single_view<range_value_t<R>>>
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         R&& range, range_value_t<R> pattern)
-        : base_(std::views::all(std::forward<R>(range)))
-        , pattern_(std::views::single(std::move(pattern))) {}
+        : base_{std::views::all(std::forward<R>(range))}
+        , pattern_{std::views::single(std::move(pattern))} {}
 
     __RXX_HIDE_FROM_ABI constexpr V base() const& noexcept(
         std::is_nothrow_copy_constructible_v<V>)
@@ -83,10 +84,10 @@ public:
         if constexpr (std::ranges::forward_range<V>) {
             using IteratorType = outer_iterator<details::simple_view<V> &&
                 details::simple_view<P>>;
-            return IteratorType{this, std::ranges::begin(base_)};
+            return IteratorType{*this, std::ranges::begin(base_)};
         } else {
             current_ = std::ranges::begin(base_);
-            return outer_iterator<false>{this};
+            return outer_iterator<false>{*this};
         }
     }
 
@@ -94,7 +95,7 @@ public:
     requires std::ranges::forward_range<V> &&
         std::ranges::forward_range<V const>
     {
-        return outer_iterator<true>{this, std::ranges::begin(base_)};
+        return outer_iterator<true>{*this, std::ranges::begin(base_)};
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end()
@@ -102,14 +103,14 @@ public:
     {
         using IteratorType =
             outer_iterator<details::simple_view<V> && details::simple_view<P>>;
-        return IteratorType{this, std::ranges::end(base_)};
+        return IteratorType{*this, std::ranges::end(base_)};
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end() const {
         if constexpr (std::ranges::forward_range<V> &&
             std::ranges::forward_range<V const> &&
             std::ranges::common_range<V const>) {
-            return outer_iterator<true>{this, std::ranges::end(base_)};
+            return outer_iterator<true>{*this, std::ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -124,13 +125,25 @@ private:
         current_;
 };
 
+namespace details {
+template <bool, typename>
+struct lazy_split_view_outer_iterator_category {};
+
+template <bool Const, typename V>
+requires std::ranges::forward_range<details::const_if<Const, V>>
+struct lazy_split_view_outer_iterator_category<Const, V> {
+    using iterator_category = std::input_iterator_tag;
+};
+} // namespace details
+
 template <std::ranges::input_range V, std::ranges::forward_range P>
 requires std::ranges::view<V> && std::ranges::view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
     (std::ranges::forward_range<V> || details::tiny_range<P>)
 template <bool Const>
-class lazy_split_view<V, P>::outer_iterator {
+class lazy_split_view<V, P>::outer_iterator :
+    public details::lazy_split_view_outer_iterator_category<Const, V> {
     friend lazy_split_view;
     using Parent RXX_NODEBUG = details::const_if<Const, lazy_split_view>;
     using Base RXX_NODEBUG = details::const_if<Const, V>;
@@ -139,7 +152,6 @@ public:
     using iterator_concept =
         std::conditional_t<std::ranges::forward_range<Base>,
             std::forward_iterator_tag, std::input_iterator_tag>;
-    using iterator_category = std::input_iterator_tag;
     using difference_type = range_difference_t<Base>;
     struct value_type : std::ranges::view_interface<value_type> {
     public:
@@ -167,19 +179,19 @@ public:
     };
 
     __RXX_HIDE_FROM_ABI constexpr outer_iterator() noexcept(
-        std::ranges::forward_range<V> &&
+        !std::ranges::forward_range<V> ||
         std::is_nothrow_default_constructible_v<iterator_t<Base>>) = default;
 
     __RXX_HIDE_FROM_ABI explicit constexpr outer_iterator(
-        Parent* parent) noexcept
+        Parent& parent) noexcept
     requires (!std::ranges::forward_range<Base>)
-        : parent_{parent} {}
+        : parent_{RXX_BUILTIN_addressof(parent)} {}
 
     __RXX_HIDE_FROM_ABI constexpr outer_iterator(
-        Parent* parent, iterator_t<Base> current) noexcept(std::
+        Parent& parent, iterator_t<Base> current) noexcept(std::
             is_nothrow_move_constructible_v<iterator_t<Base>>)
     requires std::ranges::forward_range<Base>
-        : parent_{parent}
+        : parent_{RXX_BUILTIN_addressof(parent)}
         , current_{std::move(current)} {}
 
     __RXX_HIDE_FROM_ABI constexpr outer_iterator(outer_iterator<!Const>
@@ -359,7 +371,7 @@ public:
         incremented_ = true;
         if constexpr (!std::ranges::forward_range<Base>) {
             if constexpr (P::size() == 0) {
-                *this;
+                return *this;
             }
         }
         ++iter_.cur();
@@ -395,7 +407,8 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(inner_iterator const& iter) noexcept(
-        noexcept(std::ranges::iter_move(std::declval<iterator_t<Base>>()))) {
+        noexcept(std::ranges::iter_move(std::declval<iterator_t<Base>>())))
+        -> decltype(auto) {
         return std::ranges::iter_move(iter.outer_current());
     }
 
@@ -404,10 +417,9 @@ public:
     iter_swap(inner_iterator const& left, inner_iterator const& right) noexcept(
         noexcept(std::ranges::iter_swap(
             left.outer_current(), right.outer_current())))
-    requires std::indirectly_swappable<ranges::iterator_t<Base>>
+    requires std::indirectly_swappable<iterator_t<Base>>
     {
-        return std::ranges::iter_swap(
-            left.outer_current(), left.outer_current());
+        std::ranges::iter_swap(left.outer_current(), right.outer_current());
     }
 
 private:
@@ -462,12 +474,15 @@ lazy_split_view(R&&, range_value_t<R>) -> lazy_split_view<std::views::all_t<R>,
 
 namespace views {
 namespace details {
+
 struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
 
     template <typename R, typename P>
     requires requires { lazy_split_view(std::declval<R>(), std::declval<P>()); }
-    constexpr auto operator()(R&& range, P&& pattern) const noexcept(
-        noexcept(lazy_split_view(std::declval<R>(), std::declval<P>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        R&& range, P&& pattern) const
+        noexcept(
+            noexcept(lazy_split_view(std::declval<R>(), std::declval<P>()))) {
         return lazy_split_view(
             std::forward<R>(range), std::forward<P>(pattern));
     }
@@ -478,28 +493,14 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
     static constexpr bool _S_has_simple_extra_args = std::is_scalar_v<P> ||
         (std::ranges::view<P> && std::copy_constructible<P>);
     static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX
+#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename P>
     requires std::constructible_from<std::decay_t<P>, P>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         P&& pattern) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
         return __RXX ranges::details::make_pipeable(
-            [transformer = *this,
-                pattern = std::forward<P>(pattern)]<typename V>(
-                V&& arg) mutable {
-                return transformer(
-                    std::forward<V>(arg), std::forward<P>(pattern));
-            });
-    }
-#elif RXX_MSVC_STL
-    template <typename P>
-    requires std::constructible_from<std::decay_t<P>, P>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        P&& size) const
-        noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
-        return std::ranges::_Range_closure<lazy_split_t, std::decay_t<P>>{
-            std::forward<P>(size)};
+            set_arity<2>(*this), std::forward<P>(pattern));
     }
 #else
 #  error "Unsupported"

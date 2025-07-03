@@ -3,6 +3,7 @@
 
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
+#include "rxx/details/bind_back.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
@@ -427,24 +428,13 @@ struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
     using ranges::details::adaptor_non_closure<slide_t>::operator();
     static constexpr int _S_arity = 2;
     static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX
+#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         D num) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
-        return __RXX ranges::details::make_pipeable(
-            [slider = *this, num = num]<typename V>(
-                V&& arg) mutable { return slider(std::forward<V>(arg), num); });
-    }
-#elif RXX_MSVC_STL
-    template <typename D>
-    requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        D num) const
-        noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
-        return std::ranges::_Range_closure<slide_t, std::decay_t<D>>{
-            std::forward<D>(delimiter)};
+        return __RXX ranges::details::make_pipeable(set_arity<2>(*this), num);
     }
 #else
 #  error "Unsupported"
