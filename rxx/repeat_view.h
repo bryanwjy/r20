@@ -2,6 +2,7 @@
 #pragma once
 
 #include "rxx/details/const_if.h"
+#include "rxx/details/integer_like.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
@@ -21,13 +22,6 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 namespace details {
-template <typename T>
-concept is_integer_like = std::integral<T> && !std::same_as<T, bool>;
-template <typename T>
-concept is_signed_integer_like = std::signed_integral<T>;
-template <typename T>
-concept integer_like_with_usable_difference_type = is_signed_integer_like<T> ||
-    (is_integer_like<T> && std::weakly_incrementable<T>);
 
 template <typename Int>
 struct wider_signed_int {
@@ -71,7 +65,7 @@ struct repeat_view_iterator_difference {
     using type RXX_NODEBUG = iota_diff_t<T>;
 };
 
-template <is_signed_integer_like T>
+template <signed_integer_like T>
 struct repeat_view_iterator_difference<T> {
     using type RXX_NODEBUG = T;
 };

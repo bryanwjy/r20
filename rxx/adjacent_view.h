@@ -366,9 +366,11 @@ class adjacent_view<V, N>::sentinel {
     friend class adjacent_view;
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr sentinel() = default;
+    __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
+        std::is_nothrow_constructible_v<sentinel_t<Base>>) = default;
 
-    __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other)
+    __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other) noexcept(
+        std::is_nothrow_constructible_v<sentinel_t<V>, sentinel_t<Base>>)
     requires Const && std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
         : end_{std::move(other.end_)} {}
 
