@@ -39,7 +39,7 @@ struct drop_t : ranges::details::adaptor_non_closure<drop_t> {
 
     template <typename _Tp>
     static constexpr bool _S_has_simple_extra_args =
-        std::ranges::__detail::__is_integer_like<_Tp>;
+        RXX ranges::details::integer_like<_Tp>;
 
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX | RXX_MSVC_STL
