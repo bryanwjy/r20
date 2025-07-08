@@ -1,6 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/iterator_category_of.h"
@@ -20,7 +21,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::move_constructible F, std::ranges::input_range... Views>
+template <std::move_constructible F, input_range... Views>
 requires (... && std::ranges::view<Views>) &&
     (sizeof...(Views) > 0) && std::is_object_v<F> &&
     std::regular_invocable<F&, range_reference_t<Views>...> &&
@@ -60,10 +61,11 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
-        if constexpr (std::ranges::common_range<InnerView>)
+        if constexpr (std::ranges::common_range<InnerView>) {
             return iterator<false>(*this, zip_.end());
-        else
+        } else {
             return sentinel<false>(zip_.end());
+        }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -71,10 +73,11 @@ public:
     requires std::ranges::range<InnerView const> &&
         std::regular_invocable<F const&, range_reference_t<Views const>...>
     {
-        if constexpr (std::ranges::common_range<InnerView const>)
+        if constexpr (std::ranges::common_range<InnerView const>) {
             return iterator<true>(*this, zip_.end());
-        else
+        } else {
             return sentinel<true>(zip_.end());
+        }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -96,7 +99,7 @@ private:
     struct iter_cat {};
 
     template <bool Const>
-    requires std::ranges::forward_range<Base<Const>>
+    requires forward_range<Base<Const>>
     struct iter_cat<Const> {
         using iterator_category = decltype([]() {
             using Result = std::invoke_result_t<details::const_if<Const, F>&,
@@ -136,7 +139,7 @@ template <typename F, typename... Rs>
 zip_transform_view(F, Rs&&...)
     -> zip_transform_view<F, std::views::all_t<Rs>...>;
 
-template <std::move_constructible F, std::ranges::input_range... Views>
+template <std::move_constructible F, input_range... Views>
 requires (... && std::ranges::view<Views>) &&
     (sizeof...(Views) > 0) && std::is_object_v<F> &&
     std::regular_invocable<F&, range_reference_t<Views>...> &&
@@ -190,7 +193,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::ranges::forward_range<Base<Const>>
+    requires forward_range<Base<Const>>
     {
         auto previous = *this;
         ++*this;
@@ -198,14 +201,14 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<Base<Const>>
+    requires bidirectional_range<Base<Const>>
     {
         --inner_;
         return *this;
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<Base<Const>>
+    requires bidirectional_range<Base<Const>>
     {
         auto previous = *this;
         --*this;
@@ -213,14 +216,14 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
-    requires std::ranges::random_access_range<Base<Const>>
+    requires random_access_range<Base<Const>>
     {
         inner_ += offset;
         return *this;
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
-    requires std::ranges::random_access_range<Base<Const>>
+    requires random_access_range<Base<Const>>
     {
         inner_ -= offset;
         return *this;
@@ -228,7 +231,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr decltype(auto) operator[](difference_type offset) const
-    requires std::ranges::random_access_range<Base<Const>>
+    requires random_access_range<Base<Const>>
     {
         return std::apply(
             [&]<typename... It>(It const&... iters) -> decltype(auto) {
@@ -249,7 +252,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto operator<=>(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base<Const>>
+    requires random_access_range<Base<Const>>
     {
         return left.inner_ <=> right.inner_;
     }
@@ -257,7 +260,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         iterator const& self, difference_type offset)
-    requires std::ranges::random_access_range<Base<Const>>
+    requires random_access_range<Base<Const>>
     {
         return iterator(*self.parent_, self.inner_ + offset);
     }
@@ -265,7 +268,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         difference_type offset, iterator const& selft)
-    requires std::ranges::random_access_range<Base<Const>>
+    requires random_access_range<Base<Const>>
     {
         return iterator(*selft.parent_, selft.inner_ + offset);
     }
@@ -273,7 +276,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator-(
         iterator const& selft, difference_type offset)
-    requires std::ranges::random_access_range<Base<Const>>
+    requires random_access_range<Base<Const>>
     {
         return iterator(*selft.parent_, selft.inner_ - offset);
     }
@@ -291,7 +294,7 @@ private:
     ziperator<Const> inner_;
 };
 
-template <std::move_constructible F, std::ranges::input_range... Views>
+template <std::move_constructible F, input_range... Views>
 requires (... && std::ranges::view<Views>) &&
     (sizeof...(Views) > 0) && std::is_object_v<F> &&
     std::regular_invocable<F&, range_reference_t<Views>...> &&

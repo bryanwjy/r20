@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
@@ -27,11 +28,11 @@ namespace details {
 
 template <typename R>
 concept sized_random_access_range =
-    std::ranges::random_access_range<R> && std::ranges::sized_range<R>;
+    random_access_range<R> && std::ranges::sized_range<R>;
 
 template <bool Const, typename First, typename... Vs>
 concept cartesian_product_is_random_access =
-    (std::ranges::random_access_range<details::const_if<Const, First>> && ... &&
+    (random_access_range<details::const_if<Const, First>> && ... &&
         sized_random_access_range<details::const_if<Const, Vs>>);
 
 template <typename R>
@@ -40,8 +41,8 @@ concept cartesian_product_common_arg =
 
 template <bool Const, typename First, typename... Vs>
 concept cartesian_product_is_bidirectional =
-    (std::ranges::bidirectional_range<details::const_if<Const, First>> && ... &&
-        (std::ranges::bidirectional_range<details::const_if<Const, Vs>> &&
+    (bidirectional_range<details::const_if<Const, First>> && ... &&
+        (bidirectional_range<details::const_if<Const, Vs>> &&
             cartesian_product_common_arg<details::const_if<Const, Vs>>));
 
 template <typename First, typename... Vs>
@@ -70,7 +71,7 @@ __RXX_HIDE_FROM_ABI constexpr auto cartesian_product_common_arg_end(R& range) {
 }
 } // namespace details
 
-template <std::ranges::input_range First, std::ranges::forward_range... Vs>
+template <input_range First, forward_range... Vs>
 requires (std::ranges::view<First> && ... && std::ranges::view<Vs>)
 class cartesian_product_view :
     public std::ranges::view_interface<cartesian_product_view<First, Vs...>> {
@@ -191,7 +192,7 @@ template <typename... Vs>
 cartesian_product_view(Vs&&...)
     -> cartesian_product_view<std::views::all_t<Vs>...>;
 
-template <std::ranges::input_range First, std::ranges::forward_range... Vs>
+template <input_range First, forward_range... Vs>
 requires (std::ranges::view<First> && ... && std::ranges::view<Vs>)
 template <bool Const>
 class cartesian_product_view<First, Vs...>::iterator {
@@ -207,8 +208,7 @@ public:
         } else if constexpr (details::cartesian_product_is_bidirectional<Const,
                                  First, Vs...>) {
             return std::bidirectional_iterator_tag{};
-        } else if constexpr (std::ranges::forward_range<
-                                 details::const_if<Const, First>>) {
+        } else if constexpr (forward_range<details::const_if<Const, First>>) {
             return std::forward_iterator_tag{};
         } else {
             return std::input_iterator_tag{};
@@ -251,7 +251,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::ranges::forward_range<details::const_if<Const, First>>
+    requires forward_range<details::const_if<Const, First>>
     {
         auto prev = *this;
         ++*this;

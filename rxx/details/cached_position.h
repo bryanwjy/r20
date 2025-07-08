@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/concepts.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/primitives.h"
 
@@ -13,7 +14,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges::details {
 
-template <std::ranges::range R>
+template <range R>
 class cached_position {
 public:
     __RXX_HIDE_FROM_ABI explicit constexpr operator bool() const noexcept {
@@ -29,7 +30,7 @@ public:
         R const&, iterator_t<R> const&) const noexcept {}
 };
 
-template <std::ranges::forward_range R>
+template <forward_range R>
 class cached_position<R> : protected non_propagating_cache<iterator_t<R>> {
 public:
     using non_propagating_cache<iterator_t<R>>::operator bool;
@@ -48,7 +49,7 @@ public:
     }
 };
 
-template <std::ranges::random_access_range R>
+template <random_access_range R>
 requires (sizeof(range_difference_t<R>) <= sizeof(iterator_t<R>))
 class cached_position<R> {
 public:

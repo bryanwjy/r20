@@ -36,11 +36,11 @@ concept tiny_range = std::ranges::sized_range<T> && requires {
 } && (std::remove_reference_t<T>::size() <= 1);
 } // namespace details
 
-template <std::ranges::input_range V, std::ranges::forward_range P>
+template <input_range V, forward_range P>
 requires std::ranges::view<V> && std::ranges::view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
-    (std::ranges::forward_range<V> || details::tiny_range<P>)
+    (forward_range<V> || details::tiny_range<P>)
 class lazy_split_view :
     public std::ranges::view_interface<lazy_split_view<V, P>> {
 
@@ -62,7 +62,7 @@ public:
         : base_{std::move(base)}
         , pattern_{std::move(pattern)} {}
 
-    template <std::ranges::input_range R>
+    template <input_range R>
     requires std::constructible_from<V, std::views::all_t<R>> &&
                  std::constructible_from<P,
                      std::ranges::single_view<range_value_t<R>>>
@@ -84,7 +84,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto begin() {
-        if constexpr (std::ranges::forward_range<V>) {
+        if constexpr (forward_range<V>) {
             using IteratorType = outer_iterator<details::simple_view<V> &&
                 details::simple_view<P>>;
             return IteratorType{*this, __RXX ranges::begin(base_)};
@@ -95,14 +95,13 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto begin() const
-    requires std::ranges::forward_range<V> &&
-        std::ranges::forward_range<V const>
+    requires forward_range<V> && forward_range<V const>
     {
         return outer_iterator<true>{*this, __RXX ranges::begin(base_)};
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end()
-    requires std::ranges::forward_range<V> && std::ranges::common_range<V>
+    requires forward_range<V> && std::ranges::common_range<V>
     {
         using IteratorType =
             outer_iterator<details::simple_view<V> && details::simple_view<P>>;
@@ -110,8 +109,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end() const {
-        if constexpr (std::ranges::forward_range<V> &&
-            std::ranges::forward_range<V const> &&
+        if constexpr (forward_range<V> && forward_range<V const> &&
             std::ranges::common_range<V const>) {
             return outer_iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
@@ -123,7 +121,7 @@ private:
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) P pattern_{};
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)
-    std::conditional_t<!std::ranges::forward_range<V>,
+    std::conditional_t<!forward_range<V>,
         details::non_propagating_cache<iterator_t<V>>, details::empty_cache>
         current_;
 };
@@ -133,17 +131,17 @@ template <bool, typename>
 struct lazy_split_view_outer_iterator_category {};
 
 template <bool Const, typename V>
-requires std::ranges::forward_range<details::const_if<Const, V>>
+requires forward_range<details::const_if<Const, V>>
 struct lazy_split_view_outer_iterator_category<Const, V> {
     using iterator_category = std::input_iterator_tag;
 };
 } // namespace details
 
-template <std::ranges::input_range V, std::ranges::forward_range P>
+template <input_range V, forward_range P>
 requires std::ranges::view<V> && std::ranges::view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
-    (std::ranges::forward_range<V> || details::tiny_range<P>)
+    (forward_range<V> || details::tiny_range<P>)
 template <bool Const>
 class lazy_split_view<V, P>::outer_iterator :
     public details::lazy_split_view_outer_iterator_category<Const, V> {
@@ -152,9 +150,8 @@ class lazy_split_view<V, P>::outer_iterator :
     using Base RXX_NODEBUG = details::const_if<Const, V>;
 
 public:
-    using iterator_concept =
-        std::conditional_t<std::ranges::forward_range<Base>,
-            std::forward_iterator_tag, std::input_iterator_tag>;
+    using iterator_concept = std::conditional_t<forward_range<Base>,
+        std::forward_iterator_tag, std::input_iterator_tag>;
     using difference_type = range_difference_t<Base>;
     struct value_type : std::ranges::view_interface<value_type> {
     public:
@@ -181,24 +178,23 @@ public:
         outer_iterator iter_{};
     };
 
-    __RXX_HIDE_FROM_ABI constexpr outer_iterator() noexcept(
-        !std::ranges::forward_range<V> ||
+    __RXX_HIDE_FROM_ABI constexpr outer_iterator() noexcept(!forward_range<V> ||
         std::is_nothrow_default_constructible_v<iterator_t<Base>>) = default;
 
     __RXX_HIDE_FROM_ABI explicit constexpr outer_iterator(
         Parent& parent) noexcept
-    requires (!std::ranges::forward_range<Base>)
+    requires (!forward_range<Base>)
         : parent_{RXX_BUILTIN_addressof(parent)} {}
 
     __RXX_HIDE_FROM_ABI constexpr outer_iterator(
         Parent& parent, iterator_t<Base> current) noexcept(std::
             is_nothrow_move_constructible_v<iterator_t<Base>>)
-    requires std::ranges::forward_range<Base>
+    requires forward_range<Base>
         : parent_{RXX_BUILTIN_addressof(parent)}
         , current_{std::move(current)} {}
 
-    __RXX_HIDE_FROM_ABI constexpr outer_iterator(outer_iterator<!Const>
-            other) noexcept(!std::ranges::forward_range<Base> ||
+    __RXX_HIDE_FROM_ABI constexpr outer_iterator(
+        outer_iterator<!Const> other) noexcept(!forward_range<Base> ||
         std::is_nothrow_constructible_v<iterator_t<Base>, iterator_t<V>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
         : parent_{other.parent_}
@@ -247,7 +243,7 @@ public:
 
     __RXX_HIDE_FROM_ABI
     constexpr auto operator++(int) -> decltype(auto) {
-        if constexpr (std::ranges::forward_range<Base>) {
+        if constexpr (forward_range<Base>) {
             auto prev = *this;
             ++*this;
             return prev;
@@ -261,7 +257,7 @@ public:
         outer_iterator const&
             right) noexcept(noexcept(std::declval<iterator_t<Base>>() ==
         std::declval<iterator_t<Base>>()))
-    requires std::ranges::forward_range<Base>
+    requires forward_range<Base>
     {
         return left.current_ == right.current_ &&
             left.trailing_empty_ == right.trailing_empty_;
@@ -286,7 +282,7 @@ private:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto& cur() noexcept {
-        if constexpr (std::ranges::forward_range<V>) {
+        if constexpr (forward_range<V>) {
             return current_;
         } else {
             return *parent_->current_;
@@ -295,7 +291,7 @@ private:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto& cur() const noexcept {
-        if constexpr (std::ranges::forward_range<V>) {
+        if constexpr (forward_range<V>) {
             return current_;
         } else {
             return *parent_->current_;
@@ -304,8 +300,7 @@ private:
 
     Parent* parent_ = nullptr;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)
-    std::conditional_t<std::ranges::forward_range<V>, iterator_t<Base>,
-        details::empty_cache>
+    std::conditional_t<forward_range<V>, iterator_t<Base>, details::empty_cache>
         current_{};
     bool trailing_empty_ = false;
 };
@@ -315,7 +310,7 @@ template <bool, typename>
 struct lazy_split_view_inner_iterator_category {};
 
 template <bool Const, typename V>
-requires std::ranges::forward_range<details::const_if<Const, V>>
+requires forward_range<details::const_if<Const, V>>
 struct lazy_split_view_inner_iterator_category<Const, V> {
     using iterator_category = std::conditional_t<
         std::derived_from<details::iterator_category_of<Const, V>,
@@ -324,20 +319,19 @@ struct lazy_split_view_inner_iterator_category<Const, V> {
 };
 } // namespace details
 
-template <std::ranges::input_range V, std::ranges::forward_range P>
+template <input_range V, forward_range P>
 requires std::ranges::view<V> && std::ranges::view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
-    (std::ranges::forward_range<V> || details::tiny_range<P>)
+    (forward_range<V> || details::tiny_range<P>)
 template <bool Const>
 class lazy_split_view<V, P>::inner_iterator :
     public details::lazy_split_view_inner_iterator_category<Const, V> {
     using Base RXX_NODEBUG = details::const_if<Const, V>;
 
 public:
-    using iterator_concept =
-        std::conditional_t<std::ranges::forward_range<Base>,
-            std::forward_iterator_tag, std::input_iterator_tag>;
+    using iterator_concept = std::conditional_t<forward_range<Base>,
+        std::forward_iterator_tag, std::input_iterator_tag>;
     using value_type = std::ranges::range_value_t<Base>;
     using difference_type = std::ranges::range_difference_t<Base>;
 
@@ -357,7 +351,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<Base> base() && noexcept(
         std::is_nothrow_move_constructible_v<iterator_t<Base>>)
-    requires std::ranges::forward_range<V>
+    requires forward_range<V>
     {
         return std::move(iter_.cur());
     }
@@ -372,7 +366,7 @@ public:
     __RXX_HIDE_FROM_ABI
     constexpr inner_iterator& operator++() {
         incremented_ = true;
-        if constexpr (!std::ranges::forward_range<Base>) {
+        if constexpr (!forward_range<Base>) {
             if constexpr (P::size() == 0) {
                 return *this;
             }
@@ -383,7 +377,7 @@ public:
 
     __RXX_HIDE_FROM_ABI
     constexpr auto operator++(int) -> decltype(auto) {
-        if constexpr (std::ranges::forward_range<Base>) {
+        if constexpr (forward_range<Base>) {
             auto prev = *this;
             ++*this;
             return prev;
@@ -397,7 +391,7 @@ public:
         inner_iterator const&
             right) noexcept(noexcept(std::declval<iterator_t<Base>>() ==
         std::declval<iterator_t<Base>>()))
-    requires std::ranges::forward_range<Base>
+    requires forward_range<Base>
     {
         return left.iter_.cur() == right.iter_.cur();
     }
@@ -471,7 +465,7 @@ template <typename R, typename P>
 lazy_split_view(R&&, P&&)
     -> lazy_split_view<std::views::all_t<R>, std::views::all_t<P>>;
 
-template <std::ranges::input_range R>
+template <input_range R>
 lazy_split_view(R&&, range_value_t<R>) -> lazy_split_view<std::views::all_t<R>,
     std::ranges::single_view<range_value_t<R>>>;
 

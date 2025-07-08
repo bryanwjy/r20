@@ -20,7 +20,27 @@ concept range = requires(T& t) {
 };
 
 template <typename T>
-concept input_range = ranges::range<T> && std::input_iterator<iterator_t<T>>;
+concept input_range = range<T> && std::input_iterator<iterator_t<T>>;
+
+template <typename T>
+concept forward_range = input_range<T> && std::forward_iterator<iterator_t<T>>;
+
+template <typename T>
+concept bidirectional_range =
+    forward_range<T> && std::bidirectional_iterator<iterator_t<T>>;
+
+template <typename T>
+concept random_access_range =
+    bidirectional_range<T> && std::random_access_iterator<iterator_t<T>>;
+
+template <typename T>
+concept contiguous_range = random_access_range<T> &&
+    std::contiguous_iterator<ranges::iterator_t<T>> && requires(T& t) {
+        {
+            std::ranges::data(t)
+        } -> std::same_as<std::add_pointer_t<ranges::range_reference_t<T>>>;
+    };
+
 namespace details {
 template <typename T>
 concept constant_iterator = std::input_iterator<T> &&

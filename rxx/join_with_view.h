@@ -59,12 +59,12 @@ concept concatable = requires {
 
 template <typename R>
 concept bidirectional_common =
-    std::ranges::bidirectional_range<R> && std::ranges::common_range<R>;
+    bidirectional_range<R> && std::ranges::common_range<R>;
 } // namespace details
 
-template <std::ranges::input_range V, std::ranges::forward_range P>
+template <input_range V, forward_range P>
 requires std::ranges::view<V> && std::ranges::view<P> &&
-    std::ranges::input_range<range_reference_t<V>> &&
+    input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
 class join_with_view :
     public std::ranges::view_interface<join_with_view<V, P>> {
@@ -88,7 +88,7 @@ public:
         : base_{std::move(base)}
         , pattern_{std::move(pattern)} {}
 
-    template <std::ranges::input_range R>
+    template <input_range R>
     requires std::constructible_from<V, std::views::all_t<R>> &&
                  std::constructible_from<P,
                      std::ranges::single_view<range_value_t<InnerRange>>>
@@ -110,7 +110,7 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto begin() {
-        if constexpr (std::ranges::forward_range<V>) {
+        if constexpr (forward_range<V>) {
             using result_type = iterator<details::simple_view<V> &&
                 std::is_reference_v<InnerRange> && details::simple_view<P>>;
             return result_type{*this, __RXX ranges::begin(base_)};
@@ -122,10 +122,9 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::forward_range<V const> &&
-        std::ranges::forward_range<P const> &&
+    requires forward_range<V const> && forward_range<P const> &&
         std::is_reference_v<range_reference_t<V const>> &&
-        std::ranges::input_range<range_reference_t<V const>> &&
+        input_range<range_reference_t<V const>> &&
         details::concatable<range_reference_t<V const>, P const>
     {
         return iterator<true>{*this, __RXX ranges::begin(base_)};
@@ -134,9 +133,8 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
         constexpr bool use_const =
             details::simple_view<V> && details::simple_view<P>;
-        if constexpr (std::ranges::forward_range<V> &&
-            std::ranges::common_range<V> && std::is_reference_v<InnerRange> &&
-            std::ranges::forward_range<InnerRange> &&
+        if constexpr (forward_range<V> && std::ranges::common_range<V> &&
+            std::is_reference_v<InnerRange> && forward_range<InnerRange> &&
             std::ranges::common_range<InnerRange>) {
             return iterator<use_const>{*this, __RXX ranges::end(base_)};
         } else {
@@ -146,14 +144,13 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::forward_range<V const> &&
-        std::ranges::forward_range<P const> &&
+    requires forward_range<V const> && forward_range<P const> &&
         std::is_reference_v<range_reference_t<V const>> &&
-        std::ranges::input_range<range_reference_t<V const>> &&
+        input_range<range_reference_t<V const>> &&
         details::concatable<range_reference_t<V const>, P const>
     {
         using ConstInnerRange = range_reference_t<V const>;
-        if constexpr (std::ranges::forward_range<ConstInnerRange> &&
+        if constexpr (forward_range<ConstInnerRange> &&
             std::ranges::common_range<ConstInnerRange> &&
             std::ranges::common_range<V const>) {
             return iterator<true>{*this, __RXX ranges::end(base_)};
@@ -163,7 +160,7 @@ public:
     }
 
 private:
-    using OuterItType = std::conditional_t<std::ranges::forward_range<V>,
+    using OuterItType = std::conditional_t<forward_range<V>,
         details::empty_cache, details::non_propagating_cache<iterator_t<V>>>;
     using InnerType = std::conditional_t<std::is_reference_v<InnerRange>,
         details::empty_cache,
@@ -179,7 +176,7 @@ template <typename R, typename P>
 join_with_view(R&&, P&&)
     -> join_with_view<std::views::all_t<R>, std::views::all_t<P>>;
 
-template <std::ranges::input_range R>
+template <input_range R>
 join_with_view(R&&, range_value_t<range_reference_t<R>>)
     -> join_with_view<std::views::all_t<R>,
         std::ranges::single_view<range_value_t<range_reference_t<R>>>>;
@@ -198,8 +195,8 @@ struct join_with_view_iterator_category {
 
 template <bool Const, typename V, typename P>
 requires std::is_reference_v<range_reference_t<details::const_if<Const, V>>> &&
-    std::ranges::forward_range<details::const_if<Const, V>> &&
-    std::ranges::forward_range<range_reference_t<details::const_if<Const, V>>>
+    forward_range<details::const_if<Const, V>> &&
+    forward_range<range_reference_t<details::const_if<Const, V>>>
 struct join_with_view_iterator_category<Const, V, P> {
     using Base RXX_NODEBUG = details::const_if<Const, V>;
     using InnerBase RXX_NODEBUG = range_reference_t<Base>;
@@ -240,9 +237,9 @@ struct join_with_view_iterator_category<Const, V, P> {
 
 } // namespace details
 
-template <std::ranges::input_range V, std::ranges::forward_range P>
+template <input_range V, forward_range P>
 requires std::ranges::view<V> && std::ranges::view<P> &&
-    std::ranges::input_range<range_reference_t<V>> &&
+    input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
 template <bool Const>
 class join_with_view<V, P>::iterator :
@@ -261,11 +258,11 @@ class join_with_view<V, P>::iterator :
     using typename category_base::PatternBase;
     using typename category_base::PatternIter;
 
-    static_assert(!Const || std::ranges::forward_range<Base>,
+    static_assert(!Const || forward_range<Base>,
         "Const can only be true when Base models forward_range.");
 
     __RXX_HIDE_FROM_ABI constexpr OuterIter& get_outer() {
-        if constexpr (std::ranges::forward_range<Base>) {
+        if constexpr (forward_range<Base>) {
             return outer_;
         } else {
             return *parent_->outer_;
@@ -273,7 +270,7 @@ class join_with_view<V, P>::iterator :
     }
 
     __RXX_HIDE_FROM_ABI constexpr OuterIter const& get_outer() const {
-        if constexpr (std::ranges::forward_range<Base>) {
+        if constexpr (forward_range<Base>) {
             return outer_;
         } else {
             return *parent_->outer_;
@@ -332,7 +329,7 @@ class join_with_view<V, P>::iterator :
     __RXX_HIDE_FROM_ABI constexpr iterator(Parent& parent,
         OuterIter
             outer) noexcept(std::is_nothrow_move_constructible_v<OuterIter>)
-    requires std::ranges::forward_range<Base>
+    requires forward_range<Base>
         : parent_{RXX_BUILTIN_addressof(parent)}
         , outer_{std::move(outer)} {
         if (get_outer() != __RXX ranges::end(parent_->base_)) {
@@ -344,7 +341,7 @@ class join_with_view<V, P>::iterator :
 
     __RXX_HIDE_FROM_ABI constexpr explicit iterator(Parent& parent) noexcept(
         std::is_nothrow_default_constructible_v<OuterIter>)
-    requires (!std::ranges::forward_range<Base>)
+    requires (!forward_range<Base>)
         : parent_{RXX_BUILTIN_addressof(parent)} {
         if (get_outer() != __RXX ranges::end(parent_->base_)) {
             inner_.template reinitialize_value<1>(
@@ -356,13 +353,12 @@ class join_with_view<V, P>::iterator :
 public:
     using iterator_concept = decltype([]() {
         if constexpr (std::is_reference_v<InnerBase> &&
-            std::ranges::bidirectional_range<Base> &&
+            bidirectional_range<Base> &&
             std::ranges::common_range<PatternBase> &&
             std::ranges::common_range<InnerBase>) {
             return std::bidirectional_iterator_tag{};
         } else if constexpr (std::is_reference_v<InnerBase> &&
-            std::ranges::forward_range<Base> &&
-            std::ranges::forward_range<InnerBase>) {
+            forward_range<Base> && forward_range<InnerBase>) {
             return std::forward_iterator_tag{};
         } else {
             return std::input_iterator_tag{};
@@ -410,9 +406,8 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::is_reference_v<InnerBase> &&
-        std::ranges::forward_range<Base> &&
-        std::ranges::forward_range<InnerBase>
+    requires std::is_reference_v<InnerBase> && forward_range<Base> &&
+        forward_range<InnerBase>
     {
         auto previous = *this;
         ++*this;
@@ -421,8 +416,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
     requires std::is_reference_v<InnerBase> &&
-        std::ranges::bidirectional_range<Base> &&
-        details::bidirectional_common<InnerBase> &&
+        bidirectional_range<Base> && details::bidirectional_common<InnerBase> &&
         details::bidirectional_common<PatternBase>
     {
         if (outer_ == __RXX ranges::end(parent_->base_)) {
@@ -457,8 +451,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
     requires std::is_reference_v<InnerBase> &&
-        std::ranges::bidirectional_range<Base> &&
-        details::bidirectional_common<InnerBase> &&
+        bidirectional_range<Base> && details::bidirectional_common<InnerBase> &&
         details::bidirectional_common<PatternBase>
     {
         auto previous = *this;
@@ -470,7 +463,7 @@ public:
     friend constexpr bool operator==(
         iterator const& left, iterator const& right)
     requires std::is_reference_v<range_reference_t<Base>> &&
-        std::ranges::forward_range<Base> &&
+        forward_range<Base> &&
         std::equality_comparable<iterator_t<range_reference_t<Base>>>
     {
         return left.outer_ == right.outer_ && left.inner_ == right.inner_;
@@ -522,17 +515,17 @@ public:
     }
 
 private:
-    using OuterType = std::conditional_t<std::ranges::forward_range<Base>,
-        OuterIter, details::empty_cache>;
+    using OuterType = std::conditional_t<forward_range<Base>, OuterIter,
+        details::empty_cache>;
     using InnerType = details::variant_base<PatternIter, InnerIter>;
     Parent* parent_ = nullptr;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterType outer_{};
     InnerType inner_;
 };
 
-template <std::ranges::input_range V, std::ranges::forward_range P>
+template <input_range V, forward_range P>
 requires std::ranges::view<V> && std::ranges::view<P> &&
-    std::ranges::input_range<range_reference_t<V>> &&
+    input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
 template <bool Const>
 class join_with_view<V, P>::sentinel {

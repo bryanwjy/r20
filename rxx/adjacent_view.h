@@ -38,7 +38,7 @@ using repeat_type_t RXX_NODEBUG = decltype(repeat<T>(make_index_sequence_v<N>));
 
 } // namespace details
 
-template <std::ranges::forward_range V, size_t N>
+template <forward_range V, size_t N>
 requires std::ranges::view<V> && (N > 0)
 class adjacent_view : public std::ranges::view_interface<adjacent_view<V, N>> {
 
@@ -138,7 +138,7 @@ private:
     V base_;
 };
 
-template <std::ranges::forward_range V, size_t N>
+template <forward_range V, size_t N>
 requires std::ranges::view<V> && (N > 0)
 template <bool Const>
 class adjacent_view<V, N>::iterator {
@@ -163,7 +163,7 @@ class adjacent_view<V, N>::iterator {
         std::is_nothrow_default_constructible_v<iterator_t<Base>> &&
         std::is_nothrow_copy_assignable_v<iterator_t<Base>>) {
         std::array<iterator_t<Base>, N> output{};
-        if constexpr (!std::ranges::bidirectional_range<Base>) {
+        if constexpr (!bidirectional_range<Base>) {
             for (auto& val : output) {
                 val = end;
             }
@@ -194,9 +194,9 @@ class adjacent_view<V, N>::iterator {
 public:
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = decltype([]() {
-        if constexpr (std::ranges::random_access_range<Base>)
+        if constexpr (random_access_range<Base>)
             return std::random_access_iterator_tag{};
-        else if constexpr (std::ranges::bidirectional_range<Base>)
+        else if constexpr (bidirectional_range<Base>)
             return std::bidirectional_iterator_tag{};
         else
             return std::forward_iterator_tag{};
@@ -238,14 +238,14 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         details::for_each([&](auto& it) { it += offset; }, current_);
         return *this;
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         details::for_each([&](auto& it) { it -= offset; }, current_);
         return *this;
@@ -253,7 +253,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator[](difference_type offset) const
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return details::transform(
             [&](auto const& it) -> decltype(auto) { return it[offset]; },
@@ -268,14 +268,14 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator<(iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return left.current_.back() < right.current_.back();
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator>(iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return right < left;
     }
@@ -283,7 +283,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator<=(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return !(right < left);
     }
@@ -291,7 +291,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator>=(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return !(left < right);
     }
@@ -299,7 +299,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto operator<=>(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base> &&
+    requires random_access_range<Base> &&
         std::three_way_comparable<iterator_t<Base>>
     {
         return left.current_.back() <=> right.current_.back();
@@ -308,7 +308,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         iterator const& self, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = self;
         copy += offset;
@@ -318,7 +318,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         difference_type offset, iterator const& self)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return self + offset;
     }
@@ -326,7 +326,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator-(
         iterator const& self, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = self;
         copy -= offset;
@@ -360,7 +360,7 @@ private:
     std::array<iterator_t<Base>, N> current_{};
 };
 
-template <std::ranges::forward_range V, size_t N>
+template <forward_range V, size_t N>
 requires std::ranges::view<V> && (N > 0)
 template <bool Const>
 class adjacent_view<V, N>::sentinel {

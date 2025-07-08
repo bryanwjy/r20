@@ -2,6 +2,7 @@
 #pragma once
 
 #include "rxx/adjacent_view.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
@@ -45,7 +46,7 @@ using repeat_invoke_result_t RXX_NODEBUG =
 
 } // namespace details
 
-template <std::ranges::forward_range V, std::move_constructible F, size_t N>
+template <forward_range V, std::move_constructible F, size_t N>
 requires std::ranges::view<V> && (N > 0) && std::is_object_v<F> &&
     details::repeat_regular_invocable<F&, range_reference_t<V>, N> &&
     details::referenceable<
@@ -136,7 +137,7 @@ private:
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) adjacent_view<V, N> inner_;
 };
 
-template <std::ranges::forward_range V, std::move_constructible F, size_t N>
+template <forward_range V, std::move_constructible F, size_t N>
 requires std::ranges::view<V> && (N > 0) && std::is_object_v<F> &&
     details::repeat_regular_invocable<F&, range_reference_t<V>, N> &&
     details::referenceable<
@@ -212,7 +213,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::ranges::forward_range<Base>
+    requires forward_range<Base>
     {
         auto previous = *this;
         ++*this;
@@ -220,14 +221,14 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         --inner_;
         return *this;
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         auto previous = *this;
         --*this;
@@ -235,14 +236,14 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         inner_ += offset;
         return *this;
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         inner_ -= offset;
         return *this;
@@ -250,7 +251,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr decltype(auto) operator[](difference_type offset) const
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return std::apply(
             [&]<typename... It>(It const&... iters) -> decltype(auto) {
@@ -271,7 +272,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto operator<=>(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return left.inner_ <=> right.inner_;
     }
@@ -279,7 +280,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         iterator const& self, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return iterator(*self.parent_, self.inner_ + offset);
     }
@@ -287,7 +288,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         difference_type offset, iterator const& selft)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return iterator(*selft.parent_, selft.inner_ + offset);
     }
@@ -295,7 +296,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator-(
         iterator const& selft, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return iterator(*selft.parent_, selft.inner_ - offset);
     }
@@ -314,7 +315,7 @@ private:
     inner_iterator<Const> inner_;
 };
 
-template <std::ranges::forward_range V, std::move_constructible F, size_t N>
+template <forward_range V, std::move_constructible F, size_t N>
 requires std::ranges::view<V> && (N > 0) && std::is_object_v<F> &&
     details::repeat_regular_invocable<F&, range_reference_t<V>, N> &&
     details::referenceable<

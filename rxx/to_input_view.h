@@ -21,7 +21,7 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
-template <std::ranges::input_range V>
+template <input_range V>
 requires std::ranges::view<V>
 class to_input_view : public std::ranges::view_interface<to_input_view<V>> {
 
@@ -99,7 +99,7 @@ private:
 template <typename R>
 to_input_view(R&&) -> to_input_view<std::views::all_t<R>>;
 
-template <std::ranges::input_range V>
+template <input_range V>
 requires std::ranges::view<V>
 template <bool Const>
 class to_input_view<V>::iterator {
@@ -200,8 +200,8 @@ struct to_input_t : __RXX ranges::details::adaptor_closure<to_input_t> {
     requires requires { to_input_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const noexcept(noexcept(to_input_view(std::declval<R>()))) {
-        if constexpr (std::ranges::input_range<R> &&
-            !std::ranges::common_range<R> && !std::ranges::forward_range<R>) {
+        if constexpr (input_range<R> && !std::ranges::common_range<R> &&
+            !forward_range<R>) {
             return std::views::all(std::forward<R>(arg));
         } else {
             return to_input_view(std::forward<R>(arg));

@@ -26,18 +26,18 @@ namespace ranges {
 namespace details {
 template <typename V>
 concept slide_caches_nothing =
-    std::ranges::random_access_range<V> && std::ranges::sized_range<V>;
+    random_access_range<V> && std::ranges::sized_range<V>;
 
 template <typename V>
 concept slide_caches_last = !slide_caches_nothing<V> &&
-    std::ranges::bidirectional_range<V> && std::ranges::common_range<V>;
+    bidirectional_range<V> && std::ranges::common_range<V>;
 
 template <typename V>
 concept slide_caches_first = !slide_caches_nothing<V> && !slide_caches_last<V>;
 
 } // namespace details
 
-template <std::ranges::forward_range V>
+template <forward_range V>
 requires std::ranges::view<V>
 class slide_view : public std::ranges::view_interface<slide_view<V>> {
     template <bool>
@@ -164,7 +164,7 @@ private:
 template <typename R>
 slide_view(R&&, range_difference_t<R>) -> slide_view<std::views::all_t<R>>;
 
-template <std::ranges::forward_range V>
+template <forward_range V>
 requires std::ranges::view<V>
 template <bool Const>
 class slide_view<V>::iterator {
@@ -190,9 +190,9 @@ class slide_view<V>::iterator {
 public:
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = decltype([]() {
-        if constexpr (std::ranges::random_access_range<V>)
+        if constexpr (random_access_range<V>)
             return std::random_access_iterator_tag{};
-        else if constexpr (std::ranges::bidirectional_range<V>)
+        else if constexpr (bidirectional_range<V>)
             return std::bidirectional_iterator_tag{};
         else
             return std::forward_iterator_tag{};
@@ -222,7 +222,7 @@ public:
     constexpr auto operator[](difference_type pos) const noexcept(noexcept(
         std::views::counted(std::declval<iterator_t<Base> const&>() + pos,
             std::declval<range_difference_t<Base> const&>())))
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return std::views::counted(current_ + pos, num_);
     }
@@ -242,7 +242,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         --current_;
         if constexpr (details::slide_caches_first<Base>) {
@@ -252,7 +252,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         auto prev = *this;
         --*this;
@@ -260,7 +260,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type val)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         current_ += val;
         if constexpr (details::slide_caches_first<Base>) {
@@ -270,7 +270,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type val)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         current_ -= val;
         if constexpr (details::slide_caches_first<Base>) {
@@ -282,7 +282,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         iterator const& iter, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = iter;
         copy += offset;
@@ -292,7 +292,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         difference_type offset, iterator const& iter)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = iter;
         copy += offset;
@@ -302,7 +302,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator-(
         iterator const& iter, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = iter;
         copy -= offset;
@@ -333,14 +333,14 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator<(iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return left.current_ < right.current_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator>(iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return right < left;
     }
@@ -348,7 +348,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator<=(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return !(right < left);
     }
@@ -356,7 +356,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator>=(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return !(left < right);
     }
@@ -364,7 +364,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto operator<=>(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base> &&
+    requires random_access_range<Base> &&
         std::three_way_comparable<iterator_t<Base>>
     {
         return left.current_ <=> right.current_;
@@ -379,7 +379,7 @@ private:
     range_difference_t<Base> num_ = 0;
 };
 
-template <std::ranges::forward_range V>
+template <forward_range V>
 requires std::ranges::view<V>
 class slide_view<V>::sentinel {
     friend slide_view;

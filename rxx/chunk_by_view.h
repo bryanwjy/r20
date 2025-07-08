@@ -27,7 +27,7 @@ concept chunk_by_predicate = std::ranges::view<V> && std::is_object_v<Pred> &&
     std::indirect_binary_predicate<Pred, iterator_t<V>, iterator_t<V>>;
 }
 
-template <std::ranges::forward_range V, details::chunk_by_predicate<V> Pred>
+template <forward_range V, details::chunk_by_predicate<V> Pred>
 class chunk_by_view :
     public std::ranges::view_interface<chunk_by_view<V, Pred>> {
 
@@ -95,7 +95,7 @@ private:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<V> find_prev(iterator_t<V> current)
-    requires std::ranges::bidirectional_range<V>
+    requires bidirectional_range<V>
     {
         auto first = __RXX ranges::begin(base_);
         std::ranges::reverse_view reversed{
@@ -121,7 +121,7 @@ private:
 template <typename R, typename Pred>
 chunk_by_view(R&&, Pred) -> chunk_by_view<std::views::all_t<R>, Pred>;
 
-template <std::ranges::forward_range V, details::chunk_by_predicate<V> Pred>
+template <forward_range V, details::chunk_by_predicate<V> Pred>
 class chunk_by_view<V, Pred>::iterator {
     friend chunk_by_view;
 
@@ -137,9 +137,8 @@ public:
     using value_type = std::ranges::subrange<iterator_t<V>>;
     using difference_type = range_difference_t<V>;
     using iterator_category = std::input_iterator_tag;
-    using iterator_concept =
-        std::conditional_t<std::ranges::bidirectional_range<V>,
-            std::bidirectional_iterator_tag, std::forward_iterator_tag>;
+    using iterator_concept = std::conditional_t<bidirectional_range<V>,
+        std::bidirectional_iterator_tag, std::forward_iterator_tag>;
 
     __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
         std::is_nothrow_default_constructible_v<iterator_t<V>>) = default;
@@ -163,7 +162,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<V>
+    requires bidirectional_range<V>
     {
         next_ = current_;
         current_ = parent_->find_prev(next_);
@@ -171,7 +170,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<V>
+    requires bidirectional_range<V>
     {
         auto prev = *this;
         --*this;

@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
@@ -20,8 +21,8 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 namespace details {
 template <typename R>
-concept range_with_movable_reference = std::ranges::input_range<R> &&
-    std::move_constructible<range_reference_t<R>> &&
+concept range_with_movable_reference =
+    input_range<R> && std::move_constructible<range_reference_t<R>> &&
     std::move_constructible<range_rvalue_reference_t<R>>;
 } // namespace details
 
@@ -125,11 +126,11 @@ class enumerate_view<V>::iterator {
 public:
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = decltype([]() {
-        if constexpr (std::ranges::random_access_range<Base>)
+        if constexpr (random_access_range<Base>)
             return std::random_access_iterator_tag{};
-        else if constexpr (std::ranges::bidirectional_range<Base>)
+        else if constexpr (bidirectional_range<Base>)
             return std::bidirectional_iterator_tag{};
-        else if constexpr (std::ranges::forward_range<Base>)
+        else if constexpr (forward_range<Base>)
             return std::forward_iterator_tag{};
         else
             return std::input_iterator_tag{};
@@ -174,7 +175,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::ranges::forward_range<Base>
+    requires forward_range<Base>
     {
         auto copy = *this;
         ++*this;
@@ -182,7 +183,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         --current_;
         --pos_;
@@ -190,7 +191,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         auto copy = *this;
         --*this;
@@ -198,7 +199,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         current_ += offset;
         pos_ += offset;
@@ -206,7 +207,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         current_ -= offset;
         pos_ -= offset;
@@ -215,7 +216,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator[](difference_type offset) const
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return reference_type{pos_ + offset, current_[offset]};
     }
@@ -235,7 +236,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         iterator const& self, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = self;
         copy += offset;
@@ -245,7 +246,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         difference_type offset, iterator const& self)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return self + offset;
     }
@@ -253,7 +254,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator-(
         iterator const& self, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = self;
         copy -= offset;

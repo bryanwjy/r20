@@ -25,7 +25,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
 template <std::ranges::view V>
-requires std::ranges::input_range<V>
+requires input_range<V>
 class as_rvalue_view : public std::ranges::view_interface<as_rvalue_view<V>> {
 public:
     __RXX_HIDE_FROM_ABI constexpr as_rvalue_view() noexcept(

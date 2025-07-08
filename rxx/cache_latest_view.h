@@ -21,7 +21,7 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
-template <std::ranges::input_range V>
+template <input_range V>
 requires std::ranges::view<V>
 class cache_latest_view :
     public std::ranges::view_interface<cache_latest_view<V>> {
@@ -82,7 +82,7 @@ private:
 template <typename R>
 cache_latest_view(R&&) -> cache_latest_view<std::views::all_t<R>>;
 
-template <std::ranges::input_range V>
+template <input_range V>
 requires std::ranges::view<V>
 class cache_latest_view<V>::iterator {
 
@@ -151,7 +151,7 @@ private:
     iterator_t<V> current_;
 };
 
-template <std::ranges::input_range V>
+template <input_range V>
 requires std::ranges::view<V>
 class cache_latest_view<V>::sentinel {
 

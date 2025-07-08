@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/concepts.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
@@ -26,10 +27,9 @@ namespace details {
 template <typename... Rs>
 concept zip_common =
     (sizeof...(Rs) == 1 && (... && std::ranges::common_range<Rs>)) ||
-    (!(... && std::ranges::bidirectional_range<Rs>)&&(
+    (!(... && bidirectional_range<Rs>)&&(
         ... && std::ranges::common_range<Rs>)) ||
-    ((... && std::ranges::random_access_range<Rs>)&&(
-        ... && std::ranges::sized_range<Rs>));
+    ((... && random_access_range<Rs>)&&(... && std::ranges::sized_range<Rs>));
 
 template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -45,7 +45,7 @@ constexpr T abs(T val) noexcept {
 }
 } // namespace details
 
-template <std::ranges::input_range... Rs>
+template <input_range... Rs>
 requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
 class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
 
@@ -84,7 +84,7 @@ public:
         if constexpr (!details::zip_common<Rs...>) {
             return sentinel<false>(
                 details::transform(__RXX ranges::end, views_));
-        } else if constexpr ((... && std::ranges::random_access_range<Rs>)) {
+        } else if constexpr ((... && random_access_range<Rs>)) {
             return begin() + iter_difference_t<iterator<false>>(size());
         } else {
             return iterator<false>(
@@ -99,8 +99,7 @@ public:
         if constexpr (!details::zip_common<Rs const...>) {
             return sentinel<true>(
                 details::transform(__RXX ranges::end, views_));
-        } else if constexpr ((... &&
-                                 std::ranges::random_access_range<Rs const>)) {
+        } else if constexpr ((... && random_access_range<Rs const>)) {
             return begin() + std::iter_difference_t<iterator<true>>(size());
         } else {
             return iterator<true>(
@@ -154,7 +153,7 @@ struct zip_view_iterator_category<Const, Rs...> {
 };
 } // namespace details
 
-template <std::ranges::input_range... Rs>
+template <input_range... Rs>
 requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::iterator :
@@ -365,7 +364,7 @@ private:
     current_type current_;
 };
 
-template <std::ranges::input_range... Rs>
+template <input_range... Rs>
 requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::sentinel {
