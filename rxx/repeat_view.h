@@ -25,7 +25,7 @@ namespace details {
 
 template <typename Int>
 struct wider_signed_int {
-    using type = typename decltype([]() {
+    using type RXX_NODEBUG = typename decltype([]() {
         if constexpr (sizeof(Int) < sizeof(short))
             return std::type_identity<short>{};
         else if constexpr (sizeof(Int) < sizeof(int))

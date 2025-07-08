@@ -22,8 +22,9 @@ template <std::ranges::input_range V>
 requires std::ranges::view<V>
 class cache_latest_view :
     public std::ranges::view_interface<cache_latest_view<V>> {
-    using CacheT = std::conditional_t<std::is_reference_v<range_reference_t<V>>,
-        std::add_pointer_t<range_reference_t<V>>, range_reference_t<V>>;
+    using CacheT RXX_NODEBUG =
+        std::conditional_t<std::is_reference_v<range_reference_t<V>>,
+            std::add_pointer_t<range_reference_t<V>>, range_reference_t<V>>;
 
     class iterator;
     class sentinel;

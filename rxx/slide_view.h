@@ -146,10 +146,12 @@ public:
     }
 
 private:
-    using CacheBegin = std::conditional_t<details::slide_caches_first<V>,
-        details::cached_position<V>, details::empty_cache>;
-    using CacheEnd = std::conditional_t<details::slide_caches_last<V>,
-        details::cached_position<V>, details::empty_cache>;
+    using CacheBegin RXX_NODEBUG =
+        std::conditional_t<details::slide_caches_first<V>,
+            details::cached_position<V>, details::empty_cache>;
+    using CacheEnd RXX_NODEBUG =
+        std::conditional_t<details::slide_caches_last<V>,
+            details::cached_position<V>, details::empty_cache>;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_;
     range_difference_t<V> num_;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) CacheBegin cache_begin_;
@@ -167,7 +169,7 @@ class slide_view<V>::iterator {
     friend slide_view;
     friend slide_view::sentinel;
 
-    using Base = details::const_if<Const, V>;
+    using Base RXX_NODEBUG = details::const_if<Const, V>;
 
     __RXX_HIDE_FROM_ABI constexpr iterator(
         iterator_t<Base> current, range_difference_t<Base> num)
@@ -452,5 +454,5 @@ RXX_DEFAULT_NAMESPACE_END
 
 template <typename V>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<rxx::ranges::slide_view<V>> =
+    std::ranges::enable_borrowed_range<__RXX ranges::slide_view<V>> =
         std::ranges::enable_borrowed_range<V>;

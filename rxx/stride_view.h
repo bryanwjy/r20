@@ -151,8 +151,8 @@ requires std::ranges::view<V>
 template <bool Const>
 class stride_view<V>::iterator :
     public details::stride_view_iterator_category<Const, V> {
-    using Parent = details::const_if<Const, stride_view>;
-    using Base = details::const_if<Const, V>;
+    using Parent RXX_NODEBUG = details::const_if<Const, stride_view>;
+    using Base RXX_NODEBUG = details::const_if<Const, V>;
     friend stride_view;
 
 public:
@@ -443,5 +443,5 @@ RXX_DEFAULT_NAMESPACE_END
 
 template <typename V>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<rxx::ranges::stride_view<V>> =
+    std::ranges::enable_borrowed_range<__RXX ranges::stride_view<V>> =
         std::ranges::enable_borrowed_range<V>;
