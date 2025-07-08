@@ -16,6 +16,9 @@
 #elif __has_include(<xutility>)
 #  include <xutility>
 #else
+#  if RXX_LIBSTDCXX | RXX_MSVC_STL | RXX_LIBCXX
+#    warning "Outdated standard library detected"
+#  endif
 #  include <ranges>
 #endif
 
