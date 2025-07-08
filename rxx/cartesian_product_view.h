@@ -72,7 +72,7 @@ __RXX_HIDE_FROM_ABI constexpr auto cartesian_product_common_arg_end(R& range) {
 } // namespace details
 
 template <input_range First, forward_range... Vs>
-requires (std::ranges::view<First> && ... && std::ranges::view<Vs>)
+requires (view<First> && ... && view<Vs>)
 class cartesian_product_view :
     public std::ranges::view_interface<cartesian_product_view<First, Vs...>> {
 
@@ -106,8 +106,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires (
-        std::ranges::range<First const> && ... && std::ranges::range<Vs const>)
+    requires (range<First const> && ... && range<Vs const>)
     {
         return iterator<true>(
             *this, details::transform(__RXX ranges::begin, bases_));
@@ -193,7 +192,7 @@ cartesian_product_view(Vs&&...)
     -> cartesian_product_view<std::views::all_t<Vs>...>;
 
 template <input_range First, forward_range... Vs>
-requires (std::ranges::view<First> && ... && std::ranges::view<Vs>)
+requires (view<First> && ... && view<Vs>)
 template <bool Const>
 class cartesian_product_view<First, Vs...>::iterator {
     friend cartesian_product_view;

@@ -23,7 +23,7 @@ namespace ranges {
 
 namespace details {
 template <typename Pred, typename V>
-concept chunk_by_predicate = std::ranges::view<V> && std::is_object_v<Pred> &&
+concept chunk_by_predicate = view<V> && std::is_object_v<Pred> &&
     std::indirect_binary_predicate<Pred, iterator_t<V>, iterator_t<V>>;
 }
 

@@ -38,7 +38,7 @@ concept slide_caches_first = !slide_caches_nothing<V> && !slide_caches_last<V>;
 } // namespace details
 
 template <forward_range V>
-requires std::ranges::view<V>
+requires view<V>
 class slide_view : public std::ranges::view_interface<slide_view<V>> {
     template <bool>
     class iterator;
@@ -165,7 +165,7 @@ template <typename R>
 slide_view(R&&, range_difference_t<R>) -> slide_view<std::views::all_t<R>>;
 
 template <forward_range V>
-requires std::ranges::view<V>
+requires view<V>
 template <bool Const>
 class slide_view<V>::iterator {
 
@@ -380,7 +380,7 @@ private:
 };
 
 template <forward_range V>
-requires std::ranges::view<V>
+requires view<V>
 class slide_view<V>::sentinel {
     friend slide_view;
 
@@ -421,7 +421,7 @@ private:
 namespace views {
 namespace details {
 struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
-    template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
+    template <viewable_range R, typename D = range_difference_t<R>>
     requires requires { slide_view(std::declval<R>(), std::declval<D>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& range, std::type_identity_t<D> num) const

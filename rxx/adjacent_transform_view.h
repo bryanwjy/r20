@@ -47,7 +47,7 @@ using repeat_invoke_result_t RXX_NODEBUG =
 } // namespace details
 
 template <forward_range V, std::move_constructible F, size_t N>
-requires std::ranges::view<V> && (N > 0) && std::is_object_v<F> &&
+requires view<V> && (N > 0) && std::is_object_v<F> &&
     details::repeat_regular_invocable<F&, range_reference_t<V>, N> &&
     details::referenceable<
         details::repeat_invoke_result_t<F&, range_reference_t<V>, N>>
@@ -92,7 +92,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<InnerView const> &&
+    requires range<InnerView const> &&
         details::repeat_regular_invocable<F const&, range_reference_t<V const>,
             N>
     {
@@ -108,7 +108,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<InnerView const> &&
+    requires range<InnerView const> &&
         details::repeat_regular_invocable<F const&, range_reference_t<V const>,
             N>
     {
@@ -138,7 +138,7 @@ private:
 };
 
 template <forward_range V, std::move_constructible F, size_t N>
-requires std::ranges::view<V> && (N > 0) && std::is_object_v<F> &&
+requires view<V> && (N > 0) && std::is_object_v<F> &&
     details::repeat_regular_invocable<F&, range_reference_t<V>, N> &&
     details::referenceable<
         details::repeat_invoke_result_t<F&, range_reference_t<V>, N>>
@@ -316,7 +316,7 @@ private:
 };
 
 template <forward_range V, std::move_constructible F, size_t N>
-requires std::ranges::view<V> && (N > 0) && std::is_object_v<F> &&
+requires view<V> && (N > 0) && std::is_object_v<F> &&
     details::repeat_regular_invocable<F&, range_reference_t<V>, N> &&
     details::referenceable<
         details::repeat_invoke_result_t<F&, range_reference_t<V>, N>>
@@ -366,7 +366,7 @@ template <size_t N>
 struct adjacent_transform_t :
     ranges::details::adaptor_non_closure<adjacent_transform_t<N>> {
 
-    template <std::ranges::viewable_range V, typename F>
+    template <viewable_range V, typename F>
     requires requires {
         adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
             std::declval<V>(), std::declval<F>());
@@ -380,7 +380,7 @@ struct adjacent_transform_t :
             N>(std::forward<V>(arg), std::forward<F>(func));
     }
 
-    template <std::ranges::viewable_range V, typename F>
+    template <viewable_range V, typename F>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator()(V&& arg, F&& func) const
         noexcept(noexcept(zip_transform(std::declval<F>())))

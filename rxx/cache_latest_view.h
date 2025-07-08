@@ -22,7 +22,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 template <input_range V>
-requires std::ranges::view<V>
+requires view<V>
 class cache_latest_view :
     public std::ranges::view_interface<cache_latest_view<V>> {
     using CacheT RXX_NODEBUG =
@@ -83,7 +83,7 @@ template <typename R>
 cache_latest_view(R&&) -> cache_latest_view<std::views::all_t<R>>;
 
 template <input_range V>
-requires std::ranges::view<V>
+requires view<V>
 class cache_latest_view<V>::iterator {
 
     __RXX_HIDE_FROM_ABI constexpr explicit iterator(cache_latest_view& parent)
@@ -152,7 +152,7 @@ private:
 };
 
 template <input_range V>
-requires std::ranges::view<V>
+requires view<V>
 class cache_latest_view<V>::sentinel {
 
     __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
@@ -204,7 +204,7 @@ namespace views {
 namespace details {
 struct cache_latest_t : __RXX ranges::details::adaptor_closure<cache_latest_t> {
 
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires requires { cache_latest_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const

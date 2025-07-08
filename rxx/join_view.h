@@ -25,7 +25,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
 template <input_range V>
-requires std::ranges::view<V> && input_range<range_reference_t<V>>
+requires view<V> && input_range<range_reference_t<V>>
 class join_view : public std::ranges::view_interface<join_view<V>> {
 
     template <bool Const>
@@ -180,7 +180,7 @@ __RXX_HIDE_FROM_ABI constexpr T& as_lvalue(T&& val RXX_LIFETIMEBOUND) {
 } // namespace details
 
 template <input_range V>
-requires std::ranges::view<V> && input_range<range_reference_t<V>>
+requires view<V> && input_range<range_reference_t<V>>
 template <bool Const>
 class join_view<V>::iterator final :
     public details::join_view_iterator_category<Const, V> {
@@ -392,7 +392,7 @@ private:
 };
 
 template <input_range V>
-requires std::ranges::view<V> && input_range<range_reference_t<V>>
+requires view<V> && input_range<range_reference_t<V>>
 template <bool Const>
 class join_view<V>::sentinel {
 private:

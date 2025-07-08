@@ -37,7 +37,7 @@ concept tiny_range = std::ranges::sized_range<T> && requires {
 } // namespace details
 
 template <input_range V, forward_range P>
-requires std::ranges::view<V> && std::ranges::view<P> &&
+requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
@@ -138,7 +138,7 @@ struct lazy_split_view_outer_iterator_category<Const, V> {
 } // namespace details
 
 template <input_range V, forward_range P>
-requires std::ranges::view<V> && std::ranges::view<P> &&
+requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
@@ -320,7 +320,7 @@ struct lazy_split_view_inner_iterator_category<Const, V> {
 } // namespace details
 
 template <input_range V, forward_range P>
-requires std::ranges::view<V> && std::ranges::view<P> &&
+requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
@@ -332,8 +332,8 @@ class lazy_split_view<V, P>::inner_iterator :
 public:
     using iterator_concept = std::conditional_t<forward_range<Base>,
         std::forward_iterator_tag, std::input_iterator_tag>;
-    using value_type = std::ranges::range_value_t<Base>;
-    using difference_type = std::ranges::range_difference_t<Base>;
+    using value_type = range_value_t<Base>;
+    using difference_type = range_difference_t<Base>;
 
     __RXX_HIDE_FROM_ABI constexpr inner_iterator() noexcept(
         std::is_nothrow_default_constructible_v<outer_iterator<Const>>) =
@@ -487,8 +487,8 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
 #if RXX_LIBSTDCXX
     using ranges::details::adaptor_non_closure<lazy_split_t>::operator();
     template <typename P>
-    static constexpr bool _S_has_simple_extra_args = std::is_scalar_v<P> ||
-        (std::ranges::view<P> && std::copy_constructible<P>);
+    static constexpr bool _S_has_simple_extra_args =
+        std::is_scalar_v<P> || (view<P> && std::copy_constructible<P>);
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename P>

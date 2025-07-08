@@ -24,7 +24,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::ranges::view V>
+template <view V>
 requires input_range<V>
 class as_rvalue_view : public std::ranges::view_interface<as_rvalue_view<V>> {
 public:
@@ -58,7 +58,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         return std::move_iterator(__RXX ranges::begin(base_));
     }
@@ -76,7 +76,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         if constexpr (std::ranges::common_range<V const>) {
             return std::move_iterator(__RXX ranges::end(base_));

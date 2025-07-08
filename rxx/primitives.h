@@ -3,7 +3,7 @@
 
 #include "rxx/config.h"
 
-#include "access.h"
+#include "rxx/access.h"
 
 #include <iterator>
 #include <ranges>
@@ -27,16 +27,6 @@ using std::ranges::range_reference_t;
 using std::ranges::range_rvalue_reference_t;
 using std::ranges::range_size_t;
 using std::ranges::range_value_t;
-
-template <std::ranges::range R>
-using const_iterator_t = decltype(__RXX ranges::cbegin(std::declval<R&>()));
-
-template <std::ranges::range R>
-using const_sentinel_t = decltype(__RXX ranges::cend(std::declval<R&>()));
-
-template <std::ranges::range R>
-using range_const_reference_t =
-    __RXX iter_const_reference_t<ranges::iterator_t<R>>;
 } // namespace ranges
 
 RXX_DEFAULT_NAMESPACE_END

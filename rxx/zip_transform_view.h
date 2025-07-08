@@ -22,7 +22,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
 template <std::move_constructible F, input_range... Views>
-requires (... && std::ranges::view<Views>) &&
+requires (... && view<Views>) &&
     (sizeof...(Views) > 0) && std::is_object_v<F> &&
     std::regular_invocable<F&, range_reference_t<Views>...> &&
     details::referenceable<
@@ -54,7 +54,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<InnerView const> &&
+    requires range<InnerView const> &&
         std::regular_invocable<F const&, range_reference_t<Views const>...>
     {
         return iterator<true>(*this, zip_.begin());
@@ -70,7 +70,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<InnerView const> &&
+    requires range<InnerView const> &&
         std::regular_invocable<F const&, range_reference_t<Views const>...>
     {
         if constexpr (std::ranges::common_range<InnerView const>) {
@@ -140,7 +140,7 @@ zip_transform_view(F, Rs&&...)
     -> zip_transform_view<F, std::views::all_t<Rs>...>;
 
 template <std::move_constructible F, input_range... Views>
-requires (... && std::ranges::view<Views>) &&
+requires (... && view<Views>) &&
     (sizeof...(Views) > 0) && std::is_object_v<F> &&
     std::regular_invocable<F&, range_reference_t<Views>...> &&
     details::referenceable<
@@ -295,7 +295,7 @@ private:
 };
 
 template <std::move_constructible F, input_range... Views>
-requires (... && std::ranges::view<Views>) &&
+requires (... && view<Views>) &&
     (sizeof...(Views) > 0) && std::is_object_v<F> &&
     std::regular_invocable<F&, range_reference_t<Views>...> &&
     details::referenceable<

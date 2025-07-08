@@ -24,7 +24,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::ranges::view V>
+template <view V>
 requires input_range<V>
 class as_const_view : public std::ranges::view_interface<as_const_view<V>> {
 public:
@@ -58,7 +58,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         return __RXX ranges::cbegin(base_);
     }
@@ -72,7 +72,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         return __RXX ranges::cend(base_);
     }
@@ -108,7 +108,7 @@ inline constexpr bool is_constable_ref_view<std::ranges::ref_view<R>> =
     constant_range<R const>;
 
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires requires { as_const_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const noexcept(noexcept(as_const_view(std::declval<R>()))) {
@@ -124,7 +124,7 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
             return std::ranges::ref_view(
                 std::as_const(std::forward<R>(arg).base()));
         } else if constexpr (std::is_lvalue_reference_v<R> &&
-            constant_range<R const> && !std::ranges::view<R>) {
+            constant_range<R const> && !view<R>) {
             return std::ranges::ref_view(static_cast<R const&>(arg));
         } else {
             return as_const_view(std::forward<R>(arg));

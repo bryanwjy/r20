@@ -26,7 +26,7 @@ concept range_with_movable_reference =
     std::move_constructible<range_rvalue_reference_t<R>>;
 } // namespace details
 
-template <std::ranges::view V>
+template <view V>
 requires details::range_with_movable_reference<V>
 class enumerate_view : public std::ranges::view_interface<enumerate_view<V>> {
     template <bool IsConst>
@@ -115,7 +115,7 @@ private:
 template <typename R>
 enumerate_view(R&&) -> enumerate_view<std::views::all_t<R>>;
 
-template <std::ranges::view V>
+template <view V>
 requires details::range_with_movable_reference<V>
 template <bool Const>
 class enumerate_view<V>::iterator {
@@ -287,7 +287,7 @@ private:
     difference_type pos_ = 0;
 };
 
-template <std::ranges::view V>
+template <view V>
 requires details::range_with_movable_reference<V>
 template <bool Const>
 class enumerate_view<V>::sentinel {
@@ -346,7 +346,7 @@ private:
 namespace views {
 namespace details {
 struct enumerate_t : __RXX ranges::details::adaptor_closure<enumerate_t> {
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires requires {
         enumerate_view<std::views::all_t<R>>(std::declval<R>());
     }

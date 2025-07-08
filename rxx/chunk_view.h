@@ -25,7 +25,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::ranges::view V>
+template <view V>
 requires input_range<V>
 class chunk_view : public std::ranges::view_interface<chunk_view<V>> {
     class outer_iterator;
@@ -91,7 +91,7 @@ private:
 template <typename R>
 chunk_view(R&&, range_difference_t<R>) -> chunk_view<std::views::all_t<R>>;
 
-template <std::ranges::view V>
+template <view V>
 requires input_range<V>
 class chunk_view<V>::outer_iterator {
     friend chunk_view;
@@ -185,7 +185,7 @@ private:
     chunk_view* parent_;
 };
 
-template <std::ranges::view V>
+template <view V>
 requires input_range<V>
 class chunk_view<V>::inner_iterator {
 
@@ -267,7 +267,7 @@ private:
     chunk_view* parent_;
 };
 
-template <std::ranges::view V>
+template <view V>
 requires forward_range<V>
 class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
@@ -572,7 +572,7 @@ namespace views {
 namespace details {
 struct chunk_t : ranges::details::adaptor_non_closure<chunk_t> {
 
-    template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
+    template <viewable_range R, typename D = range_difference_t<R>>
     requires requires { chunk_view(std::declval<R>(), std::declval<D>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg, std::type_identity_t<D> size) const {

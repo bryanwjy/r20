@@ -25,7 +25,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
 template <input_range V>
-requires std::ranges::view<V>
+requires view<V>
 class stride_view : public std::ranges::view_interface<stride_view<V>> {
     template <bool>
     class iterator;
@@ -65,7 +65,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         return iterator<true>{*this, __RXX ranges::begin(base_)};
     }
@@ -89,7 +89,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         if constexpr (std::ranges::common_range<V const> &&
             std::ranges::sized_range<V const> && forward_range<V const>) {
@@ -130,11 +130,11 @@ stride_view(R&&, range_difference_t<R>) -> stride_view<std::views::all_t<R>>;
 
 namespace details {
 template <bool Const, input_range V>
-requires std::ranges::view<V>
+requires view<V>
 struct stride_view_iterator_category {};
 
 template <bool Const, forward_range V>
-requires std::ranges::view<V>
+requires view<V>
 struct stride_view_iterator_category<Const, V> {
     using iterator_category = decltype([]() {
         if constexpr (std::derived_from<iterator_category_of<Const, V>,
@@ -148,7 +148,7 @@ struct stride_view_iterator_category<Const, V> {
 } // namespace details
 
 template <input_range V>
-requires std::ranges::view<V>
+requires view<V>
 template <bool Const>
 class stride_view<V>::iterator :
     public details::stride_view_iterator_category<Const, V> {
@@ -407,7 +407,7 @@ namespace views {
 namespace details {
 struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
 
-    template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
+    template <viewable_range R, typename D = range_difference_t<R>>
     requires requires { stride_view(std::declval<R>(), std::declval<D>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg, std::type_identity_t<D> size) const

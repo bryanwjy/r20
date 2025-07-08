@@ -63,8 +63,7 @@ concept bidirectional_common =
 } // namespace details
 
 template <input_range V, forward_range P>
-requires std::ranges::view<V> && std::ranges::view<P> &&
-    input_range<range_reference_t<V>> &&
+requires view<V> && view<P> && input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
 class join_with_view :
     public std::ranges::view_interface<join_with_view<V, P>> {
@@ -238,8 +237,7 @@ struct join_with_view_iterator_category<Const, V, P> {
 } // namespace details
 
 template <input_range V, forward_range P>
-requires std::ranges::view<V> && std::ranges::view<P> &&
-    input_range<range_reference_t<V>> &&
+requires view<V> && view<P> && input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
 template <bool Const>
 class join_with_view<V, P>::iterator :
@@ -524,8 +522,7 @@ private:
 };
 
 template <input_range V, forward_range P>
-requires std::ranges::view<V> && std::ranges::view<P> &&
-    input_range<range_reference_t<V>> &&
+requires view<V> && view<P> && input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
 template <bool Const>
 class join_with_view<V, P>::sentinel {
@@ -574,8 +571,8 @@ struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
 #if RXX_LIBSTDCXX
     using ranges::details::adaptor_non_closure<join_with_t>::operator();
     template <typename T>
-    static constexpr bool _S_has_simple_extra_args = std::is_scalar_v<T> ||
-        (std::ranges::view<T> && std::copy_constructible<T>);
+    static constexpr bool _S_has_simple_extra_args =
+        std::is_scalar_v<T> || (view<T> && std::copy_constructible<T>);
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>

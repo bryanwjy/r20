@@ -39,7 +39,7 @@ using repeat_type_t RXX_NODEBUG = decltype(repeat<T>(make_index_sequence_v<N>));
 } // namespace details
 
 template <forward_range V, size_t N>
-requires std::ranges::view<V> && (N > 0)
+requires view<V> && (N > 0)
 class adjacent_view : public std::ranges::view_interface<adjacent_view<V, N>> {
 
     struct as_sentinel_t {};
@@ -82,7 +82,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         return iterator<true>(
             __RXX ranges::begin(base_), __RXX ranges::end(base_));
@@ -102,7 +102,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         if constexpr (std::ranges::common_range<V>) {
             return iterator<true>(as_sentinel, __RXX ranges::begin(base_),
@@ -139,7 +139,7 @@ private:
 };
 
 template <forward_range V, size_t N>
-requires std::ranges::view<V> && (N > 0)
+requires view<V> && (N > 0)
 template <bool Const>
 class adjacent_view<V, N>::iterator {
     using Base = details::const_if<Const, V>;
@@ -361,7 +361,7 @@ private:
 };
 
 template <forward_range V, size_t N>
-requires std::ranges::view<V> && (N > 0)
+requires view<V> && (N > 0)
 template <bool Const>
 class adjacent_view<V, N>::sentinel {
     using Base = details::const_if<Const, V>;
@@ -414,7 +414,7 @@ namespace details {
 template <size_t N>
 struct adjacent_t : __RXX ranges::details::adaptor_closure<adjacent_t<N>> {
 
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires (N == 0) ||
         requires { adjacent_view<std::views::all_t<R>, N>(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(

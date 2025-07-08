@@ -22,7 +22,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 template <input_range V>
-requires std::ranges::view<V>
+requires view<V>
 class to_input_view : public std::ranges::view_interface<to_input_view<V>> {
 
     template <bool>
@@ -59,7 +59,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         return iterator<true>(__RXX ranges::begin(base_));
     }
@@ -73,7 +73,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         return __RXX ranges::end(base_);
     }
@@ -100,7 +100,7 @@ template <typename R>
 to_input_view(R&&) -> to_input_view<std::views::all_t<R>>;
 
 template <input_range V>
-requires std::ranges::view<V>
+requires view<V>
 template <bool Const>
 class to_input_view<V>::iterator {
 
@@ -196,7 +196,7 @@ namespace views {
 namespace details {
 struct to_input_t : __RXX ranges::details::adaptor_closure<to_input_t> {
 
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires requires { to_input_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const noexcept(noexcept(to_input_view(std::declval<R>()))) {
