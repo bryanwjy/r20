@@ -293,7 +293,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
                 return std::forward_iterator_tag{};
             }
         }());
-        using value_type = decltype(rxx::views::take(
+        using value_type = decltype(__RXX views::take(
             std::ranges::subrange(std::declval<iterator_t<Base>>(),
                 std::declval<sentinel_t<Base>>()),
             range_difference_t<Base>{}));
@@ -604,5 +604,6 @@ inline constexpr details::chunk_t chunk{};
 RXX_DEFAULT_NAMESPACE_END
 
 template <typename V>
-constexpr bool std::ranges::enable_borrowed_range<rxx::ranges::chunk_view<V>> =
-    std::ranges::forward_range<V> && std::ranges::enable_borrowed_range<V>;
+constexpr bool
+    std::ranges::enable_borrowed_range<__RXX ranges::chunk_view<V>> =
+        std::ranges::forward_range<V> && std::ranges::enable_borrowed_range<V>;
