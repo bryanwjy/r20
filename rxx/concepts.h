@@ -9,7 +9,6 @@
 #include <concepts>
 #include <initializer_list>
 #include <iterator>
-#include <ranges>
 #if __has_include(<__ranges/enable_view.h>)
 #  include <__ranges/enable_view.h>
 #elif __has_include(<bits/ranges_base.h>)
@@ -56,7 +55,7 @@ template <typename T>
 concept contiguous_range = random_access_range<T> &&
     std::contiguous_iterator<ranges::iterator_t<T>> && requires(T& t) {
         {
-            std::ranges::data(t)
+            ranges::data(t)
         } -> std::same_as<std::add_pointer_t<ranges::range_reference_t<T>>>;
     };
 

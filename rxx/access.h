@@ -46,16 +46,6 @@ concept unqualified_begin = !member_begin<T> && borrowable<T> &&
     };
 
 struct begin_t {
-private:
-    template <typename T>
-    static consteval bool is_nothrow() noexcept {
-        if constexpr (member_begin<T>) {
-            return noexcept(__RXX_AUTOCAST(std::declval<T&>().begin()));
-        } else {
-            return noexcept(__RXX_AUTOCAST(begin(std::declval<T&>())));
-        }
-    }
-
 public:
     template <typename T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -78,14 +68,16 @@ public:
     template <typename T>
     requires member_begin<T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(is_nothrow<T&>()) {
+    operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(__RXX_AUTOCAST(arg.begin()))) {
         return __RXX_AUTOCAST(arg.begin());
     }
 
     template <typename T>
     requires unqualified_begin<T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(is_nothrow<T&>()) {
+    operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(__RXX_AUTOCAST(begin(arg)))) {
         return __RXX_AUTOCAST(begin(arg));
     }
 
@@ -111,7 +103,7 @@ concept member_end = borrowable<T> && requires(T&& val) {
 template <typename T>
 concept unqualified_end = !member_end<T> && borrowable<T> &&
     class_or_enum<std::remove_cvref_t<T>> && requires(T&& val) {
-        { __RXX_AUTOCAST(begin(val)) } -> std::sentinel_for<iterator_t<T>>;
+        { __RXX_AUTOCAST(end(val)) } -> std::sentinel_for<iterator_t<T>>;
     };
 
 struct end_t {
@@ -196,10 +188,49 @@ struct cend_t {
     }
 };
 } // namespace details
+
 inline namespace cpo {
 inline constexpr ranges::details::cbegin_t cbegin{};
 inline constexpr ranges::details::cend_t cend{};
 } // namespace cpo
+
+namespace details {
+template <typename T>
+concept ptr_to_object =
+    std::is_pointer_v<T> && std::is_object_v<std::remove_pointer_t<T>>;
+
+template <typename T>
+concept member_data = borrowable<T> && requires(T&& val) {
+    { __RXX_AUTOCAST(val.data()) } -> std::sentinel_for<iterator_t<T>>;
+};
+
+template <typename T>
+concept ranges_contiguous_begin =
+    !member_data<T> && borrowable<T> && requires(T&& val) {
+        { ranges::begin(val) } -> std::contiguous_iterator;
+    };
+
+struct data_t {
+    template <member_data T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(arg.data())) {
+        return arg.data();
+    }
+
+    template <ranges_contiguous_begin T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(std::to_address(ranges::begin(arg)))) {
+        return std::to_address(ranges::begin(arg));
+    }
+};
+} // namespace details
+
+inline namespace cpo {
+inline constexpr ranges::details::data_t data{};
+} // namespace cpo
+
 } // namespace ranges
 
 RXX_DEFAULT_NAMESPACE_END
