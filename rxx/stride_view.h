@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/access.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/ceil_div.h"
@@ -58,14 +59,14 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>{*this, std::ranges::begin(base_)};
+        return iterator<false>{*this, __RXX ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires std::ranges::range<V const>
     {
-        return iterator<true>{*this, std::ranges::begin(base_)};
+        return iterator<true>{*this, __RXX ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -76,10 +77,10 @@ public:
             std::ranges::sized_range<V> && std::ranges::forward_range<V>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
-            return iterator<false>{*this, std::ranges::end(base_), missing};
+            return iterator<false>{*this, __RXX ranges::end(base_), missing};
         } else if constexpr (std::ranges::common_range<V> &&
             !std::ranges::bidirectional_range<V>) {
-            return iterator<false>{*this, std::ranges::end(base_)};
+            return iterator<false>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -94,10 +95,10 @@ public:
             std::ranges::forward_range<V const>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
-            return iterator<true>{*this, std::ranges::end(base_), missing};
+            return iterator<true>{*this, __RXX ranges::end(base_), missing};
         } else if constexpr (std::ranges::common_range<V const> &&
             !std::ranges::bidirectional_range<V const>) {
-            return iterator<true>{*this, std::ranges::end(base_)};
+            return iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -392,7 +393,7 @@ private:
     __RXX_HIDE_FROM_ABI constexpr iterator(Parent& parent,
         iterator_t<Base> current, range_difference_t<Base> missing = 0)
         : current_{std::move(current)}
-        , end_{std::ranges::end(parent.base_)}
+        , end_{__RXX ranges::end(parent.base_)}
         , stride_{parent.stride_}
         , missing_{missing} {}
 

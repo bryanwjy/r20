@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -74,7 +77,7 @@ public:
     requires (!details::simple_view<V>)
     {
         return iterator<false>(
-            std::ranges::begin(base_), std::ranges::end(base_));
+            __RXX ranges::begin(base_), __RXX ranges::end(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -82,7 +85,7 @@ public:
     requires std::ranges::range<V const>
     {
         return iterator<true>(
-            std::ranges::begin(base_), std::ranges::end(base_));
+            __RXX ranges::begin(base_), __RXX ranges::end(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -90,10 +93,10 @@ public:
     requires (!details::simple_view<V>)
     {
         if constexpr (std::ranges::common_range<V>) {
-            return iterator<false>(as_sentinel, std::ranges::begin(base_),
-                std::ranges::end(base_));
+            return iterator<false>(as_sentinel, __RXX ranges::begin(base_),
+                __RXX ranges::end(base_));
         } else {
-            return sentinel<false>(std::ranges::end(base_));
+            return sentinel<false>(__RXX ranges::end(base_));
         }
     }
 
@@ -102,10 +105,10 @@ public:
     requires std::ranges::range<V const>
     {
         if constexpr (std::ranges::common_range<V>) {
-            return iterator<true>(as_sentinel, std::ranges::begin(base_),
-                std::ranges::end(base_));
+            return iterator<true>(as_sentinel, __RXX ranges::begin(base_),
+                __RXX ranges::end(base_));
         } else {
-            return sentinel<true>(std::ranges::end(base_));
+            return sentinel<true>(__RXX ranges::end(base_));
         }
     }
 

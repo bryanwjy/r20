@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "access.h"
+
 #include <iterator>
 #include <ranges>
 #include <type_traits>
@@ -19,20 +21,18 @@ using std::iter_difference_t;
 using std::iter_rvalue_reference_t;
 
 namespace ranges {
-using std::ranges::iterator_t;
 using std::ranges::range_common_reference_t;
 using std::ranges::range_difference_t;
 using std::ranges::range_reference_t;
 using std::ranges::range_rvalue_reference_t;
 using std::ranges::range_size_t;
 using std::ranges::range_value_t;
-using std::ranges::sentinel_t;
 
 template <std::ranges::range R>
-using const_iterator_t = decltype(std::ranges::cbegin(std::declval<R&>()));
+using const_iterator_t = decltype(__RXX ranges::cbegin(std::declval<R&>()));
 
 template <std::ranges::range R>
-using const_sentinel_t = decltype(std::ranges::cend(std::declval<R&>()));
+using const_sentinel_t = decltype(__RXX ranges::cend(std::declval<R&>()));
 
 template <std::ranges::range R>
 using range_const_reference_t =

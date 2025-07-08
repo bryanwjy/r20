@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -71,14 +74,14 @@ public:
         if constexpr (details::slide_caches_first<V>) {
             if (!cache_begin_) {
                 cache_begin_.set(base_,
-                    std::ranges::next(std::ranges::begin(base_), num_ - 1,
-                        std::ranges::end(base_)));
+                    std::ranges::next(__RXX ranges::begin(base_), num_ - 1,
+                        __RXX ranges::end(base_)));
             }
 
             return iterator<false>(
-                std::ranges::begin(base_), cache_begin_.get(base_), num_);
+                __RXX ranges::begin(base_), cache_begin_.get(base_), num_);
         } else {
-            return iterator<false>(std::ranges::begin(base_), num_);
+            return iterator<false>(__RXX ranges::begin(base_), num_);
         }
     }
 
@@ -86,7 +89,7 @@ public:
     constexpr auto begin() const
     requires details::slide_caches_nothing<V const>
     {
-        return iterator<true>(std::ranges::begin(base_), num_);
+        return iterator<true>(__RXX ranges::begin(base_), num_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -96,21 +99,21 @@ public:
     {
         if constexpr (details::slide_caches_nothing<V>)
             return iterator<false>(
-                std::ranges::begin(base_) + range_difference_t<V>(size()),
+                __RXX ranges::begin(base_) + range_difference_t<V>(size()),
                 num_);
         else if constexpr (details::slide_caches_last<V>) {
             if (!cache_end_) {
                 cache_end_.set(base_,
-                    std::ranges::prev(std::ranges::end(base_), num_ - 1,
-                        std::ranges::begin(base_)));
+                    std::ranges::prev(__RXX ranges::end(base_), num_ - 1,
+                        __RXX ranges::begin(base_)));
             }
 
             return iterator<false>(cache_end_.get(base_), num_);
         } else if constexpr (std::ranges::common_range<V>) {
             return iterator<false>(
-                std::ranges::end(base_), std::ranges::end(base_), num_);
+                __RXX ranges::end(base_), __RXX ranges::end(base_), num_);
         } else {
-            return sentinel(std::ranges::end(base_));
+            return sentinel(__RXX ranges::end(base_));
         }
     }
 

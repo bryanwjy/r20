@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -59,7 +62,7 @@ public:
     constexpr Pred const& pred() const noexcept { return *pred_; }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr iterator begin() {
-        auto first = std::ranges::begin(base_);
+        auto first = __RXX ranges::begin(base_);
         if (!cached_begin_) {
             cached_begin_.set(base_, find_next(first));
         }
@@ -70,7 +73,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
         if constexpr (std::ranges::common_range<V>) {
             return iterator{
-                *this, std::ranges::end(base_), std::ranges::end(base_)};
+                *this, __RXX ranges::end(base_), __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -85,16 +88,16 @@ private:
                 *pred_, std::forward<T>(left), std::forward<U>(right));
         };
 
-        return std::ranges::next(
-            std::ranges::adjacent_find(current, std::ranges::end(base_), pred),
-            1, std::ranges::end(base_));
+        return std::ranges::next(std::ranges::adjacent_find(
+                                     current, __RXX ranges::end(base_), pred),
+            1, __RXX ranges::end(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<V> find_prev(iterator_t<V> current)
     requires std::ranges::bidirectional_range<V>
     {
-        auto first = std::ranges::begin(base_);
+        auto first = __RXX ranges::begin(base_);
         std::ranges::reverse_view reversed{
             std::ranges::subrange{first, current}
         };

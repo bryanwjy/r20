@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -84,9 +87,9 @@ public:
         if constexpr (std::ranges::forward_range<V>) {
             using IteratorType = outer_iterator<details::simple_view<V> &&
                 details::simple_view<P>>;
-            return IteratorType{*this, std::ranges::begin(base_)};
+            return IteratorType{*this, __RXX ranges::begin(base_)};
         } else {
-            current_ = std::ranges::begin(base_);
+            current_ = __RXX ranges::begin(base_);
             return outer_iterator<false>{*this};
         }
     }
@@ -95,7 +98,7 @@ public:
     requires std::ranges::forward_range<V> &&
         std::ranges::forward_range<V const>
     {
-        return outer_iterator<true>{*this, std::ranges::begin(base_)};
+        return outer_iterator<true>{*this, __RXX ranges::begin(base_)};
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end()
@@ -103,14 +106,14 @@ public:
     {
         using IteratorType =
             outer_iterator<details::simple_view<V> && details::simple_view<P>>;
-        return IteratorType{*this, std::ranges::end(base_)};
+        return IteratorType{*this, __RXX ranges::end(base_)};
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end() const {
         if constexpr (std::ranges::forward_range<V> &&
             std::ranges::forward_range<V const> &&
             std::ranges::common_range<V const>) {
-            return outer_iterator<true>{*this, std::ranges::end(base_)};
+            return outer_iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -210,7 +213,7 @@ public:
 
     __RXX_HIDE_FROM_ABI
     constexpr outer_iterator& operator++() {
-        auto const end = std::ranges::end(parent_->base_);
+        auto const end = __RXX ranges::end(parent_->base_);
         if (cur() == end) {
             trailing_empty_ = false;
             return *this;
@@ -279,7 +282,7 @@ private:
     constexpr bool at_end() const noexcept(noexcept(
         std::declval<iterator_t<Base>>() == std::declval<sentinel_t<Base>>())) {
 
-        return cur() == std::ranges::end(parent_->base_) && !trailing_empty_;
+        return cur() == __RXX ranges::end(parent_->base_) && !trailing_empty_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto& cur() noexcept {
@@ -429,7 +432,7 @@ private:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr bool at_end() const {
         auto [pcur, pend] = std::ranges::subrange{iter_.parent_->pattern_};
-        auto end = std::ranges::end(iter_.parent_->base_);
+        auto end = __RXX ranges::end(iter_.parent_->base_);
         if constexpr (details::tiny_range<P>) {
             auto const& cur = iter_.cur();
             if (cur == end) {

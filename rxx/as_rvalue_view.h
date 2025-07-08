@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -50,14 +53,14 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return std::move_iterator(std::ranges::begin(base_));
+        return std::move_iterator(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires std::ranges::range<V const>
     {
-        return std::move_iterator(std::ranges::begin(base_));
+        return std::move_iterator(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -65,9 +68,9 @@ public:
     requires (!details::simple_view<V>)
     {
         if constexpr (std::ranges::common_range<V>) {
-            return std::move_iterator(std::ranges::end(base_));
+            return std::move_iterator(__RXX ranges::end(base_));
         } else {
-            return std::move_sentinel(std::ranges::end(base_));
+            return std::move_sentinel(__RXX ranges::end(base_));
         }
     }
 
@@ -76,9 +79,9 @@ public:
     requires std::ranges::range<V const>
     {
         if constexpr (std::ranges::common_range<V const>) {
-            return std::move_iterator(std::ranges::end(base_));
+            return std::move_iterator(__RXX ranges::end(base_));
         } else {
-            return std::move_sentinel(std::ranges::end(base_));
+            return std::move_sentinel(__RXX ranges::end(base_));
         }
     }
 

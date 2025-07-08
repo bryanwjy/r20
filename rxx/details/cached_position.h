@@ -82,14 +82,14 @@ public:
         noexcept(noexcept(std::declval<iterator_t<R>>() +
             std::declval<range_difference_t<R> const&>())) {
         assert(*this);
-        return std::ranges::begin(src) + offset_;
+        return __RXX ranges::begin(src) + offset_;
     }
 
     __RXX_HIDE_FROM_ABI constexpr void
     set(R& src, iterator_t<R> const& it) noexcept(noexcept(
         std::declval<iterator_t<R>>() - std::declval<iterator_t<R>>())) {
         assert(!*this);
-        offset_ = it - std::ranges::begin(src);
+        offset_ = it - __RXX ranges::begin(src);
     }
 
 private:

@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/access.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
@@ -45,7 +46,7 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>{std::ranges::begin(view_), 0};
+        return iterator<false>{__RXX ranges::begin(view_), 0};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -55,9 +56,9 @@ public:
         if constexpr (std::ranges::common_range<V> &&
             std::ranges::sized_range<V>) {
             return iterator<false>(
-                std::ranges::end(view_), std::ranges::distance(view_));
+                __RXX ranges::end(view_), std::ranges::distance(view_));
         } else {
-            return sentinel<false>{std::ranges::end(view_)};
+            return sentinel<false>{__RXX ranges::end(view_)};
         }
     }
 
@@ -65,7 +66,7 @@ public:
     constexpr auto begin() const
     requires details::range_with_movable_reference<V const>
     {
-        return iterator<true>{std::ranges::begin(view_), 0};
+        return iterator<true>{__RXX ranges::begin(view_), 0};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -75,9 +76,9 @@ public:
         if constexpr (std::ranges::common_range<V const> &&
             std::ranges::sized_range<V const>) {
             return iterator<true>(
-                std::ranges::end(view_), std::ranges::distance(view_));
+                __RXX ranges::end(view_), std::ranges::distance(view_));
         } else {
-            return sentinel<true>{std::ranges::end(view_)};
+            return sentinel<true>{__RXX ranges::end(view_)};
         }
     }
 
@@ -119,16 +120,16 @@ template <bool Const>
 class enumerate_view<V>::iterator {
     using Base = details::const_if<Const, V>;
 
-    friend class enumerate_view;
+    friend enumerate_view;
 
 public:
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = decltype([]() {
-        if constexpr (std::ranges::random_access_range<V>)
+        if constexpr (std::ranges::random_access_range<Base>)
             return std::random_access_iterator_tag{};
-        else if constexpr (std::ranges::bidirectional_range<V>)
+        else if constexpr (std::ranges::bidirectional_range<Base>)
             return std::bidirectional_iterator_tag{};
-        else if constexpr (std::ranges::forward_range<V>)
+        else if constexpr (std::ranges::forward_range<Base>)
             return std::forward_iterator_tag{};
         else
             return std::input_iterator_tag{};
@@ -172,7 +173,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
-    __RXX_HIDE_FROM_ABI constexpr iterator& operator++(int)
+    __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
     requires std::ranges::forward_range<Base>
     {
         auto copy = *this;
@@ -188,7 +189,7 @@ public:
         return *this;
     }
 
-    __RXX_HIDE_FROM_ABI constexpr iterator& operator--(int)
+    __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
     requires std::ranges::bidirectional_range<Base>
     {
         auto copy = *this;
@@ -261,7 +262,8 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr difference_type operator-(
-        iterator const& left, iterator const& right) {
+        iterator const& left, iterator const& right) noexcept {
+        static_assert(noexcept(left.pos_ - right.pos_));
         return left.pos_ - right.pos_;
     }
 
@@ -290,7 +292,7 @@ template <bool Const>
 class enumerate_view<V>::sentinel {
     using Base = details::const_if<Const, V>;
 
-    friend class enumerate_view;
+    friend enumerate_view;
 
     __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
         sentinel_t<Base> end) noexcept(std::

@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -51,28 +54,28 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>(std::ranges::begin(base_));
+        return iterator<false>(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires std::ranges::range<V const>
     {
-        return iterator<true>(std::ranges::begin(base_));
+        return iterator<true>(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        return std::ranges::end(base_);
+        return __RXX ranges::end(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
     requires std::ranges::range<V const>
     {
-        return std::ranges::end(base_);
+        return __RXX ranges::end(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

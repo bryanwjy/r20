@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -110,9 +113,9 @@ public:
         if constexpr (std::ranges::forward_range<V>) {
             using result_type = iterator<details::simple_view<V> &&
                 std::is_reference_v<InnerRange> && details::simple_view<P>>;
-            return result_type{*this, std::ranges::begin(base_)};
+            return result_type{*this, __RXX ranges::begin(base_)};
         } else {
-            outer_.emplace(std::ranges::begin(base_));
+            outer_.emplace(__RXX ranges::begin(base_));
             return iterator<false>{*this};
         }
     }
@@ -125,7 +128,7 @@ public:
         std::ranges::input_range<range_reference_t<V const>> &&
         details::concatable<range_reference_t<V const>, P const>
     {
-        return iterator<true>{*this, std::ranges::begin(base_)};
+        return iterator<true>{*this, __RXX ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
@@ -135,7 +138,7 @@ public:
             std::ranges::common_range<V> && std::is_reference_v<InnerRange> &&
             std::ranges::forward_range<InnerRange> &&
             std::ranges::common_range<InnerRange>) {
-            return iterator<use_const>{*this, std::ranges::end(base_)};
+            return iterator<use_const>{*this, __RXX ranges::end(base_)};
         } else {
             return sentinel<use_const>{*this};
         }
@@ -153,7 +156,7 @@ public:
         if constexpr (std::ranges::forward_range<ConstInnerRange> &&
             std::ranges::common_range<ConstInnerRange> &&
             std::ranges::common_range<V const>) {
-            return iterator<true>{*this, std::ranges::end(base_)};
+            return iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
             return sentinel<true>{*this};
         }
@@ -301,18 +304,18 @@ class join_with_view<V, P>::iterator :
         while (true) {
             if (inner_.index() == 0) {
                 if (inner_.template value_ref<0>() !=
-                    std::ranges::end(parent_->pattern_)) {
+                    __RXX ranges::end(parent_->pattern_)) {
                     break;
                 }
                 inner_.template reinitialize_value<1>(
-                    std::ranges::begin(update_inner()));
+                    __RXX ranges::begin(update_inner()));
             } else {
                 if (inner_.template value_ref<1>() !=
-                    std::ranges::end(get_inner())) {
+                    __RXX ranges::end(get_inner())) {
                     break;
                 }
 
-                if (++get_outer() == std::ranges::end(parent_->base_)) {
+                if (++get_outer() == __RXX ranges::end(parent_->base_)) {
                     if constexpr (std::is_reference_v<InnerBase>) {
                         inner_.template reinitialize_value<0>();
                     }
@@ -321,7 +324,7 @@ class join_with_view<V, P>::iterator :
                 }
 
                 inner_.template reinitialize_value<0>(
-                    std::ranges::begin(parent_->pattern_));
+                    __RXX ranges::begin(parent_->pattern_));
             }
         }
     }
@@ -332,9 +335,9 @@ class join_with_view<V, P>::iterator :
     requires std::ranges::forward_range<Base>
         : parent_{RXX_BUILTIN_addressof(parent)}
         , outer_{std::move(outer)} {
-        if (get_outer() != std::ranges::end(parent_->base_)) {
+        if (get_outer() != __RXX ranges::end(parent_->base_)) {
             inner_.template reinitialize_value<1>(
-                std::ranges::begin(update_inner()));
+                __RXX ranges::begin(update_inner()));
             satisfy();
         }
     }
@@ -343,9 +346,9 @@ class join_with_view<V, P>::iterator :
         std::is_nothrow_default_constructible_v<OuterIter>)
     requires (!std::ranges::forward_range<Base>)
         : parent_{RXX_BUILTIN_addressof(parent)} {
-        if (get_outer() != std::ranges::end(parent_->base_)) {
+        if (get_outer() != __RXX ranges::end(parent_->base_)) {
             inner_.template reinitialize_value<1>(
-                std::ranges::begin(update_inner()));
+                __RXX ranges::begin(update_inner()));
             satisfy();
         }
     }
@@ -422,22 +425,23 @@ public:
         details::bidirectional_common<InnerBase> &&
         details::bidirectional_common<PatternBase>
     {
-        if (outer_ == std::ranges::end(parent_->base_)) {
-            inner_.template reinitialize_value<1>(std::ranges::end(*--outer_));
+        if (outer_ == __RXX ranges::end(parent_->base_)) {
+            inner_.template reinitialize_value<1>(__RXX ranges::end(*--outer_));
         }
 
         switch (inner_.index()) {
         case 0:
             if (inner_.template value_ref<0>() ==
-                std::ranges::begin(parent_->pattern_)) {
+                __RXX ranges::begin(parent_->pattern_)) {
                 inner_.template reinitialize_value<1>(
-                    std::ranges::end(*--outer_));
+                    __RXX ranges::end(*--outer_));
             }
             break;
         default:
-            if (inner_.template value_ref<1>() == std::ranges::begin(*outer_)) {
+            if (inner_.template value_ref<1>() ==
+                __RXX ranges::begin(*outer_)) {
                 inner_.template reinitialize_value<0>(
-                    std::ranges::end(parent_->pattern_));
+                    __RXX ranges::end(parent_->pattern_));
             }
             break;
         }
@@ -540,7 +544,7 @@ class join_with_view<V, P>::sentinel {
     friend join_with_view;
 
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(Parent& parent)
-        : end_(std::ranges::end(parent.base_)) {}
+        : end_(__RXX ranges::end(parent.base_)) {}
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(

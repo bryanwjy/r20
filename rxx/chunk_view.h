@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -52,7 +55,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr outer_iterator begin() {
-        current_ = std::ranges::begin(base_);
+        current_ = __RXX ranges::begin(base_);
         remainder_ = size_;
         return outer_iterator(*this);
     }
@@ -123,7 +126,7 @@ public:
         {
             return details::to_unsigned_like(
                 std::ranges::min(parent_->remainder_,
-                    std::ranges::end(parent_->base_) - *parent_->current_));
+                    __RXX ranges::end(parent_->base_) - *parent_->current_));
         }
 
     private:
@@ -141,7 +144,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr outer_iterator& operator++() {
         assert(*this != std::default_sentinel);
         std::ranges::advance(*parent_->current_, parent_->remainder_,
-            std::ranges::end(parent_->base_));
+            __RXX ranges::end(parent_->base_));
         parent_->remainder_ = parent_->size_;
         return *this;
     }
@@ -151,7 +154,7 @@ public:
     __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
         outer_iterator const& left, std::default_sentinel_t) {
         return *left.parent_->current_ ==
-            std::ranges::end(left.parent_->base_) &&
+            __RXX ranges::end(left.parent_->base_) &&
             left.parent_->remainder_ != 0;
     }
 
@@ -159,8 +162,8 @@ public:
         std::default_sentinel_t, outer_iterator const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        auto const dist =
-            std::ranges::end(right.parent_->base_) - *right.parent_->current_;
+        auto const dist = __RXX ranges::end(right.parent_->base_) -
+            *right.parent_->current_;
 
         if (dist < right.parent_->remainder_) {
             return dist == 0 ? 0 : 1;
@@ -212,7 +215,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr inner_iterator& operator++() {
         assert(*this != std::default_sentinel);
         ++*parent_->current_;
-        if (*parent_->current_ == std::ranges::end(parent_->base_)) {
+        if (*parent_->current_ == __RXX ranges::end(parent_->base_)) {
             parent_->remainder_ = 0;
         } else {
             --parent_->remainder_;
@@ -233,7 +236,8 @@ public:
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
         return std::ranges::min(right.parent_->remainder_,
-            std::ranges::end(right.parent_->base_) - *right.parent_->current_);
+            __RXX ranges::end(right.parent_->base_) -
+                *right.parent_->current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
@@ -278,7 +282,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
         __RXX_HIDE_FROM_ABI constexpr iterator(Parent* parent,
             iterator_t<Base> current, range_difference_t<Base> missing = 0)
             : current_(current)
-            , end_(std::ranges::end(parent->base_))
+            , end_(__RXX ranges::end(parent->base_))
             , size_(parent->size_)
             , missing_(missing) {}
 
@@ -504,13 +508,13 @@ public:
     __RXX_HIDE_FROM_ABI constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>(this, std::ranges::begin(base_));
+        return iterator<false>(this, __RXX ranges::begin(base_));
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto begin() const
     requires std::ranges::forward_range<V const>
     {
-        return iterator<true>(this, std::ranges::begin(base_));
+        return iterator<true>(this, __RXX ranges::begin(base_));
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end()
@@ -520,10 +524,10 @@ public:
             std::ranges::sized_range<V>) {
             auto const missing =
                 (size_ - std::ranges::distance(base_) % size_) % size_;
-            return iterator<false>(this, std::ranges::end(base_), missing);
+            return iterator<false>(this, __RXX ranges::end(base_), missing);
         } else if constexpr (std::ranges::common_range<V> &&
             !std::ranges::bidirectional_range<V>) {
-            return iterator<false>(this, std::ranges::end(base_));
+            return iterator<false>(this, __RXX ranges::end(base_));
         } else {
             return std::default_sentinel;
         }
@@ -536,10 +540,10 @@ public:
             std::ranges::sized_range<V const>) {
             auto const missing =
                 (size_ - std::ranges::distance(base_) % size_) % size_;
-            return iterator<true>(this, std::ranges::end(base_), missing);
+            return iterator<true>(this, __RXX ranges::end(base_), missing);
         } else if constexpr (std::ranges::common_range<V const> &&
             !std::ranges::bidirectional_range<V const>) {
-            return iterator<true>(this, std::ranges::end(base_));
+            return iterator<true>(this, __RXX ranges::end(base_));
         } else {
             return std::default_sentinel;
         }

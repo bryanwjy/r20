@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/access.h"
 #include "rxx/primitives.h"
 
 #include <concepts>
@@ -11,6 +12,15 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
+
+template <typename T>
+concept range = requires(T& t) {
+    ranges::begin(t);
+    ranges::end(t);
+};
+
+template <typename T>
+concept input_range = ranges::range<T> && std::input_iterator<iterator_t<T>>;
 namespace details {
 template <typename T>
 concept constant_iterator = std::input_iterator<T> &&
@@ -19,7 +29,7 @@ concept constant_iterator = std::input_iterator<T> &&
 
 template <typename T>
 concept constant_range =
-    std::ranges::input_range<T> && details::constant_iterator<iterator_t<T>>;
+    input_range<T> && details::constant_iterator<iterator_t<T>>;
 } // namespace ranges
 
 RXX_DEFAULT_NAMESPACE_END
