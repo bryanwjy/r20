@@ -4,6 +4,8 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/details/integer_like.h"
+#include "rxx/details/to_unsigned_like.h"
 #include "rxx/iterator.h"
 #include "rxx/primitives.h"
 
@@ -37,12 +39,26 @@
 #  include <ranges>
 #endif
 
+#if __has_include(<__ranges/size.h>)
+#  include <__ranges/size.h>
+#elif __has_include(<bits/ranges_base.h>)
+#  include <bits/ranges_base.h>
+#elif __has_include(<xutility>)
+#  include <xutility>
+#else
+#  if RXX_LIBSTDCXX | RXX_MSVC_STL | RXX_LIBCXX
+#    warning "Outdated standard library detected"
+#  endif
+#  include <ranges>
+#endif
+
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 #define __RXX_AUTOCAST(EXPR) static_cast<::std::decay_t<decltype((EXPR))>>(EXPR)
 
 namespace ranges {
 
+using ::std::ranges::disable_sized_range;
 using ::std::ranges::enable_borrowed_range;
 using ::std::ranges::enable_view;
 
@@ -309,6 +325,117 @@ struct cend_t {
 inline namespace cpo {
 inline constexpr ranges::details::cbegin_t cbegin{};
 inline constexpr ranges::details::cend_t cend{};
+} // namespace cpo
+
+namespace details {
+void size(...) = delete;
+
+template <typename T>
+concept member_size =
+    !disable_sized_range<std::remove_cvref_t<T>> && requires(T& arg) {
+        { __RXX_AUTOCAST(arg.size()) } -> integer_like;
+    };
+
+template <typename T>
+concept unqualified_size = class_or_enum<std::remove_reference_t<T>> &&
+    !disable_sized_range<std::remove_cvref_t<T>> && requires(T& arg) {
+        { __RXX_AUTOCAST(size(arg)) } -> integer_like;
+    };
+
+template <typename T>
+concept sentinel_size = requires(T& arg) {
+    requires (!std::is_unbounded_array_v<std::remove_reference_t<T>>);
+
+    { ranges::begin(arg) } -> std::forward_iterator;
+
+    {
+        ranges::end(arg)
+    } -> std::sized_sentinel_for<decltype(ranges::begin(arg))>;
+
+    details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg));
+};
+
+struct size_func_t {
+
+    template <typename T, size_t N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T (&)[N]) RXX_CONST_CALL noexcept
+    requires (sizeof(T) >= 0) // Disallow incomplete element types.
+    {
+        return N;
+    }
+
+    template <typename T>
+    requires member_size<T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(arg.size())) {
+        return arg.size();
+    }
+
+    template <typename T>
+    requires unqualified_size<T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(size(arg))) {
+        return size(arg);
+    }
+
+    template <typename T>
+    requires sentinel_size<T> || (!member_size<T> && !unqualified_size<T>)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(
+        details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg)))) {
+        return details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg));
+    }
+};
+
+} // namespace details
+
+inline namespace cpo {
+inline constexpr ranges::details::size_func_t size{};
+} // namespace cpo
+
+namespace details {
+
+void reserve_hint(...) noexcept = delete;
+template <typename T>
+concept member_reserve_hint = borrowable<T> && requires(T&& val) {
+    { __RXX_AUTOCAST(val.reserve_hint()) } -> integer_like;
+};
+
+template <typename T>
+concept unqualified_reserve_hint = !member_reserve_hint<T> && borrowable<T> &&
+    class_or_enum<std::remove_cvref_t<T>> && requires(T&& val) {
+        { __RXX_AUTOCAST(reserve_hint(val)) } -> integer_like;
+    };
+
+struct reserve_hint_t {
+    template <typename T>
+    requires requires(T&& arg) { ranges::size(arg); }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL noexcept {
+        return ranges::size(arg);
+    }
+
+    template <typename T>
+    requires member_reserve_hint<T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(__RXX_AUTOCAST(arg.reserve_hint()))) {
+        return __RXX_AUTOCAST(arg.reserve_hint());
+    }
+
+    template <typename T>
+    requires unqualified_reserve_hint<T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(__RXX_AUTOCAST(reserve_hint(arg)))) {
+        return __RXX_AUTOCAST(reserve_hint(arg));
+    }
+};
+} // namespace details
+
+inline namespace cpo {
+inline constexpr ranges::details::reserve_hint_t reserve_hint{};
 } // namespace cpo
 
 } // namespace ranges

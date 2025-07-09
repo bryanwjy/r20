@@ -5,6 +5,7 @@
 #include "rxx/config.h"
 
 #include <concepts>
+#include <iterator>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
