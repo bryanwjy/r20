@@ -124,8 +124,8 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
             return std::ranges::ref_view(
                 std::as_const(std::forward<R>(arg).base()));
         } else if constexpr (std::is_lvalue_reference_v<R> &&
-            constant_range<R const> && !view<R>) {
-            return std::ranges::ref_view(static_cast<R const&>(arg));
+            constant_range<Type const> && !view<Type>) {
+            return std::ranges::ref_view(static_cast<Type const&>(arg));
         } else {
             return as_const_view(std::forward<R>(arg));
         }
