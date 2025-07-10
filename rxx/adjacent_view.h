@@ -191,6 +191,18 @@ class adjacent_view<V, N>::iterator {
         return (iter.current_);
     }
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    static constexpr std::array<iterator_t<Base>, N>
+    move_from(std::array<iterator_t<V>, N>&& other) noexcept(
+        std::is_nothrow_constructible_v<iterator_t<Base>, iterator_t<V>>)
+    requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
+    {
+        constexpr std::make_index_sequence<N> seq{};
+        return [&]<size_t... Is>(std::index_sequence<Is...>) {
+            return std::array<iterator_t<Base>, N>{std::move(other[Is])...};
+        }(seq);
+    }
+
 public:
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = decltype([]() {
@@ -206,9 +218,11 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
         std::is_nothrow_default_constructible_v<iterator_t<Base>>) = default;
-    __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other)
+
+    __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other) noexcept(
+        std::is_nothrow_constructible_v<iterator_t<Base>, iterator_t<V>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
-        : current_{std::move(other.current_)} {}
+        : current_{move_from(std::move(other.current_))} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator*() const {
         return details::transform(
