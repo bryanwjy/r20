@@ -417,6 +417,74 @@ concept sized_range = range<T> && requires(T& arg) { ranges::size(arg); };
 
 namespace details {
 
+struct ssize_t {
+    template <typename T>
+    requires requires(T&& arg) { ranges::size(arg); }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(ranges::size(arg))) {
+        using signed_type = std::make_signed_t<decltype(ranges::size(arg))>;
+        if constexpr (sizeof(ptrdiff_t) > sizeof(signed_type)) {
+            return static_cast<ptrdiff_t>(ranges::size(arg));
+        } else {
+            return static_cast<signed_type>(ranges::size(arg));
+        }
+    }
+};
+
+} // namespace details
+
+inline namespace cpo {
+inline constexpr ranges::details::ssize_t ssize{};
+} // namespace cpo
+
+namespace details {
+void empty(...) = delete;
+
+template <typename T>
+concept member_empty = requires(T&& arg) { bool(arg.empty()); };
+
+template <typename T>
+concept size_invocable =
+    !member_empty<T> && requires(T&& arg) { ranges::size(arg); };
+
+template <typename T>
+concept comparable_begin_and_end =
+    !member_empty<T> && !size_invocable<T> && requires(T&& arg) {
+        bool(ranges::begin(arg) == ranges::end(arg));
+        { ranges::begin(arg) } -> std::forward_iterator;
+    };
+
+struct empty_t {
+    template <member_empty T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr bool operator()(T&& arg) const
+        noexcept(noexcept(bool(arg.empty()))) {
+        return bool(arg.empty());
+    }
+
+    template <size_invocable T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr bool operator()(T&& arg) const
+        noexcept(noexcept(ranges::size(arg))) {
+        return ranges::size(arg) == 0;
+    }
+
+    template <comparable_begin_and_end T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr bool operator()(T&& arg) const
+        noexcept(noexcept(bool(ranges::begin(arg) == ranges::end(arg)))) {
+        return ranges::begin(arg) == ranges::end(arg);
+    }
+};
+
+} // namespace details
+
+inline namespace cpo {
+inline constexpr ranges::details::empty_t empty{};
+} // namespace cpo
+
+namespace details {
+
 void reserve_hint(...) noexcept = delete;
 template <typename T>
 concept member_reserve_hint = borrowable<T> && requires(T&& val) {
