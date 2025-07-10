@@ -234,6 +234,8 @@ concept range = requires(T& t) {
 
 template <typename T>
 concept input_range = range<T> && std::input_iterator<iterator_t<T>>;
+template <typename R, typename T>
+concept output_range = range<R> && std::output_iterator<iterator_t<R>, T>;
 
 template <typename T>
 concept forward_range = input_range<T> && std::forward_iterator<iterator_t<T>>;
