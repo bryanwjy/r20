@@ -139,14 +139,18 @@ using iterator_t = decltype(__RXX ranges::begin(std::declval<T&>()));
 
 namespace details {
 
+__RXX_HIDE_FROM_ABI void end(...) noexcept = delete;
+
 template <typename T>
 concept member_end = borrowable<T> && requires(T&& val) {
+    typename iterator_t<T>;
     { __RXX_AUTOCAST(val.end()) } -> std::sentinel_for<iterator_t<T>>;
 };
 
 template <typename T>
 concept unqualified_end = !member_end<T> && borrowable<T> &&
     class_or_enum<std::remove_cvref_t<T>> && requires(T&& val) {
+        typename iterator_t<T>;
         { __RXX_AUTOCAST(end(val)) } -> std::sentinel_for<iterator_t<T>>;
     };
 
@@ -160,23 +164,21 @@ struct end_t {
         return arg + N;
     }
 
-    template <typename T>
-    requires member_end<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL
+    template <member_end T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(__RXX_AUTOCAST(arg.end()))) {
         return __RXX_AUTOCAST(arg.end());
     }
 
-    template <typename T>
-    requires unqualified_end<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL
+    template <unqualified_end T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(__RXX_AUTOCAST(end(arg)))) {
         return __RXX_AUTOCAST(end(arg));
     }
 
-    void operator()(auto&&) const = delete;
+    __RXX_HIDE_FROM_ABI void operator()(auto&&) const = delete;
 };
 } // namespace details
 
@@ -258,7 +260,7 @@ concept common_range = range<T> && std::same_as<iterator_t<T>, sentinel_t<T>>;
 template <typename T>
 concept view = range<T> && std::movable<T> && enable_view<T>;
 
-template <class T>
+template <typename T>
 concept viewable_range = range<T> &&
     ((view<std::remove_cvref_t<T>> &&
          std::constructible_from<std::remove_cvref_t<T>, T>) ||
@@ -266,6 +268,9 @@ concept viewable_range = range<T> &&
             (std::is_lvalue_reference_v<T> ||
                 (std::movable<std::remove_reference_t<T>> &&
                     !details::is_initializer_list<T>))));
+
+template <typename T>
+concept borrowed_range = range<T> && details::borrowable<T>;
 
 template <typename T>
 concept constant_range =
@@ -337,23 +342,25 @@ concept member_size =
     };
 
 template <typename T>
-concept unqualified_size = class_or_enum<std::remove_reference_t<T>> &&
+concept unqualified_size =
+    !member_size<T> && class_or_enum<std::remove_reference_t<T>> &&
     !disable_sized_range<std::remove_cvref_t<T>> && requires(T& arg) {
         { __RXX_AUTOCAST(size(arg)) } -> integer_like;
     };
 
 template <typename T>
-concept sentinel_size = requires(T& arg) {
-    requires (!std::is_unbounded_array_v<std::remove_reference_t<T>>);
+concept sentinel_size = !member_size<T> && !unqualified_size<T> &&
+    class_or_enum<T> && requires(T& arg) {
+        requires (!std::is_unbounded_array_v<std::remove_reference_t<T>>);
 
-    { ranges::begin(arg) } -> std::forward_iterator;
+        { ranges::begin(arg) } -> std::forward_iterator;
 
-    {
-        ranges::end(arg)
-    } -> std::sized_sentinel_for<decltype(ranges::begin(arg))>;
+        {
+            ranges::end(arg)
+        } -> std::sized_sentinel_for<decltype(ranges::begin(arg))>;
 
-    details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg));
-};
+        details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg));
+    };
 
 struct size_func_t {
 
@@ -365,25 +372,33 @@ struct size_func_t {
         return N;
     }
 
-    template <typename T>
-    requires member_size<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(arg.size())) {
+    template <typename T, size_t N>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T (&&)[N]) RXX_CONST_CALL noexcept
+    requires (sizeof(T) >= 0) // Disallow incomplete element types.
+    {
+        return N;
+    }
+
+    template <member_size T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(arg.size())) {
         return arg.size();
     }
 
-    template <typename T>
-    requires unqualified_size<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(size(arg))) {
+    template <unqualified_size T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(size(arg))) {
         return size(arg);
     }
 
-    template <typename T>
-    requires sentinel_size<T> || (!member_size<T> && !unqualified_size<T>)
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(
-        details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg)))) {
+    template <sentinel_size T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(
+            details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg)))) {
         return details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg));
     }
 };
@@ -393,6 +408,9 @@ struct size_func_t {
 inline namespace cpo {
 inline constexpr ranges::details::size_func_t size{};
 } // namespace cpo
+
+template <typename T>
+concept sized_range = range<T> && requires(T& arg) { ranges::size(arg); };
 
 namespace details {
 

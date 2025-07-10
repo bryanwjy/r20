@@ -1,8 +1,10 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/adjacent_view.h"
-#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
@@ -86,12 +88,15 @@ public:
         return std::move(inner_.base());
     }
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto begin() {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto begin() noexcept(
+        noexcept(iterator<false>(*this, inner_.begin()))) {
         return iterator<false>(*this, inner_.begin());
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
+        noexcept(noexcept(iterator<true>(*this, inner_.begin())))
     requires range<InnerView const> &&
         details::repeat_regular_invocable<F const&, range_reference_t<V const>,
             N>
@@ -100,10 +105,11 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
-        if constexpr (std::ranges::common_range<InnerView>)
+        if constexpr (ranges::common_range<InnerView>) {
             return iterator<false>(*this, inner_.end());
-        else
+        } else {
             return sentinel<false>(inner_.end());
+        }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -112,10 +118,11 @@ public:
         details::repeat_regular_invocable<F const&, range_reference_t<V const>,
             N>
     {
-        if constexpr (std::ranges::common_range<InnerView const>)
+        if constexpr (std::ranges::common_range<InnerView const>) {
             return iterator<true>(*this, inner_.end());
-        else
+        } else {
             return sentinel<true>(inner_.end());
+        }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -148,7 +155,7 @@ class adjacent_transform_view<V, F, N>::iterator {
         details::const_if<Const, adjacent_transform_view>;
     using Base RXX_NODEBUG = details::const_if<Const, V>;
 
-    friend class adjacent_transform_view;
+    friend adjacent_transform_view;
 
     __RXX_HIDE_FROM_ABI constexpr iterator(
         Parent& parent, inner_iterator<Const> inner) noexcept(std::
@@ -270,9 +277,40 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    friend constexpr auto operator<=>(
+    friend constexpr bool operator<(iterator const& left, iterator const& right)
+    requires random_access_range<Base>
+    {
+        return left.inner_ < right.inner_;
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator>(iterator const& left, iterator const& right)
+    requires random_access_range<Base>
+    {
+        return left.inner_ > right.inner_;
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator<=(
         iterator const& left, iterator const& right)
     requires random_access_range<Base>
+    {
+        return left.inner_ <= right.inner_;
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator>=(
+        iterator const& left, iterator const& right)
+    requires random_access_range<Base>
+    {
+        return left.inner_ >= right.inner_;
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr auto operator<=>(
+        iterator const& left, iterator const& right)
+    requires random_access_range<Base> &&
+        std::three_way_comparable<inner_iterator<Const>>
     {
         return left.inner_ <=> right.inner_;
     }
@@ -323,7 +361,7 @@ requires view<V> && (N > 0) && std::is_object_v<F> &&
 template <bool Const>
 class adjacent_transform_view<V, F, N>::sentinel {
 
-    friend class adjacent_transform_view;
+    friend adjacent_transform_view;
 
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(
         inner_sentinel<Const> inner) noexcept(std::
@@ -334,6 +372,21 @@ public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
         std::is_nothrow_default_constructible_v<inner_sentinel<Const>>) =
         default;
+
+    __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other) noexcept(
+        std::is_nothrow_constructible_v<inner_sentinel<Const>,
+            inner_sentinel<false>>)
+    requires Const
+        && std::convertible_to<inner_sentinel<false>, inner_sentinel<Const>>
+        : inner_(std::move(other.inner_)) {}
+
+    template <bool OtherConst>
+    requires std::sentinel_for<inner_sentinel<Const>,
+        inner_iterator<OtherConst>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+        iterator<OtherConst> const& left, sentinel const& right) {
+        return left.inner_ == right.inner_;
+    }
 
     template <bool OtherConst>
     requires std::sized_sentinel_for<inner_sentinel<Const>,
