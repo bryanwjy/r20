@@ -338,28 +338,29 @@ namespace details {
 void size(...) = delete;
 
 template <typename T>
-concept member_size =
-    !disable_sized_range<std::remove_cvref_t<T>> && requires(T& arg) {
-        { __RXX_AUTOCAST(arg.size()) } -> integer_like;
-    };
+concept enabled_size_range = !disable_sized_range<std::remove_cvref_t<T>>;
+
+template <typename T>
+concept member_size = enabled_size_range<T> && requires(T& arg) {
+    { __RXX_AUTOCAST(arg.size()) } -> integer_like;
+};
 
 template <typename T>
 concept unqualified_size =
-    !member_size<T> && class_or_enum<std::remove_reference_t<T>> &&
-    !disable_sized_range<std::remove_cvref_t<T>> && requires(T& arg) {
+    !member_size<T> && class_or_enum<std::remove_cvref_t<T>> &&
+    enabled_size_range<T> && requires(T& arg) {
         { __RXX_AUTOCAST(size(arg)) } -> integer_like;
     };
 
 template <typename T>
 concept sentinel_size = !member_size<T> && !unqualified_size<T> &&
-    class_or_enum<T> && requires(T& arg) {
-        requires (!std::is_unbounded_array_v<std::remove_reference_t<T>>);
-
+    class_or_enum<std::remove_cvref_t<T>> && requires(T&& arg) {
         { ranges::begin(arg) } -> std::forward_iterator;
 
         {
             ranges::end(arg)
-        } -> std::sized_sentinel_for<decltype(ranges::begin(arg))>;
+        }
+        -> std::sized_sentinel_for<decltype(ranges::begin(std::declval<T>()))>;
 
         details::to_unsigned_like(ranges::end(arg) - ranges::begin(arg));
     };

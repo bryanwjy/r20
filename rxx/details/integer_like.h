@@ -49,7 +49,7 @@ concept integer_non_bool =
 
 template <typename T>
 concept integer_like = integer_non_bool<T> ||
-    (enable_signed_integer_like<T> ^ enable_unsigned_integer_like<T>);
+    (enable_signed_integer_like<T> != enable_unsigned_integer_like<T>);
 
 template <typename T>
 concept signed_integer_like = integer_like<T> &&
