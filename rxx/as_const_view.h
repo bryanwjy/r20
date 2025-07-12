@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -21,77 +24,75 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::ranges::view View>
-requires std::ranges::input_range<View>
-class as_const_view : public std::ranges::view_interface<as_const_view<View>> {
+template <view V>
+requires input_range<V>
+class as_const_view : public std::ranges::view_interface<as_const_view<V>> {
 public:
     __RXX_HIDE_FROM_ABI constexpr as_const_view() noexcept(
-        std::is_nothrow_default_constructible_v<View>)
-    requires std::default_initializable<View>
+        std::is_nothrow_default_constructible_v<V>)
+    requires std::default_initializable<V>
     = default;
 
-    __RXX_HIDE_FROM_ABI constexpr explicit as_const_view(View base) noexcept(
-        std::is_nothrow_move_constructible_v<View>)
+    __RXX_HIDE_FROM_ABI explicit constexpr as_const_view(V base) noexcept(
+        std::is_nothrow_move_constructible_v<V>)
         : base_{std::move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr View base() const& noexcept(
-        std::is_nothrow_copy_constructible_v<View>)
-    requires std::copy_constructible<View>
+    constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
+    requires std::copy_constructible<V>
     {
         return base_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr View base() && noexcept(
-        std::is_nothrow_move_constructible_v<View>) {
+    constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
         return std::move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin()
-    requires (!details::simple_view<View>)
+    requires (!details::simple_view<V>)
     {
-        return std::ranges::cbegin(base_);
+        return __RXX ranges::cbegin(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<View const>
+    requires range<V const>
     {
-        return std::ranges::cbegin(base_);
+        return __RXX ranges::cbegin(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end()
-    requires (!details::simple_view<View>)
+    requires (!details::simple_view<V>)
     {
-        return std::ranges::cend(base_);
+        return __RXX ranges::cend(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<View const>
+    requires range<V const>
     {
-        return std::ranges::cend(base_);
+        return __RXX ranges::cend(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<View>
+    requires std::ranges::sized_range<V>
     {
         return std::ranges::size(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<View const>
+    requires std::ranges::sized_range<V const>
     {
         return std::ranges::size(base_);
     }
 
 private:
-    View base_{};
+    V base_{};
 };
 
 template <typename R>
@@ -107,7 +108,7 @@ inline constexpr bool is_constable_ref_view<std::ranges::ref_view<R>> =
     constant_range<R const>;
 
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires requires { as_const_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const noexcept(noexcept(as_const_view(std::declval<R>()))) {
@@ -123,8 +124,8 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
             return std::ranges::ref_view(
                 std::as_const(std::forward<R>(arg).base()));
         } else if constexpr (std::is_lvalue_reference_v<R> &&
-            constant_range<R const> && !std::ranges::view<R>) {
-            return std::ranges::ref_view(static_cast<R const&>(arg));
+            constant_range<Type const> && !view<Type>) {
+            return std::ranges::ref_view(static_cast<Type const&>(arg));
         } else {
             return as_const_view(std::forward<R>(arg));
         }

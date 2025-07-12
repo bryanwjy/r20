@@ -1,6 +1,10 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
+#include "rxx/concepts.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
@@ -23,10 +27,9 @@ namespace details {
 template <typename... Rs>
 concept zip_common =
     (sizeof...(Rs) == 1 && (... && std::ranges::common_range<Rs>)) ||
-    (!(... && std::ranges::bidirectional_range<Rs>)&&(
+    (!(... && bidirectional_range<Rs>)&&(
         ... && std::ranges::common_range<Rs>)) ||
-    ((... && std::ranges::random_access_range<Rs>)&&(
-        ... && std::ranges::sized_range<Rs>));
+    ((... && random_access_range<Rs>)&&(... && std::ranges::sized_range<Rs>));
 
 template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -42,8 +45,8 @@ constexpr T abs(T val) noexcept {
 }
 } // namespace details
 
-template <std::ranges::input_range... Rs>
-requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
+template <input_range... Rs>
+requires (... && view<Rs>) && (sizeof...(Rs) > 0)
 class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
 
     template <bool IsConst>
@@ -62,14 +65,16 @@ public:
     constexpr auto begin()
     requires (!(... && details::simple_view<Rs>))
     {
-        return iterator<false>{details::transform(std::ranges::begin, views_)};
+        return iterator<false>{
+            details::transform(__RXX ranges::begin, views_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires (... && std::ranges::range<Rs const>)
+    requires (... && range<Rs const>)
     {
-        return iterator<true>(details::transform(std::ranges::begin, views_));
+        return iterator<true>(
+            details::transform(__RXX ranges::begin, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -78,26 +83,27 @@ public:
     {
         if constexpr (!details::zip_common<Rs...>) {
             return sentinel<false>(
-                details::transform(std::ranges::end, views_));
-        } else if constexpr ((... && std::ranges::random_access_range<Rs>)) {
+                details::transform(__RXX ranges::end, views_));
+        } else if constexpr ((... && random_access_range<Rs>)) {
             return begin() + iter_difference_t<iterator<false>>(size());
         } else {
             return iterator<false>(
-                details::transform(std::ranges::end, views_));
+                details::transform(__RXX ranges::end, views_));
         }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires (... && std::ranges::range<Rs const>)
+    requires (... && range<Rs const>)
     {
         if constexpr (!details::zip_common<Rs const...>) {
-            return sentinel<true>(details::transform(std::ranges::end, views_));
-        } else if constexpr ((... &&
-                                 std::ranges::random_access_range<Rs const>)) {
+            return sentinel<true>(
+                details::transform(__RXX ranges::end, views_));
+        } else if constexpr ((... && random_access_range<Rs const>)) {
             return begin() + std::iter_difference_t<iterator<true>>(size());
         } else {
-            return iterator<true>(details::transform(std::ranges::end, views_));
+            return iterator<true>(
+                details::transform(__RXX ranges::end, views_));
         }
     }
 
@@ -147,8 +153,8 @@ struct zip_view_iterator_category<Const, Rs...> {
 };
 } // namespace details
 
-template <std::ranges::input_range... Rs>
-requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
+template <input_range... Rs>
+requires (... && view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::iterator :
     public details::zip_view_iterator_category<Const, Rs...> {
@@ -358,8 +364,8 @@ private:
     current_type current_;
 };
 
-template <std::ranges::input_range... Rs>
-requires (... && std::ranges::view<Rs>) && (sizeof...(Rs) > 0)
+template <input_range... Rs>
+requires (... && view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::sentinel {
     using end_type = std::tuple<sentinel_t<details::const_if<Const, Rs>>...>;

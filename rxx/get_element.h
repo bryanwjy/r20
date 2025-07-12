@@ -81,8 +81,13 @@ inline constexpr details::get_element_t<I> get_element{};
 
 namespace details {
 namespace tuple {
+
+template <size_t>
+struct has_value;
+
 template <typename T>
-concept has_size = requires { typename std::tuple_size<T>::type; };
+concept has_size = requires { typename has_value<std::tuple_size<T>::value>; };
+
 template <typename T, size_t I>
 concept has_element = has_size<T> && requires(T t) {
     requires I < std::tuple_size_v<T>;
@@ -96,9 +101,9 @@ inline std::make_index_sequence<std::tuple_size_v<T>> sequence_for{};
 } // namespace details
 
 template <typename T>
-concept tuple_like = details::tuple::has_size<T> &&
+concept tuple_like = details::tuple::has_size<std::remove_cvref_t<T>> &&
     []<size_t... Is>(std::index_sequence<Is...>) {
-        return (... && details::tuple::has_element<T, Is>);
-    }(details::tuple::sequence_for<T>);
+        return (... && details::tuple::has_element<std::remove_cvref_t<T>, Is>);
+    }(details::tuple::sequence_for<std::remove_cvref_t<T>>);
 
 RXX_DEFAULT_NAMESPACE_END

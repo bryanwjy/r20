@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -20,11 +23,11 @@ namespace ranges {
 
 namespace details {
 template <typename Pred, typename V>
-concept chunk_by_predicate = std::ranges::view<V> && std::is_object_v<Pred> &&
+concept chunk_by_predicate = view<V> && std::is_object_v<Pred> &&
     std::indirect_binary_predicate<Pred, iterator_t<V>, iterator_t<V>>;
 }
 
-template <std::ranges::forward_range V, details::chunk_by_predicate<V> Pred>
+template <forward_range V, details::chunk_by_predicate<V> Pred>
 class chunk_by_view :
     public std::ranges::view_interface<chunk_by_view<V, Pred>> {
 
@@ -59,7 +62,7 @@ public:
     constexpr Pred const& pred() const noexcept { return *pred_; }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr iterator begin() {
-        auto first = std::ranges::begin(base_);
+        auto first = __RXX ranges::begin(base_);
         if (!cached_begin_) {
             cached_begin_.set(base_, find_next(first));
         }
@@ -70,7 +73,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
         if constexpr (std::ranges::common_range<V>) {
             return iterator{
-                *this, std::ranges::end(base_), std::ranges::end(base_)};
+                *this, __RXX ranges::end(base_), __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -85,16 +88,16 @@ private:
                 *pred_, std::forward<T>(left), std::forward<U>(right));
         };
 
-        return std::ranges::next(
-            std::ranges::adjacent_find(current, std::ranges::end(base_), pred),
-            1, std::ranges::end(base_));
+        return std::ranges::next(std::ranges::adjacent_find(
+                                     current, __RXX ranges::end(base_), pred),
+            1, __RXX ranges::end(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<V> find_prev(iterator_t<V> current)
-    requires std::ranges::bidirectional_range<V>
+    requires bidirectional_range<V>
     {
-        auto first = std::ranges::begin(base_);
+        auto first = __RXX ranges::begin(base_);
         std::ranges::reverse_view reversed{
             std::ranges::subrange{first, current}
         };
@@ -118,7 +121,7 @@ private:
 template <typename R, typename Pred>
 chunk_by_view(R&&, Pred) -> chunk_by_view<std::views::all_t<R>, Pred>;
 
-template <std::ranges::forward_range V, details::chunk_by_predicate<V> Pred>
+template <forward_range V, details::chunk_by_predicate<V> Pred>
 class chunk_by_view<V, Pred>::iterator {
     friend chunk_by_view;
 
@@ -134,9 +137,8 @@ public:
     using value_type = std::ranges::subrange<iterator_t<V>>;
     using difference_type = range_difference_t<V>;
     using iterator_category = std::input_iterator_tag;
-    using iterator_concept =
-        std::conditional_t<std::ranges::bidirectional_range<V>,
-            std::bidirectional_iterator_tag, std::forward_iterator_tag>;
+    using iterator_concept = std::conditional_t<bidirectional_range<V>,
+        std::bidirectional_iterator_tag, std::forward_iterator_tag>;
 
     __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
         std::is_nothrow_default_constructible_v<iterator_t<V>>) = default;
@@ -160,7 +162,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<V>
+    requires bidirectional_range<V>
     {
         next_ = current_;
         current_ = parent_->find_prev(next_);
@@ -168,7 +170,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<V>
+    requires bidirectional_range<V>
     {
         auto prev = *this;
         --*this;

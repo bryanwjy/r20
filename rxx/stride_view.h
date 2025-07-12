@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "rxx/access.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/ceil_div.h"
@@ -22,8 +24,8 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::ranges::input_range V>
-requires std::ranges::view<V>
+template <input_range V>
+requires view<V>
 class stride_view : public std::ranges::view_interface<stride_view<V>> {
     template <bool>
     class iterator;
@@ -58,14 +60,14 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>{*this, std::ranges::begin(base_)};
+        return iterator<false>{*this, __RXX ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
-        return iterator<true>{*this, std::ranges::begin(base_)};
+        return iterator<true>{*this, __RXX ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -73,13 +75,13 @@ public:
     requires (!details::simple_view<V>)
     {
         if constexpr (std::ranges::common_range<V> &&
-            std::ranges::sized_range<V> && std::ranges::forward_range<V>) {
+            std::ranges::sized_range<V> && forward_range<V>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
-            return iterator<false>{*this, std::ranges::end(base_), missing};
+            return iterator<false>{*this, __RXX ranges::end(base_), missing};
         } else if constexpr (std::ranges::common_range<V> &&
-            !std::ranges::bidirectional_range<V>) {
-            return iterator<false>{*this, std::ranges::end(base_)};
+            !bidirectional_range<V>) {
+            return iterator<false>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -87,17 +89,16 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         if constexpr (std::ranges::common_range<V const> &&
-            std::ranges::sized_range<V const> &&
-            std::ranges::forward_range<V const>) {
+            std::ranges::sized_range<V const> && forward_range<V const>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
-            return iterator<true>{*this, std::ranges::end(base_), missing};
+            return iterator<true>{*this, __RXX ranges::end(base_), missing};
         } else if constexpr (std::ranges::common_range<V const> &&
-            !std::ranges::bidirectional_range<V const>) {
-            return iterator<true>{*this, std::ranges::end(base_)};
+            !bidirectional_range<V const>) {
+            return iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -128,12 +129,12 @@ template <typename R>
 stride_view(R&&, range_difference_t<R>) -> stride_view<std::views::all_t<R>>;
 
 namespace details {
-template <bool Const, std::ranges::input_range V>
-requires std::ranges::view<V>
+template <bool Const, input_range V>
+requires view<V>
 struct stride_view_iterator_category {};
 
-template <bool Const, std::ranges::forward_range V>
-requires std::ranges::view<V>
+template <bool Const, forward_range V>
+requires view<V>
 struct stride_view_iterator_category<Const, V> {
     using iterator_category = decltype([]() {
         if constexpr (std::derived_from<iterator_category_of<Const, V>,
@@ -146,8 +147,8 @@ struct stride_view_iterator_category<Const, V> {
 };
 } // namespace details
 
-template <std::ranges::input_range V>
-requires std::ranges::view<V>
+template <input_range V>
+requires view<V>
 template <bool Const>
 class stride_view<V>::iterator :
     public details::stride_view_iterator_category<Const, V> {
@@ -159,11 +160,11 @@ public:
     using difference_type = range_difference_t<Base>;
     using value_type = range_value_t<Base>;
     using iterator_concept = decltype([]() {
-        if constexpr (std::ranges::random_access_range<Base>) {
+        if constexpr (random_access_range<Base>) {
             return std::random_access_iterator_tag{};
-        } else if constexpr (std::ranges::bidirectional_range<Base>) {
+        } else if constexpr (bidirectional_range<Base>) {
             return std::bidirectional_iterator_tag{};
-        } else if constexpr (std::ranges::forward_range<Base>) {
+        } else if constexpr (forward_range<Base>) {
             return std::forward_iterator_tag{};
         } else {
             return std::input_iterator_tag{};
@@ -211,7 +212,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::ranges::forward_range<Base>
+    requires forward_range<Base>
     {
         auto prev = *this;
         ++*this;
@@ -219,7 +220,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         std::ranges::advance(current_, missing_ - stride_);
         missing_ = 0;
@@ -227,7 +228,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-    requires std::ranges::bidirectional_range<Base>
+    requires bidirectional_range<Base>
     {
         auto prev = *this;
         --*this;
@@ -235,7 +236,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         if (offset > 0) {
             assert(
@@ -249,14 +250,14 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return *this += -offset;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator[](difference_type offset) const -> decltype(auto)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return *(*this + offset);
     }
@@ -264,7 +265,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         iterator const& iter, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = iter;
         copy += offset;
@@ -274,7 +275,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator+(
         difference_type offset, iterator const& iter)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return iter + offset;
     }
@@ -282,7 +283,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator operator-(
         iterator const& iter, difference_type offset)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         auto copy = iter;
         copy -= offset;
@@ -295,7 +296,7 @@ public:
     requires std::sized_sentinel_for<iterator_t<Base>, iterator_t<Base>>
     {
         auto const diff = left.current_ - right.current_;
-        if constexpr (std::ranges::forward_range<Base>) {
+        if constexpr (forward_range<Base>) {
             return (diff + left.missing_ - right.missing_) / left.stride_;
         } else if (diff < 0) {
             return -details::ceil_div(-diff, left.stride_);
@@ -336,14 +337,14 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator<(iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return left.current_ < right.current_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator>(iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return right.current_ < left.current_;
     }
@@ -351,7 +352,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator<=(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return !(right.current_ < left.current_);
     }
@@ -359,7 +360,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator>=(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base>
+    requires random_access_range<Base>
     {
         return !(left.current_ < right.current_);
     }
@@ -367,7 +368,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto operator<=>(
         iterator const& left, iterator const& right)
-    requires std::ranges::random_access_range<Base> &&
+    requires random_access_range<Base> &&
         std::three_way_comparable<iterator_t<Base>>
     {
         return left.current_ <=> right.current_;
@@ -392,7 +393,7 @@ private:
     __RXX_HIDE_FROM_ABI constexpr iterator(Parent& parent,
         iterator_t<Base> current, range_difference_t<Base> missing = 0)
         : current_{std::move(current)}
-        , end_{std::ranges::end(parent.base_)}
+        , end_{__RXX ranges::end(parent.base_)}
         , stride_{parent.stride_}
         , missing_{missing} {}
 
@@ -406,7 +407,7 @@ namespace views {
 namespace details {
 struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
 
-    template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
+    template <viewable_range R, typename D = range_difference_t<R>>
     requires requires { stride_view(std::declval<R>(), std::declval<D>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg, std::type_identity_t<D> size) const

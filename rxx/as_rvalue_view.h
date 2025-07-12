@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -21,8 +24,8 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::ranges::view V>
-requires std::ranges::input_range<V>
+template <view V>
+requires input_range<V>
 class as_rvalue_view : public std::ranges::view_interface<as_rvalue_view<V>> {
 public:
     __RXX_HIDE_FROM_ABI constexpr as_rvalue_view() noexcept(
@@ -50,14 +53,14 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return std::move_iterator(std::ranges::begin(base_));
+        return std::move_iterator(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
-        return std::move_iterator(std::ranges::begin(base_));
+        return std::move_iterator(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -65,20 +68,20 @@ public:
     requires (!details::simple_view<V>)
     {
         if constexpr (std::ranges::common_range<V>) {
-            return std::move_iterator(std::ranges::end(base_));
+            return std::move_iterator(__RXX ranges::end(base_));
         } else {
-            return std::move_sentinel(std::ranges::end(base_));
+            return std::move_sentinel(__RXX ranges::end(base_));
         }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
         if constexpr (std::ranges::common_range<V const>) {
-            return std::move_iterator(std::ranges::end(base_));
+            return std::move_iterator(__RXX ranges::end(base_));
         } else {
-            return std::move_sentinel(std::ranges::end(base_));
+            return std::move_sentinel(__RXX ranges::end(base_));
         }
     }
 

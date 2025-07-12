@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -18,8 +21,8 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
-template <std::ranges::input_range V>
-requires std::ranges::view<V>
+template <input_range V>
+requires view<V>
 class cache_latest_view :
     public std::ranges::view_interface<cache_latest_view<V>> {
     using CacheT RXX_NODEBUG =
@@ -79,13 +82,13 @@ private:
 template <typename R>
 cache_latest_view(R&&) -> cache_latest_view<std::views::all_t<R>>;
 
-template <std::ranges::input_range V>
-requires std::ranges::view<V>
+template <input_range V>
+requires view<V>
 class cache_latest_view<V>::iterator {
 
     __RXX_HIDE_FROM_ABI constexpr explicit iterator(cache_latest_view& parent)
         : parent_(RXX_BUILTIN_addressof(parent))
-        , current_(std::ranges::begin(parent.base_)) {}
+        , current_(__RXX ranges::begin(parent.base_)) {}
 
     friend cache_latest_view;
 
@@ -148,17 +151,17 @@ private:
     iterator_t<V> current_;
 };
 
-template <std::ranges::input_range V>
-requires std::ranges::view<V>
+template <input_range V>
+requires view<V>
 class cache_latest_view<V>::sentinel {
 
     __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
         cache_latest_view& parent) noexcept(std::
                                                 is_nothrow_move_constructible_v<
                                                     sentinel_t<V>> &&
-        std::is_nothrow_invocable_v<decltype(std::ranges::end),
+        std::is_nothrow_invocable_v<decltype(__RXX ranges::end),
             decltype(parent.base_)>)
-        : end_(std::ranges::end(parent.base_)) {}
+        : end_(__RXX ranges::end(parent.base_)) {}
 
     friend cache_latest_view;
 
@@ -201,7 +204,7 @@ namespace views {
 namespace details {
 struct cache_latest_t : __RXX ranges::details::adaptor_closure<cache_latest_t> {
 
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires requires { cache_latest_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const

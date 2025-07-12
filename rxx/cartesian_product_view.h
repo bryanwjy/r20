@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "rxx/access.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
@@ -26,11 +28,11 @@ namespace details {
 
 template <typename R>
 concept sized_random_access_range =
-    std::ranges::random_access_range<R> && std::ranges::sized_range<R>;
+    random_access_range<R> && std::ranges::sized_range<R>;
 
 template <bool Const, typename First, typename... Vs>
 concept cartesian_product_is_random_access =
-    (std::ranges::random_access_range<details::const_if<Const, First>> && ... &&
+    (random_access_range<details::const_if<Const, First>> && ... &&
         sized_random_access_range<details::const_if<Const, Vs>>);
 
 template <typename R>
@@ -39,8 +41,8 @@ concept cartesian_product_common_arg =
 
 template <bool Const, typename First, typename... Vs>
 concept cartesian_product_is_bidirectional =
-    (std::ranges::bidirectional_range<details::const_if<Const, First>> && ... &&
-        (std::ranges::bidirectional_range<details::const_if<Const, Vs>> &&
+    (bidirectional_range<details::const_if<Const, First>> && ... &&
+        (bidirectional_range<details::const_if<Const, Vs>> &&
             cartesian_product_common_arg<details::const_if<Const, Vs>>));
 
 template <typename First, typename... Vs>
@@ -62,15 +64,15 @@ concept cartesian_is_sized_sentinel =
 template <cartesian_product_common_arg R>
 __RXX_HIDE_FROM_ABI constexpr auto cartesian_product_common_arg_end(R& range) {
     if constexpr (std::ranges::common_range<R>) {
-        return std::ranges::end(range);
+        return __RXX ranges::end(range);
     } else {
-        return std::ranges::begin(range) + std::ranges::distance(range);
+        return __RXX ranges::begin(range) + std::ranges::distance(range);
     }
 }
 } // namespace details
 
-template <std::ranges::input_range First, std::ranges::forward_range... Vs>
-requires (std::ranges::view<First> && ... && std::ranges::view<Vs>)
+template <input_range First, forward_range... Vs>
+requires (view<First> && ... && view<Vs>)
 class cartesian_product_view :
     public std::ranges::view_interface<cartesian_product_view<First, Vs...>> {
 
@@ -99,16 +101,15 @@ public:
     requires (!details::simple_view<First> || ... || !details::simple_view<Vs>)
     {
         return iterator<false>(
-            *this, details::transform(std::ranges::begin, bases_));
+            *this, details::transform(__RXX ranges::begin, bases_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires (
-        std::ranges::range<First const> && ... && std::ranges::range<Vs const>)
+    requires (range<First const> && ... && range<Vs const>)
     {
         return iterator<true>(
-            *this, details::transform(std::ranges::begin, bases_));
+            *this, details::transform(__RXX ranges::begin, bases_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -122,14 +123,14 @@ public:
         }(details::make_index_sequence_v<sizeof...(Vs) + 1>);
 
         auto const begin_or_first_end = [&](auto& range) {
-            return is_empty ? std::ranges::begin(range)
+            return is_empty ? __RXX ranges::begin(range)
                             : details::cartesian_product_common_arg_end(range);
         };
 
         return iterator<false>(
             *this, [&]<size_t... Is>(std::index_sequence<0, Is...>) {
                 return std::tuple{begin_or_first_end(get_element<0>(bases_)),
-                    std::ranges::begin(get_element<Is>(bases_))...};
+                    __RXX ranges::begin(get_element<Is>(bases_))...};
             }(details::make_index_sequence_v<sizeof...(Vs) + 1>));
     }
 
@@ -142,14 +143,14 @@ public:
         }(details::make_index_sequence_v<sizeof...(Vs) + 1>);
 
         auto const begin_or_first_end = [&](auto& range) {
-            return is_empty ? std::ranges::begin(range)
+            return is_empty ? __RXX ranges::begin(range)
                             : details::cartesian_product_common_arg_end(range);
         };
 
         return iterator<true>(
             *this, [&]<size_t... Is>(std::index_sequence<0, Is...>) {
                 return std::tuple{begin_or_first_end(get_element<0>(bases_)),
-                    std::ranges::begin(get_element<Is>(bases_))...};
+                    __RXX ranges::begin(get_element<Is>(bases_))...};
             }(details::make_index_sequence_v<sizeof...(Vs) + 1>));
     }
 
@@ -190,8 +191,8 @@ template <typename... Vs>
 cartesian_product_view(Vs&&...)
     -> cartesian_product_view<std::views::all_t<Vs>...>;
 
-template <std::ranges::input_range First, std::ranges::forward_range... Vs>
-requires (std::ranges::view<First> && ... && std::ranges::view<Vs>)
+template <input_range First, forward_range... Vs>
+requires (view<First> && ... && view<Vs>)
 template <bool Const>
 class cartesian_product_view<First, Vs...>::iterator {
     friend cartesian_product_view;
@@ -206,8 +207,7 @@ public:
         } else if constexpr (details::cartesian_product_is_bidirectional<Const,
                                  First, Vs...>) {
             return std::bidirectional_iterator_tag{};
-        } else if constexpr (std::ranges::forward_range<
-                                 details::const_if<Const, First>>) {
+        } else if constexpr (forward_range<details::const_if<Const, First>>) {
             return std::forward_iterator_tag{};
         } else {
             return std::input_iterator_tag{};
@@ -250,7 +250,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int)
-    requires std::ranges::forward_range<details::const_if<Const, First>>
+    requires forward_range<details::const_if<Const, First>>
     {
         auto prev = *this;
         ++*this;
@@ -330,8 +330,8 @@ public:
     {
         auto output = [&]<size_t... Is>(std::index_sequence<Is...>) {
             return std::tuple{
-                std::ranges::end(get_element<0>(iter.parent_->bases_)),
-                std::ranges::begin(
+                __RXX ranges::end(get_element<0>(iter.parent_->bases_)),
+                __RXX ranges::begin(
                     get_element<1 + Is>(iter.parent_->bases_))...};
         }(details::make_index_sequence_v<sizeof...(Vs)>);
 
@@ -362,7 +362,8 @@ public:
         return [&]<size_t... Is>(std::index_sequence<Is...>) {
             return (... ||
                 (get_element<Is>(iter.current_) ==
-                    std::ranges::end(get_element<Is>(iter.parent_->bases_))));
+                    __RXX ranges::end(
+                        get_element<Is>(iter.parent_->bases_))));
         }(details::make_index_sequence_v<1 + sizeof...(Vs)>);
     }
 
@@ -411,8 +412,8 @@ private:
         auto& iter = get_element<I>(current_);
         ++iter;
         if constexpr (I > 0) {
-            if (iter == std::ranges::end(get_element<I>(parent_->bases_))) {
-                iter = std::ranges::begin(get_element<I>(parent_->bases_));
+            if (iter == __RXX ranges::end(get_element<I>(parent_->bases_))) {
+                iter = __RXX ranges::begin(get_element<I>(parent_->bases_));
                 this->template next<I - 1>();
             }
         }
@@ -422,7 +423,7 @@ private:
     __RXX_HIDE_FROM_ABI constexpr void prev() {
         auto& iter = get_element<I>(current_);
         if constexpr (I > 0) {
-            if (iter == std::ranges::begin(get_element<I>(parent_->bases_))) {
+            if (iter == __RXX ranges::begin(get_element<I>(parent_->bases_))) {
                 iter = details::cartesian_product_common_arg_end(
                     get_element<I>(parent_->bases_));
                 this->template prev<I - 1>();
@@ -446,7 +447,7 @@ private:
                 iter += num;
             } else {
                 auto const ssize = std::ranges::ssize(base);
-                auto const start = std::ranges::begin(base);
+                auto const start = __RXX ranges::begin(base);
                 auto offset = iter - start;
                 offset += num;
                 num = offset / ssize;

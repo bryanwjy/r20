@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -18,8 +21,8 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
-template <std::ranges::input_range V>
-requires std::ranges::view<V>
+template <input_range V>
+requires view<V>
 class to_input_view : public std::ranges::view_interface<to_input_view<V>> {
 
     template <bool>
@@ -51,28 +54,28 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>(std::ranges::begin(base_));
+        return iterator<false>(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
-        return iterator<true>(std::ranges::begin(base_));
+        return iterator<true>(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        return std::ranges::end(base_);
+        return __RXX ranges::end(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
-    requires std::ranges::range<V const>
+    requires range<V const>
     {
-        return std::ranges::end(base_);
+        return __RXX ranges::end(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -96,8 +99,8 @@ private:
 template <typename R>
 to_input_view(R&&) -> to_input_view<std::views::all_t<R>>;
 
-template <std::ranges::input_range V>
-requires std::ranges::view<V>
+template <input_range V>
+requires view<V>
 template <bool Const>
 class to_input_view<V>::iterator {
 
@@ -193,12 +196,12 @@ namespace views {
 namespace details {
 struct to_input_t : __RXX ranges::details::adaptor_closure<to_input_t> {
 
-    template <std::ranges::viewable_range R>
+    template <viewable_range R>
     requires requires { to_input_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const noexcept(noexcept(to_input_view(std::declval<R>()))) {
-        if constexpr (std::ranges::input_range<R> &&
-            !std::ranges::common_range<R> && !std::ranges::forward_range<R>) {
+        if constexpr (input_range<R> && !std::ranges::common_range<R> &&
+            !forward_range<R>) {
             return std::views::all(std::forward<R>(arg));
         } else {
             return to_input_view(std::forward<R>(arg));

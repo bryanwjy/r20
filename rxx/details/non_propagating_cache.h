@@ -51,8 +51,10 @@ public:
 
     template <typename I>
     requires requires(I const& it) { T(*it); }
-    __RXX_HIDE_FROM_ABI constexpr T& emplace_deref(I const& it) {
-        return base_type::generate([&]() { return T(*it); });
+    __RXX_HIDE_FROM_ABI constexpr T& emplace_deref(I const& it) noexcept(
+        noexcept(T(*it))) {
+        return base_type::generate(
+            [&]() noexcept(noexcept(T(*it))) { return T(*it); });
     }
 
     template <typename U>

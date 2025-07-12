@@ -1,6 +1,9 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
+#include "rxx/access.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -22,8 +25,8 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-template <std::ranges::view V>
-requires std::ranges::input_range<V>
+template <view V>
+requires input_range<V>
 class chunk_view : public std::ranges::view_interface<chunk_view<V>> {
     class outer_iterator;
     class inner_iterator;
@@ -52,7 +55,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr outer_iterator begin() {
-        current_ = std::ranges::begin(base_);
+        current_ = __RXX ranges::begin(base_);
         remainder_ = size_;
         return outer_iterator(*this);
     }
@@ -88,8 +91,8 @@ private:
 template <typename R>
 chunk_view(R&&, range_difference_t<R>) -> chunk_view<std::views::all_t<R>>;
 
-template <std::ranges::view V>
-requires std::ranges::input_range<V>
+template <view V>
+requires input_range<V>
 class chunk_view<V>::outer_iterator {
     friend chunk_view;
 
@@ -123,7 +126,7 @@ public:
         {
             return details::to_unsigned_like(
                 std::ranges::min(parent_->remainder_,
-                    std::ranges::end(parent_->base_) - *parent_->current_));
+                    __RXX ranges::end(parent_->base_) - *parent_->current_));
         }
 
     private:
@@ -141,7 +144,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr outer_iterator& operator++() {
         assert(*this != std::default_sentinel);
         std::ranges::advance(*parent_->current_, parent_->remainder_,
-            std::ranges::end(parent_->base_));
+            __RXX ranges::end(parent_->base_));
         parent_->remainder_ = parent_->size_;
         return *this;
     }
@@ -151,7 +154,7 @@ public:
     __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
         outer_iterator const& left, std::default_sentinel_t) {
         return *left.parent_->current_ ==
-            std::ranges::end(left.parent_->base_) &&
+            __RXX ranges::end(left.parent_->base_) &&
             left.parent_->remainder_ != 0;
     }
 
@@ -159,8 +162,8 @@ public:
         std::default_sentinel_t, outer_iterator const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        auto const dist =
-            std::ranges::end(right.parent_->base_) - *right.parent_->current_;
+        auto const dist = __RXX ranges::end(right.parent_->base_) -
+            *right.parent_->current_;
 
         if (dist < right.parent_->remainder_) {
             return dist == 0 ? 0 : 1;
@@ -182,8 +185,8 @@ private:
     chunk_view* parent_;
 };
 
-template <std::ranges::view V>
-requires std::ranges::input_range<V>
+template <view V>
+requires input_range<V>
 class chunk_view<V>::inner_iterator {
 
     __RXX_HIDE_FROM_ABI explicit constexpr inner_iterator(
@@ -212,7 +215,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr inner_iterator& operator++() {
         assert(*this != std::default_sentinel);
         ++*parent_->current_;
-        if (*parent_->current_ == std::ranges::end(parent_->base_)) {
+        if (*parent_->current_ == __RXX ranges::end(parent_->base_)) {
             parent_->remainder_ = 0;
         } else {
             --parent_->remainder_;
@@ -233,7 +236,8 @@ public:
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
         return std::ranges::min(right.parent_->remainder_,
-            std::ranges::end(right.parent_->base_) - *right.parent_->current_);
+            __RXX ranges::end(right.parent_->base_) -
+                *right.parent_->current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
@@ -263,8 +267,8 @@ private:
     chunk_view* parent_;
 };
 
-template <std::ranges::view V>
-requires std::ranges::forward_range<V>
+template <view V>
+requires forward_range<V>
 class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
     // Clang<16  has a bug, which prevents out-of-line definition of this
@@ -278,16 +282,16 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
         __RXX_HIDE_FROM_ABI constexpr iterator(Parent* parent,
             iterator_t<Base> current, range_difference_t<Base> missing = 0)
             : current_(current)
-            , end_(std::ranges::end(parent->base_))
+            , end_(__RXX ranges::end(parent->base_))
             , size_(parent->size_)
             , missing_(missing) {}
 
     public:
         using iterator_category = std::input_iterator_tag;
         using iterator_concept = decltype([]() {
-            if constexpr (std::ranges::random_access_range<Base>) {
+            if constexpr (random_access_range<Base>) {
                 return std::random_access_iterator_tag{};
-            } else if constexpr (std::ranges::bidirectional_range<Base>) {
+            } else if constexpr (bidirectional_range<Base>) {
                 return std::bidirectional_iterator_tag{};
             } else {
                 return std::forward_iterator_tag{};
@@ -336,7 +340,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
         }
 
         __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
-        requires std::ranges::bidirectional_range<Base>
+        requires bidirectional_range<Base>
         {
             std::ranges::advance(current_, missing_ - size_);
             missing_ = 0;
@@ -344,7 +348,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
         }
 
         __RXX_HIDE_FROM_ABI constexpr iterator operator--(int)
-        requires std::ranges::bidirectional_range<Base>
+        requires bidirectional_range<Base>
         {
             auto prev = *this;
             --*this;
@@ -353,7 +357,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(
             difference_type offset)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             if (offset > 0) {
                 assert(std::ranges::distance(current_, end_) >
@@ -368,14 +372,14 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI constexpr iterator& operator-=(
             difference_type offset)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             return *this += -offset;
         }
 
         __RXX_HIDE_FROM_ABI constexpr value_type operator[](
             difference_type offset) const
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             return *(*this + offset);
         }
@@ -392,35 +396,35 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI friend constexpr bool operator<(
             iterator const& left, iterator const& right)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             return left.current_ > right.current_;
         }
 
         __RXX_HIDE_FROM_ABI friend constexpr bool operator>(
             iterator const& left, iterator const& right)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             return right < left;
         }
 
         __RXX_HIDE_FROM_ABI friend constexpr bool operator<=(
             iterator const& left, iterator const& right)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             return !(right < left);
         }
 
         __RXX_HIDE_FROM_ABI friend constexpr bool operator>=(
             iterator const& left, iterator const& right)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             return !(left < right);
         }
 
         __RXX_HIDE_FROM_ABI friend constexpr auto operator<=>(
             iterator const& left, iterator const& right)
-        requires std::ranges::random_access_range<Base> &&
+        requires random_access_range<Base> &&
             std::three_way_comparable<iterator_t<Base>>
         {
             return left.current_ <=> right.current_;
@@ -428,7 +432,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
             iterator const& iter, difference_type offset)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             auto copy = iter;
             copy += offset;
@@ -437,7 +441,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
             difference_type offset, iterator const& iter)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             auto copy = iter;
             copy += offset;
@@ -446,7 +450,7 @@ class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI friend constexpr iterator operator-(
             iterator const& iter, difference_type offset)
-        requires std::ranges::random_access_range<Base>
+        requires random_access_range<Base>
         {
             auto copy = iter;
             copy -= offset;
@@ -504,13 +508,13 @@ public:
     __RXX_HIDE_FROM_ABI constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>(this, std::ranges::begin(base_));
+        return iterator<false>(this, __RXX ranges::begin(base_));
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto begin() const
-    requires std::ranges::forward_range<V const>
+    requires forward_range<V const>
     {
-        return iterator<true>(this, std::ranges::begin(base_));
+        return iterator<true>(this, __RXX ranges::begin(base_));
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end()
@@ -520,26 +524,26 @@ public:
             std::ranges::sized_range<V>) {
             auto const missing =
                 (size_ - std::ranges::distance(base_) % size_) % size_;
-            return iterator<false>(this, std::ranges::end(base_), missing);
+            return iterator<false>(this, __RXX ranges::end(base_), missing);
         } else if constexpr (std::ranges::common_range<V> &&
-            !std::ranges::bidirectional_range<V>) {
-            return iterator<false>(this, std::ranges::end(base_));
+            !bidirectional_range<V>) {
+            return iterator<false>(this, __RXX ranges::end(base_));
         } else {
             return std::default_sentinel;
         }
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end() const
-    requires std::ranges::forward_range<V const>
+    requires forward_range<V const>
     {
         if constexpr (std::ranges::common_range<V const> &&
             std::ranges::sized_range<V const>) {
             auto const missing =
                 (size_ - std::ranges::distance(base_) % size_) % size_;
-            return iterator<true>(this, std::ranges::end(base_), missing);
+            return iterator<true>(this, __RXX ranges::end(base_), missing);
         } else if constexpr (std::ranges::common_range<V const> &&
-            !std::ranges::bidirectional_range<V const>) {
-            return iterator<true>(this, std::ranges::end(base_));
+            !bidirectional_range<V const>) {
+            return iterator<true>(this, __RXX ranges::end(base_));
         } else {
             return std::default_sentinel;
         }
@@ -568,7 +572,7 @@ namespace views {
 namespace details {
 struct chunk_t : ranges::details::adaptor_non_closure<chunk_t> {
 
-    template <std::ranges::viewable_range R, typename D = range_difference_t<R>>
+    template <viewable_range R, typename D = range_difference_t<R>>
     requires requires { chunk_view(std::declval<R>(), std::declval<D>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg, std::type_identity_t<D> size) const {
@@ -606,4 +610,4 @@ RXX_DEFAULT_NAMESPACE_END
 template <typename V>
 constexpr bool
     std::ranges::enable_borrowed_range<__RXX ranges::chunk_view<V>> =
-        std::ranges::forward_range<V> && std::ranges::enable_borrowed_range<V>;
+        forward_range<V> && std::ranges::enable_borrowed_range<V>;
