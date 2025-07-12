@@ -424,3 +424,25 @@ constexpr const_sentinel<S> make_const_sentinel(S s) {
 }
 
 RXX_DEFAULT_NAMESPACE_END
+
+template <typename T, std::common_with<T> U>
+requires std::input_iterator<std::common_type_t<T, U>>
+struct std::common_type<__RXX basic_const_iterator<T>, U> {
+    using type RXX_NODEBUG =
+        __RXX basic_const_iterator<std::common_type_t<T, U>>;
+};
+
+template <typename T, std::common_with<T> U>
+requires std::input_iterator<std::common_type_t<T, U>>
+struct std::common_type<U, __RXX basic_const_iterator<T>> {
+    using type RXX_NODEBUG =
+        __RXX basic_const_iterator<std::common_type_t<T, U>>;
+};
+
+template <typename T, std::common_with<T> U>
+requires std::input_iterator<std::common_type_t<T, U>>
+struct std::common_type<__RXX basic_const_iterator<T>,
+    __RXX basic_const_iterator<U>> {
+    using type RXX_NODEBUG =
+        __RXX basic_const_iterator<std::common_type_t<T, U>>;
+};

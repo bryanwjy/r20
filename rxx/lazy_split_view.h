@@ -14,6 +14,7 @@
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/variant_base.h"
 #include "rxx/primitives.h"
+#include "rxx/single_view.h"
 
 #include <cassert>
 #include <compare>
@@ -64,12 +65,11 @@ public:
 
     template <input_range R>
     requires std::constructible_from<V, std::views::all_t<R>> &&
-                 std::constructible_from<P,
-                     std::ranges::single_view<range_value_t<R>>>
+                 std::constructible_from<P, single_view<range_value_t<R>>>
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         R&& range, range_value_t<R> pattern)
         : base_{std::views::all(std::forward<R>(range))}
-        , pattern_{std::views::single(std::move(pattern))} {}
+        , pattern_{views::single(std::move(pattern))} {}
 
     __RXX_HIDE_FROM_ABI constexpr V base() const& noexcept(
         std::is_nothrow_copy_constructible_v<V>)
@@ -466,8 +466,8 @@ lazy_split_view(R&&, P&&)
     -> lazy_split_view<std::views::all_t<R>, std::views::all_t<P>>;
 
 template <input_range R>
-lazy_split_view(R&&, range_value_t<R>) -> lazy_split_view<std::views::all_t<R>,
-    std::ranges::single_view<range_value_t<R>>>;
+lazy_split_view(R&&, range_value_t<R>)
+    -> lazy_split_view<std::views::all_t<R>, single_view<range_value_t<R>>>;
 
 namespace views {
 namespace details {

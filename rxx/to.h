@@ -50,81 +50,12 @@ concept constructible_from_iter_pair = common_range<R> &&
         std::input_iterator_tag> &&
     std::constructible_from<C, iterator_t<R>, sentinel_t<R>, Args...>;
 
-template <typename C, input_range R, typename... Args>
-consteval bool nothrow_to() noexcept {
-    if constexpr (details::try_non_recursive_conversion<C, R>) {
-        if constexpr (std::constructible_from<C, R, Args...>) {
-            return std::is_nothrow_constructible_v<C, R, Args...>;
-        }
-#if RXX_CXX23
-        else if constexpr (std::constructible_from<C, std::from_range_t, R,
-                               Args...>) {
-            return std::is_nothrow_constructible_v<C, std::from_range_t, R,
-                Args...>;
-        }
-#endif
-        else if constexpr (details::constructible_from_iter_pair<C, R,
-                               Args...>) {
-            return std::is_nothrow_constructible_v<iterator_t<R>, sentinel_t<R>,
-                Args...>;
-        } else {
-            constexpr bool nothrow_initialize =
-                std::is_nothrow_constructible_v<C, Args...> &&
-                details::reservable_container<C> &&
-                requires(C result, R range) {
-                    { ranges::size(range) } noexcept;
-                    {
-                        result.reserve(std::declval<range_size_t<C>>())
-                    } noexcept;
-                    { *result.begin() } noexcept;
-                    { result.end() } noexcept;
-                    { result.end() != result.begin() } noexcept;
-                };
-            using RefType = decltype(*std::declval<R&>().begin());
-
-            if constexpr (requires(C result) {
-                              result.emplace_back(std::declval<RefType>());
-                          }) {
-                return noexcept(std::declval<C&>().emplace_back(
-                           std::declval<RefType>())) &&
-                    nothrow_initialize;
-            } else if constexpr (requires(C result) {
-                                     result.push_back(std::declval<RefType>());
-                                 }) {
-                return noexcept(std::declval<C&>().push_back(
-                           std::declval<RefType>())) &&
-                    nothrow_initialize;
-            } else if constexpr (requires(C result) {
-                                     result.emplace(
-                                         result.end(), std::declval<RefType>());
-                                 }) {
-                return noexcept(
-                           std::declval<C&>().emplace(std::declval<C&>().end(),
-                               std::declval<RefType>())) &&
-                    nothrow_initialize;
-            } else if constexpr (requires(C result) {
-                                     result.insert(
-                                         result.end(), std::declval<RefType>());
-                                 }) {
-
-                return noexcept(
-                           std::declval<C&>().insert(std::declval<C&>().end(),
-                               std::declval<RefType>())) &&
-                    nothrow_initialize;
-            } else {
-                return false;
-            }
-        }
-    }
-    return false;
-}
-
 } // namespace details
 
 template <typename C, input_range R, typename... Args>
 requires (!view<C>)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C to(
-    R&& range, Args&&... args) noexcept(details::nothrow_to<C, R, Args...>()) {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
+    to(R&& range, Args&&... args) {
     static_assert(
         !std::is_const_v<C>, "The target container cannot be const-qualified");
     static_assert(!std::is_volatile_v<C>,

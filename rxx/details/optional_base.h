@@ -48,16 +48,16 @@ union opt_union {
 
     template <typename... Args>
     requires std::constructible_from<T, Args...>
-    __RXX_HIDE_FROM_ABI constexpr explicit opt_union(std::in_place_t,
+    __RXX_HIDE_FROM_ABI explicit constexpr opt_union(std::in_place_t,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
         : value{std::forward<Args>(args)...} {}
 
     template <typename F, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr explicit opt_union(generating_t, F&& f,
+    __RXX_HIDE_FROM_ABI inline explicit constexpr opt_union(generating_t, F&& f,
         Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
         : value{std::invoke(std::forward<F>(f), std::forward<Args>(args)...)} {}
 
-    __RXX_HIDE_FROM_ABI constexpr explicit opt_union(decltype(nullptr)) noexcept
+    __RXX_HIDE_FROM_ABI explicit constexpr opt_union(decltype(nullptr)) noexcept
         : nothing{} {}
 
     __RXX_HIDE_FROM_ABI constexpr ~opt_union() noexcept
@@ -98,30 +98,28 @@ class optional_base {
     struct container {
         template <typename... Args>
         requires std::constructible_from<T, Args...>
-        __RXX_HIDE_FROM_ABI constexpr explicit container(std::in_place_t tag,
+        __RXX_HIDE_FROM_ABI explicit constexpr container(std::in_place_t tag,
             Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
             Args...>)
             : union_{tag, tag, std::forward<Args>(args)...}
             , has_value_{true} {}
 
-        template <typename F, typename... Args>
-        requires requires {
-            typename std::invoke_result_t<F, Args...>;
-        } && std::constructible_from<T, std::invoke_result_t<F, Args...>>
-        __RXX_HIDE_FROM_ABI constexpr explicit container(std::in_place_t tag,
+        template <typename... Args>
+        requires std::constructible_from<union_type, generating_t, Args...>
+        __RXX_HIDE_FROM_ABI explicit constexpr container(std::in_place_t tag,
             generating_t gen,
-            Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
-            Args...>)
+            Args&&... args) noexcept(std::is_nothrow_constructible_v<union_type,
+            generating_t, Args...>)
             : union_{tag, gen, std::forward<Args>(args)...}
             , has_value_{true} {}
 
-        __RXX_HIDE_FROM_ABI constexpr explicit container(
+        __RXX_HIDE_FROM_ABI explicit constexpr container(
             decltype(nullptr)) noexcept
             : union_{std::in_place, nullptr}
             , has_value_{false} {}
 
         template <typename U>
-        __RXX_HIDE_FROM_ABI constexpr explicit container(generating_t tag,
+        __RXX_HIDE_FROM_ABI explicit constexpr container(generating_t tag,
             bool has_value,
             U&& u) noexcept(noexcept(make_from_union<union_type>(has_value,
             std::declval<U>())))
@@ -297,15 +295,23 @@ public:
         : optional_base(generating, other.has_value(), std::move(*other)) {}
 
     template <typename U>
-    requires std::constructible_from<T, U const&> && (can_convert<U>())
-    __RXX_HIDE_FROM_ABI
-        explicit(!std::is_convertible_v<U const&, T>) constexpr optional_base(
-            optional_base<U> const&
-                other) noexcept(std::is_nothrow_constructible_v<T, U const&>)
+    requires requires {
+        requires !std::same_as<T, U>;
+        requires std::constructible_from<T, U const&>;
+        requires can_convert<U>();
+    }
+    __RXX_HIDE_FROM_ABI explicit(
+        !std::is_convertible_v<U const&,
+            T>) constexpr optional_base(optional_base<U> const&
+            other) noexcept(std::is_nothrow_constructible_v<T, U const&>)
         : optional_base(generating, other.has_value(), *other) {}
 
     template <typename U>
-    requires std::constructible_from<T, U> && (can_convert<U>())
+    requires requires {
+        requires !std::same_as<T, U>;
+        requires std::constructible_from<T, U>;
+        requires can_convert<U>();
+    }
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr optional_base(optional_base<U>&&
             other) noexcept(std::is_nothrow_constructible_v<T, U>)
@@ -326,14 +332,14 @@ public:
         : container_(tag, tag, list, std::forward<Args>(args)...) {}
 
     template <typename U = std::remove_cv_t<T>>
-    requires std::constructible_from<T, U> &&
-        (!std::same_as<std::remove_cvref_t<U>, std::in_place_t> &&
-            !std::same_as<std::remove_cvref_t<U>, optional_base<T>> &&
-            (!std::same_as<std::remove_cv_t<T>, bool> ||
-                !is_optional_base_v<std::remove_cvref_t<U>>))
-    __RXX_HIDE_FROM_ABI
-        explicit(!std::is_convertible_v<U, T>) constexpr optional_base(
-            U&& other) noexcept(std::is_nothrow_constructible_v<T, U>)
+    requires (!std::same_as<std::remove_cvref_t<U>, std::in_place_t> &&
+                 !std::same_as<std::remove_cvref_t<U>, optional_base<T>> &&
+                 (!std::same_as<std::remove_cv_t<T>, bool> ||
+                     !is_optional_base_v<std::remove_cvref_t<U>>)) &&
+        std::constructible_from<T, U>
+    __RXX_HIDE_FROM_ABI explicit(
+        !std::is_convertible_v<U, T>) constexpr optional_base(U&&
+            other) noexcept(std::is_nothrow_constructible_v<T, U>)
         : container_(std::in_place, std::in_place, std::forward<U>(other)) {}
 
     __RXX_HIDE_FROM_ABI inline constexpr optional_base& operator=(
@@ -405,7 +411,7 @@ public:
     }
 
     template <typename U>
-    requires std::constructible_from<T, U const&> &&
+    requires (!std::same_as<U, T>) && std::constructible_from<T, U const&> &&
         std::assignable_from<T&, U const&> && (can_assign<U>())
     __RXX_HIDE_FROM_ABI inline constexpr optional_base&
     operator=(optional_base<U> const& other) noexcept(
@@ -425,8 +431,8 @@ public:
     }
 
     template <typename U>
-    requires std::constructible_from<T, U> && std::assignable_from<T&, U> &&
-        (can_assign<U>())
+    requires (!std::same_as<U, T>) && std::constructible_from<T, U> &&
+        std::assignable_from<T&, U> && (can_assign<U>())
     __RXX_HIDE_FROM_ABI inline constexpr optional_base&
     operator=(optional_base<U>&& other) noexcept(
         std::is_nothrow_constructible_v<T, U> &&
@@ -445,9 +451,9 @@ public:
     }
 
     template <typename U = std::remove_cv_t<T>>
-    requires std::constructible_from<T, U> && std::assignable_from<T&, U> &&
-        (!std::same_as<std::remove_cvref_t<U>, optional_base<T>> &&
-            (!std::same_as<std::decay_t<U>, T> || !std::is_scalar_v<T>))
+    requires (!std::same_as<std::remove_cvref_t<U>, optional_base<T>> &&
+                 (!std::same_as<std::decay_t<U>, T> || !std::is_scalar_v<T>)) &&
+        std::constructible_from<T, U> && std::assignable_from<T&, U>
     __RXX_HIDE_FROM_ABI inline constexpr optional_base& operator=(
         U&& other) noexcept(std::is_nothrow_constructible_v<T, U> &&
         std::is_nothrow_assignable_v<T&, U>) {
