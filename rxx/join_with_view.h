@@ -244,10 +244,10 @@ class join_with_view<V, P>::iterator :
     public details::join_with_view_iterator_category<Const, V, P> {
 
     friend join_with_view;
-    using category_base =
+    using category_base RXX_NODEBUG =
         details::join_with_view_iterator_category<Const, V, P>;
 
-    using Parent = details::const_if<Const, join_with_view>;
+    using Parent RXX_NODEBUG = details::const_if<Const, join_with_view>;
 
     using typename category_base::Base;
     using typename category_base::InnerBase;
@@ -375,7 +375,15 @@ public:
                  std::convertible_to<iterator_t<P>, PatternIter>
         : parent_{other.parent_}
         , outer_{std::move(other.outer_)}
-        , inner_{std::move(other.inner_)} {}
+        , inner_{[&]() {
+            if (other.inner_.index() == 0) {
+                return InnerType{std::in_place_index<0>,
+                    std::move(other.inner_.template value_ref<0>())};
+            } else {
+                return InnerType{std::in_place_index<1>,
+                    std::move(other.inner_.template value_ref<1>())};
+            }
+        }()} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr std::common_reference_t<iter_reference_t<InnerIter>,
@@ -513,9 +521,9 @@ public:
     }
 
 private:
-    using OuterType = std::conditional_t<forward_range<Base>, OuterIter,
-        details::empty_cache>;
-    using InnerType = details::variant_base<PatternIter, InnerIter>;
+    using OuterType RXX_NODEBUG = std::conditional_t<forward_range<Base>,
+        OuterIter, details::empty_cache>;
+    using InnerType RXX_NODEBUG = details::variant_base<PatternIter, InnerIter>;
     Parent* parent_ = nullptr;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterType outer_{};
     InnerType inner_;

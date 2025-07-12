@@ -104,6 +104,17 @@ class optional_base {
             : union_{tag, tag, std::forward<Args>(args)...}
             , has_value_{true} {}
 
+        template <typename F, typename... Args>
+        requires requires {
+            typename std::invoke_result_t<F, Args...>;
+        } && std::constructible_from<T, std::invoke_result_t<F, Args...>>
+        __RXX_HIDE_FROM_ABI constexpr explicit container(std::in_place_t tag,
+            generating_t gen,
+            Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
+            Args...>)
+            : union_{tag, gen, std::forward<Args>(args)...}
+            , has_value_{true} {}
+
         __RXX_HIDE_FROM_ABI constexpr explicit container(
             decltype(nullptr)) noexcept
             : union_{std::in_place, nullptr}
