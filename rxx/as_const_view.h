@@ -12,6 +12,7 @@
 #include "rxx/details/view_traits.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/ref_view.h"
 
 #include <compare>
 #include <functional>
@@ -105,7 +106,7 @@ template <typename T>
 inline constexpr bool is_constable_ref_view = false;
 
 template <typename R>
-inline constexpr bool is_constable_ref_view<std::ranges::ref_view<R>> =
+inline constexpr bool is_constable_ref_view<ref_view<R>> =
     constant_range<R const>;
 
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
@@ -122,11 +123,10 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
         } else if constexpr (__RXX ranges::details::is_span<Type>) {
             return std::span<Element const, Type::extent>(std::forward<R>(arg));
         } else if constexpr (is_constable_ref_view<R>) {
-            return std::ranges::ref_view(
-                std::as_const(std::forward<R>(arg).base()));
+            return ref_view(std::as_const(std::forward<R>(arg).base()));
         } else if constexpr (std::is_lvalue_reference_v<R> &&
             constant_range<Type const> && !view<Type>) {
-            return std::ranges::ref_view(static_cast<Type const&>(arg));
+            return ref_view(static_cast<Type const&>(arg));
         } else {
             return as_const_view(std::forward<R>(arg));
         }
