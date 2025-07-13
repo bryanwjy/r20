@@ -161,11 +161,9 @@ class zip_transform_view<F, Views...>::iterator :
 
 public:
     using iterator_concept = typename ziperator<Const>::iterator_concept;
-    using value_type = std::conditional_t<Const,
-        std::remove_cvref_t<
-            std::invoke_result_t<F const&, range_reference_t<Views const>...>>,
-        std::remove_cvref_t<
-            std::invoke_result_t<F&, range_reference_t<Views>...>>>;
+    using value_type =
+        std::remove_cvref_t<std::invoke_result_t<details::const_if<Const, F>&,
+            range_reference_t<details::const_if<Const, Views>>...>>;
     using difference_type = range_difference_t<Base<Const>>;
 
     __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
@@ -313,6 +311,13 @@ class zip_transform_view<F, Views...>::sentinel {
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
         std::is_nothrow_default_constructible_v<zentinel<Const>>) = default;
+
+    template <bool OtherConst>
+    requires std::sentinel_for<zentinel<Const>, ziperator<OtherConst>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+        iterator<OtherConst> const& left, sentinel const& right) {
+        return left.inner_ == right.inner_;
+    }
 
     template <bool OtherConst>
     requires std::sized_sentinel_for<zentinel<Const>, ziperator<OtherConst>>
