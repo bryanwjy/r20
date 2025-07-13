@@ -16,6 +16,7 @@
 #include "rxx/details/variant_base.h"
 #include "rxx/primitives.h"
 #include "rxx/single_view.h"
+#include "rxx/subrange.h"
 #include "rxx/view_interface.h"
 
 #include <cassert>
@@ -215,7 +216,7 @@ public:
             trailing_empty_ = false;
             return *this;
         }
-        auto const [pbegin, pend] = std::ranges::subrange{parent_->pattern_};
+        auto const [pbegin, pend] = subrange{parent_->pattern_};
         if (pbegin == pend) {
             ++cur();
         } else if constexpr (details::tiny_range<P>) {
@@ -426,7 +427,7 @@ private:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr bool at_end() const {
-        auto [pcur, pend] = std::ranges::subrange{iter_.parent_->pattern_};
+        auto [pcur, pend] = subrange{iter_.parent_->pattern_};
         auto end = __RXX ranges::end(iter_.parent_->base_);
         if constexpr (details::tiny_range<P>) {
             auto const& cur = iter_.cur();

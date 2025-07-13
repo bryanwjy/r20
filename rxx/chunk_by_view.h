@@ -11,6 +11,7 @@
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/primitives.h"
+#include "rxx/subrange.h"
 #include "rxx/view_interface.h"
 
 #include <cassert>
@@ -100,7 +101,7 @@ private:
     {
         auto first = __RXX ranges::begin(base_);
         std::ranges::reverse_view reversed{
-            std::ranges::subrange{first, current}
+            subrange{first, current}
         };
 
         auto const pred = [this]<typename T, typename U>(
@@ -135,7 +136,7 @@ class chunk_by_view<V, Pred>::iterator {
         , next_(std::move(next)) {}
 
 public:
-    using value_type = std::ranges::subrange<iterator_t<V>>;
+    using value_type = subrange<iterator_t<V>>;
     using difference_type = range_difference_t<V>;
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = std::conditional_t<bidirectional_range<V>,

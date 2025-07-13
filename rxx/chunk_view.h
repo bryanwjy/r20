@@ -14,6 +14,7 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
+#include "rxx/subrange.h"
 #include "rxx/take_view.h"
 #include "rxx/view_interface.h"
 
@@ -300,7 +301,7 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             }
         }());
         using value_type = decltype(__RXX views::take(
-            std::ranges::subrange(std::declval<iterator_t<Base>>(),
+            subrange(std::declval<iterator_t<Base>>(),
                 std::declval<sentinel_t<Base>>()),
             range_difference_t<Base>{}));
         using difference_type = range_difference_t<Base>;
@@ -325,8 +326,7 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI constexpr value_type operator*() const {
             assert(current_ != end_);
-            return std::views::take(
-                std::ranges::subrange(current_, end_), size_);
+            return std::views::take(subrange(current_, end_), size_);
         }
 
         __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
