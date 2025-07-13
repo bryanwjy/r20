@@ -1,6 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/integer_like.h"
 #include "rxx/details/view_traits.h"
@@ -48,7 +49,7 @@ struct take_t : ranges::details::adaptor_non_closure<take_t> {
         N&& num) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<N>, N>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<N>(num));
+            __RXX ranges::details::set_arity<2>(*this), std::forward<N>(num));
     }
 #else
 #  error "Unsupported"

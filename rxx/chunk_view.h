@@ -591,7 +591,8 @@ struct chunk_t : ranges::details::adaptor_non_closure<chunk_t> {
         D&& size) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<D>(size));
+            __RXX ranges::details::set_arity<2>(*this),
+            std::forward<D>(size));
     }
 #else
 #  error "Unsupported"

@@ -50,7 +50,7 @@ struct drop_t : ranges::details::adaptor_non_closure<drop_t> {
         N&& num) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<N>, N>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<N>(num));
+            __RXX ranges::details::set_arity<2>(*this), std::forward<N>(num));
     }
 #else
 #  error "Unsupported"

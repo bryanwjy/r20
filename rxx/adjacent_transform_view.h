@@ -454,7 +454,8 @@ struct adjacent_transform_t :
         F&& func) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<F>(func));
+            __RXX ranges::details::set_arity<2>(*this),
+            std::forward<F>(func));
     }
 #else
 #  error "Unsupported"
