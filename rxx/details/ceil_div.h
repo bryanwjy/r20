@@ -11,7 +11,7 @@ namespace details {
 
 template <typename I>
 __RXX_HIDE_FROM_ABI constexpr I ceil_div(I num, I denom) noexcept {
-    return (num + denom - 1) / denom;
+    return num / denom + static_cast<I>((num % denom) != 0);
 }
 
 } // namespace details

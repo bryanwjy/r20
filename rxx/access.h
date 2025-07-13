@@ -3,11 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "rxx/access.h"
 #include "rxx/details/integer_like.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/iterator.h"
-#include "rxx/primitives.h"
 
 #include <concepts>
 #include <initializer_list>
@@ -234,64 +232,12 @@ concept range = requires(T& t) {
 
 template <typename T>
 concept input_range = range<T> && std::input_iterator<iterator_t<T>>;
-template <typename R, typename T>
-concept output_range = range<R> && std::output_iterator<iterator_t<R>, T>;
-
-template <typename T>
-concept forward_range = input_range<T> && std::forward_iterator<iterator_t<T>>;
-
-template <typename T>
-concept bidirectional_range =
-    forward_range<T> && std::bidirectional_iterator<iterator_t<T>>;
-
-template <typename T>
-concept random_access_range =
-    bidirectional_range<T> && std::random_access_iterator<iterator_t<T>>;
-
-template <typename T>
-concept contiguous_range = random_access_range<T> &&
-    std::contiguous_iterator<ranges::iterator_t<T>> && requires(T& t) {
-        {
-        __RXX ranges::data(t)
-        } -> std::same_as<std::add_pointer_t<ranges::range_reference_t<T>>>;
-    };
-
-template <typename T>
-concept common_range = range<T> && std::same_as<iterator_t<T>, sentinel_t<T>>;
-
-template <typename T>
-concept view = range<T> && std::movable<T> && enable_view<T>;
-
-template <typename T>
-concept viewable_range = range<T> &&
-    ((view<std::remove_cvref_t<T>> &&
-         std::constructible_from<std::remove_cvref_t<T>, T>) ||
-        (!view<std::remove_cvref_t<T>> &&
-            (std::is_lvalue_reference_v<T> ||
-                (std::movable<std::remove_reference_t<T>> &&
-                    !details::is_initializer_list<T>))));
-
-template <typename T>
-concept borrowed_range = range<T> && details::borrowable<T>;
-
-template <typename T>
-concept constant_range =
-    input_range<T> && __RXX details::constant_iterator<iterator_t<T>>;
-
-template <range R>
-using const_iterator_t = const_iterator<iterator_t<R>>;
-
-template <range R>
-using const_sentinel_t = const_sentinel<sentinel_t<R>>;
-
-template <range R>
-using range_const_reference_t = iter_const_reference_t<ranges::iterator_t<R>>;
 
 namespace details {
-template <std::ranges::input_range R>
+template <input_range R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto& possibly_const_range(R& r) noexcept {
-    if constexpr (std::ranges::input_range<R const>) {
+    if constexpr (input_range<R const>) {
         return const_cast<R const&>(r);
     } else {
         return r;
@@ -309,7 +255,7 @@ struct cbegin_t {
         -> decltype(auto) {
 
         auto& ref = details::possibly_const_range(arg);
-        return const_iterator_t<decltype(ref)>(ranges::begin(ref));
+        return const_iterator<iterator_t<decltype(ref)>>(ranges::begin(ref));
     }
 };
 
@@ -324,7 +270,7 @@ struct cend_t {
         -> decltype(auto) {
 
         auto& ref = details::possibly_const_range(arg);
-        return const_sentinel_t<decltype(ref)>(ranges::end(ref));
+        return const_sentinel<sentinel_t<decltype(ref)>>(ranges::end(ref));
     }
 };
 } // namespace details

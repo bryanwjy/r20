@@ -4,13 +4,16 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/tuple_functions.h"
+#include "rxx/empty_view.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <compare>
 #include <functional>
@@ -25,11 +28,9 @@ namespace ranges {
 namespace details {
 
 template <typename... Rs>
-concept zip_common =
-    (sizeof...(Rs) == 1 && (... && std::ranges::common_range<Rs>)) ||
-    (!(... && bidirectional_range<Rs>)&&(
-        ... && std::ranges::common_range<Rs>)) ||
-    ((... && random_access_range<Rs>)&&(... && std::ranges::sized_range<Rs>));
+concept zip_common = (sizeof...(Rs) == 1 && (... && common_range<Rs>)) ||
+    (!(... && bidirectional_range<Rs>)&&(... && common_range<Rs>)) ||
+    ((... && random_access_range<Rs>)&&(... && sized_range<Rs>));
 
 template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -47,7 +48,7 @@ constexpr T abs(T val) noexcept {
 
 template <input_range... Rs>
 requires (... && view<Rs>) && (sizeof...(Rs) > 0)
-class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
+class zip_view : public view_interface<zip_view<Rs...>> {
 
     template <bool IsConst>
     class iterator;
@@ -65,16 +66,14 @@ public:
     constexpr auto begin()
     requires (!(... && details::simple_view<Rs>))
     {
-        return iterator<false>{
-            details::transform(__RXX ranges::begin, views_)};
+        return iterator<false>{details::transform(ranges::begin, views_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires (... && range<Rs const>)
     {
-        return iterator<true>(
-            details::transform(__RXX ranges::begin, views_));
+        return iterator<true>(details::transform(ranges::begin, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -87,8 +86,7 @@ public:
         } else if constexpr ((... && random_access_range<Rs>)) {
             return begin() + iter_difference_t<iterator<false>>(size());
         } else {
-            return iterator<false>(
-                details::transform(__RXX ranges::end, views_));
+            return iterator<false>(details::transform(ranges::end, views_));
         }
     }
 
@@ -102,14 +100,13 @@ public:
         } else if constexpr ((... && random_access_range<Rs const>)) {
             return begin() + std::iter_difference_t<iterator<true>>(size());
         } else {
-            return iterator<true>(
-                details::transform(__RXX ranges::end, views_));
+            return iterator<true>(details::transform(ranges::end, views_));
         }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires (std::ranges::sized_range<Rs> && ...)
+    requires (sized_range<Rs> && ...)
     {
         return std::apply(
             [](auto... sizes) {
@@ -117,12 +114,12 @@ public:
                     std::common_type_t<decltype(sizes)...>>;
                 return std::ranges::min({common(sizes)...});
             },
-            details::transform(std::ranges::size, views_));
+            details::transform(ranges::size, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires (std::ranges::sized_range<Rs const> && ...)
+    requires (sized_range<Rs const> && ...)
     {
         return std::apply(
             [](auto... sizes) {
@@ -130,7 +127,7 @@ public:
                     std::common_type_t<decltype(sizes)...>>;
                 return std::ranges::min({common(sizes)...});
             },
-            details::transform(std::ranges::size, views_));
+            details::transform(ranges::size, views_));
     }
 
 private:
@@ -138,7 +135,7 @@ private:
 };
 
 template <typename... Rs>
-zip_view(Rs&&...) -> zip_view<std::views::all_t<Rs>...>;
+zip_view(Rs&&...) -> zip_view<views::all_t<Rs>...>;
 
 namespace details {
 
@@ -404,14 +401,16 @@ public:
         operator-(iterator<OtherConst> const& iter, sentinel const& self) {
         auto const diff =
             details::transform(std::minus<>{}, get_current(iter), self.end_);
-        return std::apply([](auto... val) {
-            using diff_type = std::common_type_t<
-                range_difference_t<details::const_if<OtherConst, Rs>>...>;
-            return std::ranges::min(
-                {diff_type(val)...}, [](auto lhs, auto rhs) {
-                    return details::abs(lhs) < details::abs(rhs);
-                });
-        });
+        return std::apply(
+            [](auto... val) {
+                using diff_type = std::common_type_t<
+                    range_difference_t<details::const_if<OtherConst, Rs>>...>;
+                return std::ranges::min(
+                    {diff_type(val)...}, [](auto lhs, auto rhs) {
+                        return details::abs(lhs) < details::abs(rhs);
+                    });
+            },
+            diff);
     }
 
     template <bool OtherConst>
@@ -433,18 +432,16 @@ namespace details {
 struct zip_t {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator()() const noexcept {
-        return std::ranges::empty_view<std::tuple<>>{};
+        return empty_view<std::tuple<>>{};
     }
 
     template <typename... Rs>
-    requires requires {
-        zip_view<std::views::all_t<Rs>...>(std::declval<Rs>()...);
-    }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(Rs&&... args) const noexcept(
-        noexcept(zip_view<std::views::all_t<Rs>...>(std::declval<Rs>()...)))
-        -> decltype(zip_view<std::views::all_t<Rs>...>(std::declval<Rs>()...)) {
-        return zip_view<std::views::all_t<Rs>...>(std::forward<Rs>(args)...);
+    requires requires { zip_view<all_t<Rs>...>(std::declval<Rs>()...); }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        Rs&&... args) const
+        noexcept(noexcept(zip_view<all_t<Rs>...>(std::declval<Rs>()...)))
+            -> decltype(zip_view<all_t<Rs>...>(std::declval<Rs>()...)) {
+        return zip_view<all_t<Rs>...>(std::forward<Rs>(args)...);
     }
 };
 } // namespace details

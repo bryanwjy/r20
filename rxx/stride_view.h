@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -13,6 +14,7 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -26,7 +28,7 @@ namespace ranges {
 
 template <input_range V>
 requires view<V>
-class stride_view : public std::ranges::view_interface<stride_view<V>> {
+class stride_view : public view_interface<stride_view<V>> {
     template <bool>
     class iterator;
 
@@ -74,13 +76,11 @@ public:
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        if constexpr (std::ranges::common_range<V> &&
-            std::ranges::sized_range<V> && forward_range<V>) {
+        if constexpr (common_range<V> && sized_range<V> && forward_range<V>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
             return iterator<false>{*this, __RXX ranges::end(base_), missing};
-        } else if constexpr (std::ranges::common_range<V> &&
-            !bidirectional_range<V>) {
+        } else if constexpr (common_range<V> && !bidirectional_range<V>) {
             return iterator<false>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
@@ -91,12 +91,12 @@ public:
     constexpr auto end() const
     requires range<V const>
     {
-        if constexpr (std::ranges::common_range<V const> &&
-            std::ranges::sized_range<V const> && forward_range<V const>) {
+        if constexpr (common_range<V const> && sized_range<V const> &&
+            forward_range<V const>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
             return iterator<true>{*this, __RXX ranges::end(base_), missing};
-        } else if constexpr (std::ranges::common_range<V const> &&
+        } else if constexpr (common_range<V const> &&
             !bidirectional_range<V const>) {
             return iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
@@ -106,7 +106,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
         return details::to_unsigned_like(
             details::ceil_div(std::ranges::distance(base_), stride_));
@@ -114,7 +114,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
         return details::to_unsigned_like(
             details::ceil_div(std::ranges::distance(base_), stride_));
@@ -126,7 +126,7 @@ private:
 };
 
 template <typename R>
-stride_view(R&&, range_difference_t<R>) -> stride_view<std::views::all_t<R>>;
+stride_view(R&&, range_difference_t<R>) -> stride_view<views::all_t<R>>;
 
 namespace details {
 template <bool Const, input_range V>
@@ -426,7 +426,8 @@ struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
         D&& size) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<D>(size));
+            __RXX ranges::details::set_arity<2>(*this),
+            std::forward<D>(size));
     }
 #else
 #  error "Unsupported"

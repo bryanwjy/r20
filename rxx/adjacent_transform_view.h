@@ -5,6 +5,8 @@
 
 #include "rxx/access.h"
 #include "rxx/adjacent_view.h"
+#include "rxx/all.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
@@ -12,6 +14,7 @@
 #include "rxx/details/referenceable.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 #include "rxx/zip_transform_view.h"
 
 #include <compare>
@@ -54,7 +57,7 @@ requires view<V> && (N > 0) && std::is_object_v<F> &&
     details::referenceable<
         details::repeat_invoke_result_t<F&, range_reference_t<V>, N>>
 class adjacent_transform_view :
-    public std::ranges::view_interface<adjacent_transform_view<V, F, N>> {
+    public view_interface<adjacent_transform_view<V, F, N>> {
     using InnerView RXX_NODEBUG = adjacent_view<V, N>;
     template <bool Const>
     using inner_iterator RXX_NODEBUG =
@@ -118,7 +121,7 @@ public:
         details::repeat_regular_invocable<F const&, range_reference_t<V const>,
             N>
     {
-        if constexpr (std::ranges::common_range<InnerView const>) {
+        if constexpr (common_range<InnerView const>) {
             return iterator<true>(*this, inner_.end());
         } else {
             return sentinel<true>(inner_.end());
@@ -127,14 +130,14 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<InnerView>
+    requires sized_range<InnerView>
     {
         return inner_.size();
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<InnerView const>
+    requires sized_range<InnerView const>
     {
         return inner_.size();
     }
@@ -421,16 +424,15 @@ struct adjacent_transform_t :
 
     template <viewable_range V, typename F>
     requires requires {
-        adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
+        adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
             std::declval<V>(), std::declval<F>());
     }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         V&& arg, F&& func) const
-        noexcept(noexcept(
-            adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
-                std::declval<V>(), std::declval<F>()))) {
-        return adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>,
-            N>(std::forward<V>(arg), std::forward<F>(func));
+        noexcept(noexcept(adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
+            std::declval<V>(), std::declval<F>()))) {
+        return adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
+            std::forward<V>(arg), std::forward<F>(func));
     }
 
     template <viewable_range V, typename F>
@@ -454,7 +456,8 @@ struct adjacent_transform_t :
         F&& func) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<F>(func));
+            __RXX ranges::details::set_arity<2>(*this),
+            std::forward<F>(func));
     }
 #else
 #  error "Unsupported"

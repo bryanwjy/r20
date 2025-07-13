@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -11,6 +12,7 @@
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -23,8 +25,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 template <input_range V>
 requires view<V>
-class cache_latest_view :
-    public std::ranges::view_interface<cache_latest_view<V>> {
+class cache_latest_view : public view_interface<cache_latest_view<V>> {
     using CacheT RXX_NODEBUG =
         std::conditional_t<std::is_reference_v<range_reference_t<V>>,
             std::add_pointer_t<range_reference_t<V>>, range_reference_t<V>>;
@@ -62,16 +63,16 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
 private:
@@ -80,7 +81,7 @@ private:
 };
 
 template <typename R>
-cache_latest_view(R&&) -> cache_latest_view<std::views::all_t<R>>;
+cache_latest_view(R&&) -> cache_latest_view<views::all_t<R>>;
 
 template <input_range V>
 requires view<V>

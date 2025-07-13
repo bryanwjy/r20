@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -12,6 +13,7 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -25,12 +27,11 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 namespace details {
 template <typename V>
-concept slide_caches_nothing =
-    random_access_range<V> && std::ranges::sized_range<V>;
+concept slide_caches_nothing = random_access_range<V> && sized_range<V>;
 
 template <typename V>
-concept slide_caches_last = !slide_caches_nothing<V> &&
-    bidirectional_range<V> && std::ranges::common_range<V>;
+concept slide_caches_last =
+    !slide_caches_nothing<V> && bidirectional_range<V> && common_range<V>;
 
 template <typename V>
 concept slide_caches_first = !slide_caches_nothing<V> && !slide_caches_last<V>;
@@ -39,7 +40,7 @@ concept slide_caches_first = !slide_caches_nothing<V> && !slide_caches_last<V>;
 
 template <forward_range V>
 requires view<V>
-class slide_view : public std::ranges::view_interface<slide_view<V>> {
+class slide_view : public view_interface<slide_view<V>> {
     template <bool>
     class iterator;
     class sentinel;
@@ -109,7 +110,7 @@ public:
             }
 
             return iterator<false>(cache_end_.get(base_), num_);
-        } else if constexpr (std::ranges::common_range<V>) {
+        } else if constexpr (common_range<V>) {
             return iterator<false>(
                 __RXX ranges::end(base_), __RXX ranges::end(base_), num_);
         } else {
@@ -126,7 +127,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
         if (auto const value = std::ranges::distance(base_) - num_ + 1;
             value >= 0) {
@@ -138,7 +139,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
         if (auto const value = std::ranges::distance(base_) - num_ + 1;
             value >= 0) {
@@ -162,7 +163,7 @@ private:
 };
 
 template <typename R>
-slide_view(R&&, range_difference_t<R>) -> slide_view<std::views::all_t<R>>;
+slide_view(R&&, range_difference_t<R>) -> slide_view<views::all_t<R>>;
 
 template <forward_range V>
 requires view<V>
@@ -439,7 +440,8 @@ struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         D num) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
-        return __RXX ranges::details::make_pipeable(set_arity<2>(*this), num);
+        return __RXX ranges::details::make_pipeable(
+            __RXX ranges::details::set_arity<2>(*this), num);
     }
 #else
 #  error "Unsupported"

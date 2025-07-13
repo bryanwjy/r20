@@ -4,12 +4,16 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/primitives.h"
+#include "rxx/reverse_view.h"
+#include "rxx/subrange.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -28,8 +32,7 @@ concept chunk_by_predicate = view<V> && std::is_object_v<Pred> &&
 }
 
 template <forward_range V, details::chunk_by_predicate<V> Pred>
-class chunk_by_view :
-    public std::ranges::view_interface<chunk_by_view<V, Pred>> {
+class chunk_by_view : public view_interface<chunk_by_view<V, Pred>> {
 
     class iterator;
 
@@ -71,9 +74,8 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
-        if constexpr (std::ranges::common_range<V>) {
-            return iterator{
-                *this, __RXX ranges::end(base_), __RXX ranges::end(base_)};
+        if constexpr (common_range<V>) {
+            return iterator{*this, ranges::end(base_), ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -88,9 +90,9 @@ private:
                 *pred_, std::forward<T>(left), std::forward<U>(right));
         };
 
-        return std::ranges::next(std::ranges::adjacent_find(
-                                     current, __RXX ranges::end(base_), pred),
-            1, __RXX ranges::end(base_));
+        return std::ranges::next(
+            std::ranges::adjacent_find(current, ranges::end(base_), pred), 1,
+            ranges::end(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -98,8 +100,8 @@ private:
     requires bidirectional_range<V>
     {
         auto first = __RXX ranges::begin(base_);
-        std::ranges::reverse_view reversed{
-            std::ranges::subrange{first, current}
+        ranges::reverse_view reversed{
+            subrange{first, current}
         };
 
         auto const pred = [this]<typename T, typename U>(
@@ -119,7 +121,7 @@ private:
 };
 
 template <typename R, typename Pred>
-chunk_by_view(R&&, Pred) -> chunk_by_view<std::views::all_t<R>, Pred>;
+chunk_by_view(R&&, Pred) -> chunk_by_view<views::all_t<R>, Pred>;
 
 template <forward_range V, details::chunk_by_predicate<V> Pred>
 class chunk_by_view<V, Pred>::iterator {
@@ -134,7 +136,7 @@ class chunk_by_view<V, Pred>::iterator {
         , next_(std::move(next)) {}
 
 public:
-    using value_type = std::ranges::subrange<iterator_t<V>>;
+    using value_type = subrange<iterator_t<V>>;
     using difference_type = range_difference_t<V>;
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = std::conditional_t<bidirectional_range<V>,
@@ -220,7 +222,8 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
         Pred&& pred) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<Pred>, Pred>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<Pred>(pred));
+            __RXX ranges::details::set_arity<2>(*this),
+            std::forward<Pred>(pred));
     }
 #else
 #  error "Unsupported"

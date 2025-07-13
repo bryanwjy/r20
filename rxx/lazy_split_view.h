@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -15,6 +16,8 @@
 #include "rxx/details/variant_base.h"
 #include "rxx/primitives.h"
 #include "rxx/single_view.h"
+#include "rxx/subrange.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -32,7 +35,7 @@ template <auto> // do we need to constraint?
 struct constant_value;
 
 template <typename T>
-concept tiny_range = std::ranges::sized_range<T> && requires {
+concept tiny_range = sized_range<T> && requires {
     typename constant_value<std::remove_reference_t<T>::size()>;
 } && (std::remove_reference_t<T>::size() <= 1);
 } // namespace details
@@ -42,8 +45,7 @@ requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
-class lazy_split_view :
-    public std::ranges::view_interface<lazy_split_view<V, P>> {
+class lazy_split_view : public view_interface<lazy_split_view<V, P>> {
 
     template <bool>
     class outer_iterator;
@@ -64,7 +66,7 @@ public:
         , pattern_{std::move(pattern)} {}
 
     template <input_range R>
-    requires std::constructible_from<V, std::views::all_t<R>> &&
+    requires std::constructible_from<V, views::all_t<R>> &&
                  std::constructible_from<P, single_view<range_value_t<R>>>
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         R&& range, range_value_t<R> pattern)
@@ -101,7 +103,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end()
-    requires forward_range<V> && std::ranges::common_range<V>
+    requires forward_range<V> && common_range<V>
     {
         using IteratorType =
             outer_iterator<details::simple_view<V> && details::simple_view<P>>;
@@ -110,7 +112,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr auto end() const {
         if constexpr (forward_range<V> && forward_range<V const> &&
-            std::ranges::common_range<V const>) {
+            common_range<V const>) {
             return outer_iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
@@ -153,7 +155,7 @@ public:
     using iterator_concept = std::conditional_t<forward_range<Base>,
         std::forward_iterator_tag, std::input_iterator_tag>;
     using difference_type = range_difference_t<Base>;
-    struct value_type : std::ranges::view_interface<value_type> {
+    struct value_type : view_interface<value_type> {
     public:
         friend outer_iterator;
 
@@ -214,7 +216,7 @@ public:
             trailing_empty_ = false;
             return *this;
         }
-        auto const [pbegin, pend] = std::ranges::subrange{parent_->pattern_};
+        auto const [pbegin, pend] = subrange{parent_->pattern_};
         if (pbegin == pend) {
             ++cur();
         } else if constexpr (details::tiny_range<P>) {
@@ -425,7 +427,7 @@ private:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr bool at_end() const {
-        auto [pcur, pend] = std::ranges::subrange{iter_.parent_->pattern_};
+        auto [pcur, pend] = subrange{iter_.parent_->pattern_};
         auto end = __RXX ranges::end(iter_.parent_->base_);
         if constexpr (details::tiny_range<P>) {
             auto const& cur = iter_.cur();
@@ -462,12 +464,11 @@ private:
 };
 
 template <typename R, typename P>
-lazy_split_view(R&&, P&&)
-    -> lazy_split_view<std::views::all_t<R>, std::views::all_t<P>>;
+lazy_split_view(R&&, P&&) -> lazy_split_view<views::all_t<R>, views::all_t<P>>;
 
 template <input_range R>
 lazy_split_view(R&&, range_value_t<R>)
-    -> lazy_split_view<std::views::all_t<R>, single_view<range_value_t<R>>>;
+    -> lazy_split_view<views::all_t<R>, single_view<range_value_t<R>>>;
 
 namespace views {
 namespace details {
@@ -497,7 +498,8 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
         P&& pattern) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<P>(pattern));
+            __RXX ranges::details::set_arity<2>(*this),
+            std::forward<P>(pattern));
     }
 #else
 #  error "Unsupported"

@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -15,6 +16,7 @@
 #include "rxx/details/variant_base.h"
 #include "rxx/primitives.h"
 #include "rxx/single_view.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -67,8 +69,7 @@ concept bidirectional_common = bidirectional_range<R> && common_range<R>;
 template <input_range V, forward_range P>
 requires view<V> && view<P> && input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
-class join_with_view :
-    public std::ranges::view_interface<join_with_view<V, P>> {
+class join_with_view : public view_interface<join_with_view<V, P>> {
     using InnerRange RXX_NODEBUG = range_reference_t<V>;
 
     template <bool Const>
@@ -90,7 +91,7 @@ public:
         , pattern_{std::move(pattern)} {}
 
     template <input_range R>
-    requires std::constructible_from<V, std::views::all_t<R>> &&
+    requires std::constructible_from<V, views::all_t<R>> &&
                  std::constructible_from<P,
                      single_view<range_value_t<InnerRange>>>
     __RXX_HIDE_FROM_ABI explicit constexpr join_with_view(
@@ -209,12 +210,11 @@ private:
 };
 
 template <typename R, typename P>
-join_with_view(R&&, P&&)
-    -> join_with_view<std::views::all_t<R>, std::views::all_t<P>>;
+join_with_view(R&&, P&&) -> join_with_view<views::all_t<R>, views::all_t<P>>;
 
 template <input_range R>
 join_with_view(R&&, range_value_t<range_reference_t<R>>)
-    -> join_with_view<std::views::all_t<R>,
+    -> join_with_view<views::all_t<R>,
         single_view<range_value_t<range_reference_t<R>>>>;
 
 namespace details {
@@ -627,7 +627,8 @@ struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
         D&& delimiter) const
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            set_arity<2>(*this), std::forward<D>(delimiter));
+            __RXX ranges::details::set_arity<2>(*this),
+            std::forward<D>(delimiter));
     }
 #else
 #  error "Unsupported"

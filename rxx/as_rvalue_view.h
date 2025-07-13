@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -11,6 +12,7 @@
 #include "rxx/details/view_traits.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <compare>
 #include <functional>
@@ -26,7 +28,7 @@ namespace ranges {
 
 template <view V>
 requires input_range<V>
-class as_rvalue_view : public std::ranges::view_interface<as_rvalue_view<V>> {
+class as_rvalue_view : public view_interface<as_rvalue_view<V>> {
 public:
     __RXX_HIDE_FROM_ABI constexpr as_rvalue_view() noexcept(
         std::is_nothrow_default_constructible_v<V>)
@@ -67,7 +69,7 @@ public:
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        if constexpr (std::ranges::common_range<V>) {
+        if constexpr (common_range<V>) {
             return std::move_iterator(__RXX ranges::end(base_));
         } else {
             return std::move_sentinel(__RXX ranges::end(base_));
@@ -78,7 +80,7 @@ public:
     constexpr auto end() const
     requires range<V const>
     {
-        if constexpr (std::ranges::common_range<V const>) {
+        if constexpr (common_range<V const>) {
             return std::move_iterator(__RXX ranges::end(base_));
         } else {
             return std::move_sentinel(__RXX ranges::end(base_));
@@ -87,16 +89,16 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
 private:
@@ -104,7 +106,7 @@ private:
 };
 
 template <typename R>
-as_rvalue_view(R&&) -> as_rvalue_view<std::views::all_t<R>>;
+as_rvalue_view(R&&) -> as_rvalue_view<views::all_t<R>>;
 
 namespace views {
 namespace details {

@@ -189,20 +189,20 @@ requires (sizeof...(TTypes) == sizeof...(UTypes)) && requires {
 }
 struct std::basic_common_reference<std::tuple<TTypes...>, std::tuple<UTypes...>,
     TQual, UQual> {
-    using type = std::tuple<
-        __RXX common_reference_t<TQual<TTypes>..., UQual<UTypes>>...>;
+    using type =
+        std::tuple< __RXX common_reference_t<TQual<TTypes>, UQual<UTypes>>...>;
 };
 
-template <typename... TTypes, typename... UTypes,
+template <typename T1, typename T2, typename U1, typename U2,
     template <typename> class TQual, template <typename> class UQual>
-requires (sizeof...(TTypes) == sizeof...(UTypes)) && requires {
-    typename std::pair<
-        __RXX common_reference_t<TQual<TTypes>..., UQual<UTypes>>...>;
+requires requires {
+    typename std::pair< __RXX common_reference_t<TQual<T1>, UQual<U1>>,
+        __RXX common_reference_t<TQual<T2>, UQual<U2>>>;
 }
-struct std::basic_common_reference<std::pair<TTypes...>, std::pair<UTypes...>,
-    TQual, UQual> {
-    using type = std::pair<
-        __RXX common_reference_t<TQual<TTypes>..., UQual<UTypes>>...>;
+struct std::basic_common_reference<std::pair<T1, T2>, std::pair<U1, U2>, TQual,
+    UQual> {
+    using type = std::pair< __RXX common_reference_t<TQual<T1>, UQual<U1>>,
+        __RXX common_reference_t<TQual<T2>, UQual<U2>>>;
 };
 
 template <__RXX tuple_like T, __RXX tuple_like U,
@@ -229,11 +229,13 @@ struct std::common_type<std::tuple<TTypes...>, std::tuple<UTypes...>> {
     using type = typename std::tuple<std::common_type_t<TTypes, UTypes>...>;
 };
 
-template <typename... TTypes, typename... UTypes>
-requires (sizeof...(TTypes) == sizeof...(UTypes)) &&
-    requires { typename std::pair<std::common_type_t<TTypes, UTypes>...>; }
-struct std::common_type<std::pair<TTypes...>, std::pair<UTypes...>> {
-    using type = typename std::pair<std::common_type_t<TTypes, UTypes>...>;
+template <typename T1, typename T2, typename U1, typename U2>
+requires requires {
+    typename std::pair<std::common_type_t<T1, U1>, std::common_type_t<T2, U2>>;
+}
+struct std::common_type<std::pair<T1, T2>, std::pair<U1, U2>> {
+    using type =
+        std::pair<std::common_type_t<T1, U1>, std::common_type_t<T2, U2>>;
 };
 
 template <__RXX tuple_like T, __RXX tuple_like U>

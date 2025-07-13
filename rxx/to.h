@@ -3,9 +3,11 @@
 
 #include "rxx/config.h"
 
-#include "rxx/access.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
+#include "rxx/primitives.h"
+#include "rxx/ref_view.h"
 
 #include <concepts>
 #include <utility>
@@ -124,10 +126,10 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
     } else {
         static_assert(input_range<range_reference_t<R>>,
             "ranges::to: unable to convert to the given container type.");
-        return ranges::to<C>(std::ranges::ref_view(range) |
-                std::views::transform([]<typename T>(T&& item) {
-                    return ranges::to<range_value_t<C>>(std::forward<T>(item));
-                }),
+        return ranges::to<C>(
+            ref_view(range) | std::views::transform([]<typename T>(T&& item) {
+                return ranges::to<range_value_t<C>>(std::forward<T>(item));
+            }),
             std::forward<Args>(args)...);
     }
 }
@@ -163,10 +165,9 @@ struct template_deducer {
             using ResultType = decltype( //
                 C(std::declval<R>(), std::declval<Args>()...));
             return std::type_identity<ResultType>{};
-
-            // Case 2 -- can construct from the given range using the
-            // `from_range_t` tagged constructor.
         }
+        // Case 2 -- can construct from the given range using the
+        // `from_range_t` tagged constructor.
 #if RXX_CXX23
         else if constexpr ( //
             requires {

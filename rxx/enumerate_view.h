@@ -4,11 +4,13 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <compare>
 #include <iterator>
@@ -28,7 +30,7 @@ concept range_with_movable_reference =
 
 template <view V>
 requires details::range_with_movable_reference<V>
-class enumerate_view : public std::ranges::view_interface<enumerate_view<V>> {
+class enumerate_view : public view_interface<enumerate_view<V>> {
     template <bool IsConst>
     class iterator;
     template <bool IsConst>
@@ -47,19 +49,18 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>{__RXX ranges::begin(view_), 0};
+        return iterator<false>{ranges::begin(view_), 0};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        if constexpr (std::ranges::common_range<V> &&
-            std::ranges::sized_range<V>) {
+        if constexpr (common_range<V> && sized_range<V>) {
             return iterator<false>(
-                __RXX ranges::end(view_), std::ranges::distance(view_));
+                ranges::end(view_), std::ranges::distance(view_));
         } else {
-            return sentinel<false>{__RXX ranges::end(view_)};
+            return sentinel<false>{ranges::end(view_)};
         }
     }
 
@@ -67,34 +68,33 @@ public:
     constexpr auto begin() const
     requires details::range_with_movable_reference<V const>
     {
-        return iterator<true>{__RXX ranges::begin(view_), 0};
+        return iterator<true>{ranges::begin(view_), 0};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
     requires details::range_with_movable_reference<V const>
     {
-        if constexpr (std::ranges::common_range<V const> &&
-            std::ranges::sized_range<V const>) {
+        if constexpr (common_range<V const> && sized_range<V const>) {
             return iterator<true>(
-                __RXX ranges::end(view_), std::ranges::distance(view_));
+                ranges::end(view_), std::ranges::distance(view_));
         } else {
-            return sentinel<true>{__RXX ranges::end(view_)};
+            return sentinel<true>{ranges::end(view_)};
         }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(view_);
+        return ranges::size(view_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(view_);
+        return ranges::size(view_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -113,7 +113,7 @@ private:
 };
 
 template <typename R>
-enumerate_view(R&&) -> enumerate_view<std::views::all_t<R>>;
+enumerate_view(R&&) -> enumerate_view<views::all_t<R>>;
 
 template <view V>
 requires details::range_with_movable_reference<V>
@@ -347,14 +347,12 @@ namespace views {
 namespace details {
 struct enumerate_t : __RXX ranges::details::adaptor_closure<enumerate_t> {
     template <viewable_range R>
-    requires requires {
-        enumerate_view<std::views::all_t<R>>(std::declval<R>());
-    }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(R&& arg) const noexcept(
-        noexcept(enumerate_view<std::views::all_t<R>>(std::declval<R>())))
-        -> decltype(enumerate_view<std::views::all_t<R>>(std::declval<R>())) {
-        return enumerate_view<std::views::all_t<R>>(std::forward<R>(arg));
+    requires requires { enumerate_view<all_t<R>>(std::declval<R>()); }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        R&& arg) const
+        noexcept(noexcept(enumerate_view<all_t<R>>(std::declval<R>())))
+            -> decltype(enumerate_view<all_t<R>>(std::declval<R>())) {
+        return enumerate_view<all_t<R>>(std::forward<R>(arg));
     }
 
 #if RXX_LIBSTDCXX

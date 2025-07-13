@@ -4,13 +4,17 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/view_traits.h"
+#include "rxx/empty_view.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/ref_view.h"
+#include "rxx/view_interface.h"
 
 #include <compare>
 #include <functional>
@@ -26,7 +30,7 @@ namespace ranges {
 
 template <view V>
 requires input_range<V>
-class as_const_view : public std::ranges::view_interface<as_const_view<V>> {
+class as_const_view : public view_interface<as_const_view<V>> {
 public:
     __RXX_HIDE_FROM_ABI constexpr as_const_view() noexcept(
         std::is_nothrow_default_constructible_v<V>)
@@ -79,16 +83,16 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(base_);
+        return __RXX ranges::size(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(base_);
+        return __RXX ranges::size(base_);
     }
 
 private:
@@ -96,7 +100,7 @@ private:
 };
 
 template <typename R>
-as_const_view(R&&) -> as_const_view<std::views::all_t<R>>;
+as_const_view(R&&) -> as_const_view<views::all_t<R>>;
 
 namespace views {
 namespace details {
@@ -104,7 +108,7 @@ template <typename T>
 inline constexpr bool is_constable_ref_view = false;
 
 template <typename R>
-inline constexpr bool is_constable_ref_view<std::ranges::ref_view<R>> =
+inline constexpr bool is_constable_ref_view<ref_view<R>> =
     constant_range<R const>;
 
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
@@ -114,18 +118,17 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
         R&& arg) const noexcept(noexcept(as_const_view(std::declval<R>()))) {
         using Type = std::remove_cvref_t<R>;
         using Element = std::remove_reference_t<range_reference_t<R>>;
-        if constexpr (constant_range<std::views::all_t<R>>) {
-            return std::views::all(std::forward<R>(arg));
+        if constexpr (constant_range<all_t<R>>) {
+            return views::all(std::forward<R>(arg));
         } else if constexpr (__RXX ranges::details::is_empty_view<Type>) {
-            return std::views::empty<Element const>;
+            return views::empty<Element const>;
         } else if constexpr (__RXX ranges::details::is_span<Type>) {
             return std::span<Element const, Type::extent>(std::forward<R>(arg));
         } else if constexpr (is_constable_ref_view<R>) {
-            return std::ranges::ref_view(
-                std::as_const(std::forward<R>(arg).base()));
+            return ref_view(std::as_const(std::forward<R>(arg).base()));
         } else if constexpr (std::is_lvalue_reference_v<R> &&
             constant_range<Type const> && !view<Type>) {
-            return std::ranges::ref_view(static_cast<Type const&>(arg));
+            return ref_view(static_cast<Type const&>(arg));
         } else {
             return as_const_view(std::forward<R>(arg));
         }

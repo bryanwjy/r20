@@ -280,7 +280,7 @@ public:
             other) noexcept(std::is_nothrow_copy_constructible_v<T>)
     requires (std::is_copy_constructible_v<T> &&
         !std::is_trivially_copy_constructible_v<T>)
-        : optional_base(generating, other.has_value(), *other) {}
+        : optional_base(generating, other.has_value(), other.union_ref()) {}
 
     __RXX_HIDE_FROM_ABI constexpr optional_base(optional_base&&) = delete;
     __RXX_HIDE_FROM_ABI constexpr optional_base(optional_base&&) noexcept
@@ -292,7 +292,8 @@ public:
         std::is_nothrow_move_constructible_v<T>)
     requires (std::is_move_constructible_v<T> &&
         !std::is_trivially_move_constructible_v<T>)
-        : optional_base(generating, other.has_value(), std::move(*other)) {}
+        : optional_base(
+              generating, other.has_value(), std::move(other.union_ref())) {}
 
     template <typename U>
     requires requires {
@@ -304,7 +305,7 @@ public:
         !std::is_convertible_v<U const&,
             T>) constexpr optional_base(optional_base<U> const&
             other) noexcept(std::is_nothrow_constructible_v<T, U const&>)
-        : optional_base(generating, other.has_value(), *other) {}
+        : optional_base(generating, other.has_value(), other.union_ref()) {}
 
     template <typename U>
     requires requires {
@@ -315,7 +316,8 @@ public:
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr optional_base(optional_base<U>&&
             other) noexcept(std::is_nothrow_constructible_v<T, U>)
-        : optional_base(generating, other.has_value(), std::move(*other)) {}
+        : optional_base(
+              generating, other.has_value(), std::move(other.union_ref())) {}
 
     template <typename... Args>
     requires std::constructible_from<T, Args...>
@@ -466,6 +468,26 @@ public:
         return *this;
     }
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() const& noexcept -> decltype(auto) {
+        return (container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() & noexcept -> decltype(auto) {
+        return (container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() const&& noexcept -> decltype(auto) {
+        return std::move(container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() && noexcept -> decltype(auto) {
+        return std::move(container_.data.union_.data);
+    }
+
     __RXX_HIDE_FROM_ABI constexpr bool has_value() const noexcept {
         return container_.data.has_value_;
     }
@@ -475,27 +497,27 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr T const* operator->() const noexcept {
-        return RXX_BUILTIN_addressof(container_.data.union_.data.value);
+        return RXX_BUILTIN_addressof(union_ref().value);
     }
 
     __RXX_HIDE_FROM_ABI constexpr T* operator->() noexcept {
-        return RXX_BUILTIN_addressof(container_.data.union_.data.value);
+        return RXX_BUILTIN_addressof(union_ref().value);
     }
 
     __RXX_HIDE_FROM_ABI constexpr T const& operator*() const& noexcept {
-        return container_.data.union_.data.value;
+        return union_ref().value;
     }
 
     __RXX_HIDE_FROM_ABI constexpr T& operator*() & noexcept {
-        return container_.data.union_.data.value;
+        return union_ref().value;
     }
 
     __RXX_HIDE_FROM_ABI constexpr T const&& operator*() const&& noexcept {
-        return std::move(container_.data.union_.data.value);
+        return std::move(union_ref().value);
     }
 
     __RXX_HIDE_FROM_ABI constexpr T&& operator*() && noexcept {
-        return std::move(container_.data.union_.data.value);
+        return std::move(union_ref().value);
     }
 
     __RXX_HIDE_FROM_ABI constexpr void reset() noexcept {
