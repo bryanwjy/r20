@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/details/adaptor_closure.h"
 #include "rxx/details/movable_box.h"
 
 #include <concepts>
@@ -72,7 +73,7 @@ public:
     constexpr T const* end() const noexcept { return data() + 1; }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr bool empty() const noexcept { return false; }
+    static constexpr bool empty() noexcept { return false; }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     static constexpr size_t size() noexcept { return 1; }
