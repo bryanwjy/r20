@@ -404,14 +404,16 @@ public:
         operator-(iterator<OtherConst> const& iter, sentinel const& self) {
         auto const diff =
             details::transform(std::minus<>{}, get_current(iter), self.end_);
-        return std::apply([](auto... val) {
-            using diff_type = std::common_type_t<
-                range_difference_t<details::const_if<OtherConst, Rs>>...>;
-            return std::ranges::min(
-                {diff_type(val)...}, [](auto lhs, auto rhs) {
-                    return details::abs(lhs) < details::abs(rhs);
-                });
-        });
+        return std::apply(
+            [](auto... val) {
+                using diff_type = std::common_type_t<
+                    range_difference_t<details::const_if<OtherConst, Rs>>...>;
+                return std::ranges::min(
+                    {diff_type(val)...}, [](auto lhs, auto rhs) {
+                        return details::abs(lhs) < details::abs(rhs);
+                    });
+            },
+            diff);
     }
 
     template <bool OtherConst>
