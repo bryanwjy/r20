@@ -163,10 +163,9 @@ struct template_deducer {
             using ResultType = decltype( //
                 C(std::declval<R>(), std::declval<Args>()...));
             return std::type_identity<ResultType>{};
-
-            // Case 2 -- can construct from the given range using the
-            // `from_range_t` tagged constructor.
         }
+        // Case 2 -- can construct from the given range using the
+        // `from_range_t` tagged constructor.
 #if RXX_CXX23
         else if constexpr ( //
             requires {
