@@ -10,6 +10,7 @@
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/tuple_functions.h"
+#include "rxx/empty_view.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
 #include "rxx/view_interface.h"
@@ -437,7 +438,7 @@ namespace details {
 struct zip_t {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator()() const noexcept {
-        return std::ranges::empty_view<std::tuple<>>{};
+        return empty_view<std::tuple<>>{};
     }
 
     template <typename... Rs>
