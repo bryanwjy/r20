@@ -56,42 +56,42 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>(__RXX ranges::begin(base_));
+        return iterator<false>(ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires range<V const>
     {
-        return iterator<true>(__RXX ranges::begin(base_));
+        return iterator<true>(ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        return __RXX ranges::end(base_);
+        return ranges::end(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
     requires range<V const>
     {
-        return __RXX ranges::end(base_);
+        return ranges::end(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
 private:
@@ -202,8 +202,7 @@ struct to_input_t : __RXX ranges::details::adaptor_closure<to_input_t> {
     requires requires { to_input_view(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const noexcept(noexcept(to_input_view(std::declval<R>()))) {
-        if constexpr (input_range<R> && !std::ranges::common_range<R> &&
-            !forward_range<R>) {
+        if constexpr (input_range<R> && !common_range<R> && !forward_range<R>) {
             return std::views::all(std::forward<R>(arg));
         } else {
             return to_input_view(std::forward<R>(arg));

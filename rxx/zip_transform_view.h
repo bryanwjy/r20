@@ -63,7 +63,7 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
-        if constexpr (std::ranges::common_range<InnerView>) {
+        if constexpr (common_range<InnerView>) {
             return iterator<false>(*this, zip_.end());
         } else {
             return sentinel<false>(zip_.end());
@@ -75,7 +75,7 @@ public:
     requires range<InnerView const> &&
         std::regular_invocable<F const&, range_reference_t<Views const>...>
     {
-        if constexpr (std::ranges::common_range<InnerView const>) {
+        if constexpr (common_range<InnerView const>) {
             return iterator<true>(*this, zip_.end());
         } else {
             return sentinel<true>(zip_.end());
@@ -84,14 +84,14 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<InnerView>
+    requires sized_range<InnerView>
     {
         return zip_.size();
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<InnerView const>
+    requires sized_range<InnerView const>
     {
         return zip_.size();
     }

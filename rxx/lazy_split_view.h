@@ -35,7 +35,7 @@ template <auto> // do we need to constraint?
 struct constant_value;
 
 template <typename T>
-concept tiny_range = std::ranges::sized_range<T> && requires {
+concept tiny_range = sized_range<T> && requires {
     typename constant_value<std::remove_reference_t<T>::size()>;
 } && (std::remove_reference_t<T>::size() <= 1);
 } // namespace details
@@ -103,7 +103,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto end()
-    requires forward_range<V> && std::ranges::common_range<V>
+    requires forward_range<V> && common_range<V>
     {
         using IteratorType =
             outer_iterator<details::simple_view<V> && details::simple_view<P>>;
@@ -112,7 +112,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr auto end() const {
         if constexpr (forward_range<V> && forward_range<V const> &&
-            std::ranges::common_range<V const>) {
+            common_range<V const>) {
             return outer_iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;

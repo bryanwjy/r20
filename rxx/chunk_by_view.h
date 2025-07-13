@@ -11,6 +11,7 @@
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/primitives.h"
+#include "rxx/reverse_view.h"
 #include "rxx/subrange.h"
 #include "rxx/view_interface.h"
 
@@ -73,9 +74,8 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
-        if constexpr (std::ranges::common_range<V>) {
-            return iterator{
-                *this, __RXX ranges::end(base_), __RXX ranges::end(base_)};
+        if constexpr (common_range<V>) {
+            return iterator{*this, ranges::end(base_), ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -90,9 +90,9 @@ private:
                 *pred_, std::forward<T>(left), std::forward<U>(right));
         };
 
-        return std::ranges::next(std::ranges::adjacent_find(
-                                     current, __RXX ranges::end(base_), pred),
-            1, __RXX ranges::end(base_));
+        return std::ranges::next(
+            std::ranges::adjacent_find(current, ranges::end(base_), pred), 1,
+            ranges::end(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -100,7 +100,7 @@ private:
     requires bidirectional_range<V>
     {
         auto first = __RXX ranges::begin(base_);
-        std::ranges::reverse_view reversed{
+        ranges::reverse_view reversed{
             subrange{first, current}
         };
 

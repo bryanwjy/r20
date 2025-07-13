@@ -69,7 +69,7 @@ public:
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        if constexpr (std::ranges::common_range<V>) {
+        if constexpr (common_range<V>) {
             return std::move_iterator(__RXX ranges::end(base_));
         } else {
             return std::move_sentinel(__RXX ranges::end(base_));
@@ -80,7 +80,7 @@ public:
     constexpr auto end() const
     requires range<V const>
     {
-        if constexpr (std::ranges::common_range<V const>) {
+        if constexpr (common_range<V const>) {
             return std::move_iterator(__RXX ranges::end(base_));
         } else {
             return std::move_sentinel(__RXX ranges::end(base_));
@@ -89,16 +89,16 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(base_);
+        return ranges::size(base_);
     }
 
 private:

@@ -28,11 +28,9 @@ namespace ranges {
 namespace details {
 
 template <typename... Rs>
-concept zip_common =
-    (sizeof...(Rs) == 1 && (... && std::ranges::common_range<Rs>)) ||
-    (!(... && bidirectional_range<Rs>)&&(
-        ... && std::ranges::common_range<Rs>)) ||
-    ((... && random_access_range<Rs>)&&(... && std::ranges::sized_range<Rs>));
+concept zip_common = (sizeof...(Rs) == 1 && (... && common_range<Rs>)) ||
+    (!(... && bidirectional_range<Rs>)&&(... && common_range<Rs>)) ||
+    ((... && random_access_range<Rs>)&&(... && sized_range<Rs>));
 
 template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -68,16 +66,14 @@ public:
     constexpr auto begin()
     requires (!(... && details::simple_view<Rs>))
     {
-        return iterator<false>{
-            details::transform(__RXX ranges::begin, views_)};
+        return iterator<false>{details::transform(ranges::begin, views_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires (... && range<Rs const>)
     {
-        return iterator<true>(
-            details::transform(__RXX ranges::begin, views_));
+        return iterator<true>(details::transform(ranges::begin, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -90,8 +86,7 @@ public:
         } else if constexpr ((... && random_access_range<Rs>)) {
             return begin() + iter_difference_t<iterator<false>>(size());
         } else {
-            return iterator<false>(
-                details::transform(__RXX ranges::end, views_));
+            return iterator<false>(details::transform(ranges::end, views_));
         }
     }
 
@@ -105,14 +100,13 @@ public:
         } else if constexpr ((... && random_access_range<Rs const>)) {
             return begin() + std::iter_difference_t<iterator<true>>(size());
         } else {
-            return iterator<true>(
-                details::transform(__RXX ranges::end, views_));
+            return iterator<true>(details::transform(ranges::end, views_));
         }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires (std::ranges::sized_range<Rs> && ...)
+    requires (sized_range<Rs> && ...)
     {
         return std::apply(
             [](auto... sizes) {
@@ -120,12 +114,12 @@ public:
                     std::common_type_t<decltype(sizes)...>>;
                 return std::ranges::min({common(sizes)...});
             },
-            details::transform(std::ranges::size, views_));
+            details::transform(ranges::size, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires (std::ranges::sized_range<Rs const> && ...)
+    requires (sized_range<Rs const> && ...)
     {
         return std::apply(
             [](auto... sizes) {
@@ -133,7 +127,7 @@ public:
                     std::common_type_t<decltype(sizes)...>>;
                 return std::ranges::min({common(sizes)...});
             },
-            details::transform(std::ranges::size, views_));
+            details::transform(ranges::size, views_));
     }
 
 private:

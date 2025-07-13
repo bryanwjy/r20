@@ -164,7 +164,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T&>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             return repeat_view<T, difference_t>(*self.value_,
                 std::min<difference_t>(
                     std::ranges::distance(self), std::forward<N>(n)));
@@ -181,7 +181,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T const&>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             return repeat_view<T, difference_t>(*self.value_,
                 std::min<difference_t>(
                     std::ranges::distance(self), std::forward<N>(n)));
@@ -198,7 +198,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             auto const dist = std::ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 std::min<difference_t>(dist, std::forward<N>(n)));
@@ -215,7 +215,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T const>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             auto const dist = std::ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 std::min<difference_t>(dist, std::forward<N>(n)));
@@ -232,7 +232,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T&>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             auto const dist = std::ranges::distance(self);
             return repeat_view<T, difference_t>(*self.value_,
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));
@@ -248,7 +248,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T const&>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             auto const dist = std::ranges::distance(self);
             return repeat_view<T, difference_t>(*self.value_,
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));
@@ -264,7 +264,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             auto const dist = std::ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));
@@ -280,7 +280,7 @@ public:
             repeat_view<T, difference_t>(std::declval<T const>(),
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
-        if constexpr (std::ranges::sized_range<repeat_view>) {
+        if constexpr (sized_range<repeat_view>) {
             auto const dist = std::ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));

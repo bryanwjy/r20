@@ -27,12 +27,11 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 namespace details {
 template <typename V>
-concept slide_caches_nothing =
-    random_access_range<V> && std::ranges::sized_range<V>;
+concept slide_caches_nothing = random_access_range<V> && sized_range<V>;
 
 template <typename V>
-concept slide_caches_last = !slide_caches_nothing<V> &&
-    bidirectional_range<V> && std::ranges::common_range<V>;
+concept slide_caches_last =
+    !slide_caches_nothing<V> && bidirectional_range<V> && common_range<V>;
 
 template <typename V>
 concept slide_caches_first = !slide_caches_nothing<V> && !slide_caches_last<V>;
@@ -111,7 +110,7 @@ public:
             }
 
             return iterator<false>(cache_end_.get(base_), num_);
-        } else if constexpr (std::ranges::common_range<V>) {
+        } else if constexpr (common_range<V>) {
             return iterator<false>(
                 __RXX ranges::end(base_), __RXX ranges::end(base_), num_);
         } else {
@@ -128,7 +127,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
         if (auto const value = std::ranges::distance(base_) - num_ + 1;
             value >= 0) {
@@ -140,7 +139,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
         if (auto const value = std::ranges::distance(base_) - num_ + 1;
             value >= 0) {

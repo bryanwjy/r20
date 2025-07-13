@@ -94,7 +94,7 @@ public:
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        if constexpr (std::ranges::common_range<V>) {
+        if constexpr (common_range<V>) {
             return iterator<false>(as_sentinel, __RXX ranges::begin(base_),
                 __RXX ranges::end(base_));
         } else {
@@ -106,7 +106,7 @@ public:
     constexpr auto end() const
     requires range<V const>
     {
-        if constexpr (std::ranges::common_range<V>) {
+        if constexpr (common_range<V>) {
             return iterator<true>(as_sentinel, __RXX ranges::begin(base_),
                 __RXX ranges::end(base_));
         } else {
@@ -116,22 +116,22 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        using SizeType = decltype(std::ranges::size(base_));
+        using SizeType = decltype(ranges::size(base_));
         using CommonType = std::common_type_t<SizeType, size_t>;
-        auto size = static_cast<CommonType>(std::ranges::size(base_));
+        auto size = static_cast<CommonType>(ranges::size(base_));
         size -= std::min<CommonType>(size, N - 1);
         return static_cast<SizeType>(size);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        using SizeType = decltype(std::ranges::size(base_));
+        using SizeType = decltype(ranges::size(base_));
         using CommonType = std::common_type_t<SizeType, size_t>;
-        auto size = static_cast<CommonType>(std::ranges::size(base_));
+        auto size = static_cast<CommonType>(ranges::size(base_));
         size -= std::min<CommonType>(size, N - 1);
         return static_cast<SizeType>(size);
     }

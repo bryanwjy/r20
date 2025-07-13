@@ -62,9 +62,9 @@ public:
         if constexpr (forward_range<V>) {
             using result_type = iterator<details::simple_view<V> &&
                 std::is_reference_v<range_reference_t<V>>>;
-            return result_type{*this, __RXX ranges::begin(base_)};
+            return result_type{*this, ranges::begin(base_)};
         } else {
-            outer_.emplace(__RXX ranges::begin(base_));
+            outer_.emplace(ranges::begin(base_));
             return iterator<false>{*this};
         }
     }
@@ -75,15 +75,14 @@ public:
         std::is_reference_v<range_reference_t<V const>> &&
         input_range<range_reference_t<V const>>
     {
-        return iterator<true>{*this, __RXX ranges::begin(base_)};
+        return iterator<true>{*this, ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
         if constexpr (forward_range<V> && std::is_reference_v<InnerRange> &&
-            forward_range<InnerRange> && std::ranges::common_range<V> &&
-            std::ranges::common_range<InnerRange>) {
-            return iterator<details::simple_view<V>>{
-                *this, __RXX ranges::end(base_)};
+            forward_range<InnerRange> && common_range<V> &&
+            common_range<InnerRange>) {
+            return iterator<details::simple_view<V>>{*this, ranges::end(base_)};
         } else {
             return sentinel<details::simple_view<V>>{*this};
         }
@@ -96,10 +95,9 @@ public:
         input_range<range_reference_t<V const>>
     {
         using ConstInnerRange = range_reference_t<V const>;
-        if constexpr (forward_range<ConstInnerRange> &&
-            std::ranges::common_range<V const> &&
-            std::ranges::common_range<ConstInnerRange>) {
-            return iterator<true>{*this, __RXX ranges::end(base_)};
+        if constexpr (forward_range<ConstInnerRange> && common_range<V const> &&
+            common_range<ConstInnerRange>) {
+            return iterator<true>{*this, ranges::end(base_)};
         } else {
             return sentinel<true>{*this};
         }
@@ -159,8 +157,7 @@ struct join_view_iterator_category<Const, V> {
         if constexpr (std::derived_from<outer_type,
                           std::bidirectional_iterator_tag> &&
             std::derived_from<inner_type, std::bidirectional_iterator_tag> &&
-            std::ranges::common_range<
-                range_reference_t<details::const_if<Const, V>>>) {
+            common_range<range_reference_t<details::const_if<Const, V>>>) {
             return std::bidirectional_iterator_tag{};
         } else if constexpr (std::derived_from<outer_type,
                                  std::forward_iterator_tag> &&
@@ -213,8 +210,7 @@ class join_view<V>::iterator final :
 
     __RXX_HIDE_FROM_ABI constexpr void satisfy() {
 
-        for (; get_outer() != __RXX ranges::end(parent_->base_);
-             ++get_outer()) {
+        for (; get_outer() != ranges::end(parent_->base_); ++get_outer()) {
             auto&& inner = [this]() -> auto&& {
                 if constexpr (std::is_reference_v<range_reference_t<Base>>) {
                     return *get_outer();
@@ -223,8 +219,8 @@ class join_view<V>::iterator final :
                 }
             }();
 
-            inner_ = __RXX ranges::begin(inner);
-            if (*inner_ != __RXX ranges::end(inner)) {
+            inner_ = ranges::begin(inner);
+            if (*inner_ != ranges::end(inner)) {
                 return;
             }
         }
@@ -264,7 +260,7 @@ public:
         if constexpr (std::is_reference_v<range_reference_t<Base>> &&
             bidirectional_range<Base> &&
             bidirectional_range<range_reference_t<Base>> &&
-            std::ranges::common_range<range_reference_t<Base>>) {
+            common_range<range_reference_t<Base>>) {
             return std::bidirectional_iterator_tag{};
         } else if constexpr (std::is_reference_v<range_reference_t<Base>> &&
             forward_range<Base> && forward_range<range_reference_t<Base>>) {
@@ -317,8 +313,7 @@ public:
                 return *parent_->inner_;
         };
 
-        if (++*inner_ ==
-            __RXX ranges::end(details::as_lvalue(get_inner_range()))) {
+        if (++*inner_ == ranges::end(details::as_lvalue(get_inner_range()))) {
             ++get_outer();
             satisfy();
         }
@@ -340,14 +335,14 @@ public:
     requires std::is_reference_v<range_reference_t<Base>> &&
         bidirectional_range<Base> &&
         bidirectional_range<range_reference_t<Base>> &&
-        std::ranges::common_range<range_reference_t<Base>>
+        common_range<range_reference_t<Base>>
     {
-        if (outer_ == __RXX ranges::end(parent_->base_)) {
-            inner_ = __RXX ranges::end(details::as_lvalue(*--outer_));
+        if (outer_ == ranges::end(parent_->base_)) {
+            inner_ = ranges::end(details::as_lvalue(*--outer_));
         }
 
-        while (*inner_ == __RXX ranges::begin(details::as_lvalue(*outer_))) {
-            inner_ = __RXX ranges::end(details::as_lvalue(*--outer_));
+        while (*inner_ == ranges::begin(details::as_lvalue(*outer_))) {
+            inner_ = ranges::end(details::as_lvalue(*--outer_));
         }
         --*inner_;
         return *this;
@@ -357,7 +352,7 @@ public:
     requires std::is_reference_v<range_reference_t<Base>> &&
         bidirectional_range<Base> &&
         bidirectional_range<range_reference_t<Base>> &&
-        std::ranges::common_range<range_reference_t<Base>>
+        common_range<range_reference_t<Base>>
     {
         auto previous = *this;
         --*this;
@@ -408,9 +403,9 @@ private:
 
 public:
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(Parent& parent) noexcept(
-        noexcept(__RXX ranges::end(parent.base_)) &&
+        noexcept(ranges::end(parent.base_)) &&
         std::is_nothrow_move_constructible_v<sentinel_t<Base>>)
-        : end_(__RXX ranges::end(parent.base_)) {}
+        : end_(ranges::end(parent.base_)) {}
 
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
         std::is_nothrow_default_constructible_v<sentinel_t<Base>>) = default;

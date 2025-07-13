@@ -6,6 +6,7 @@
 #include "rxx/access.h"
 #include "rxx/adjacent_view.h"
 #include "rxx/all.h"
+#include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
@@ -120,7 +121,7 @@ public:
         details::repeat_regular_invocable<F const&, range_reference_t<V const>,
             N>
     {
-        if constexpr (std::ranges::common_range<InnerView const>) {
+        if constexpr (common_range<InnerView const>) {
             return iterator<true>(*this, inner_.end());
         } else {
             return sentinel<true>(inner_.end());
@@ -129,14 +130,14 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<InnerView>
+    requires sized_range<InnerView>
     {
         return inner_.size();
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<InnerView const>
+    requires sized_range<InnerView const>
     {
         return inner_.size();
     }

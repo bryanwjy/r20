@@ -76,13 +76,11 @@ public:
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        if constexpr (std::ranges::common_range<V> &&
-            std::ranges::sized_range<V> && forward_range<V>) {
+        if constexpr (common_range<V> && sized_range<V> && forward_range<V>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
             return iterator<false>{*this, __RXX ranges::end(base_), missing};
-        } else if constexpr (std::ranges::common_range<V> &&
-            !bidirectional_range<V>) {
+        } else if constexpr (common_range<V> && !bidirectional_range<V>) {
             return iterator<false>{*this, __RXX ranges::end(base_)};
         } else {
             return std::default_sentinel;
@@ -93,12 +91,12 @@ public:
     constexpr auto end() const
     requires range<V const>
     {
-        if constexpr (std::ranges::common_range<V const> &&
-            std::ranges::sized_range<V const> && forward_range<V const>) {
+        if constexpr (common_range<V const> && sized_range<V const> &&
+            forward_range<V const>) {
             auto const missing =
                 (stride_ - std::ranges::distance(base_) % stride_) % stride_;
             return iterator<true>{*this, __RXX ranges::end(base_), missing};
-        } else if constexpr (std::ranges::common_range<V const> &&
+        } else if constexpr (common_range<V const> &&
             !bidirectional_range<V const>) {
             return iterator<true>{*this, __RXX ranges::end(base_)};
         } else {
@@ -108,7 +106,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
         return details::to_unsigned_like(
             details::ceil_div(std::ranges::distance(base_), stride_));
@@ -116,7 +114,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
         return details::to_unsigned_like(
             details::ceil_div(std::ranges::distance(base_), stride_));

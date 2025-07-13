@@ -49,19 +49,18 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>{__RXX ranges::begin(view_), 0};
+        return iterator<false>{ranges::begin(view_), 0};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end()
     requires (!details::simple_view<V>)
     {
-        if constexpr (std::ranges::common_range<V> &&
-            std::ranges::sized_range<V>) {
+        if constexpr (common_range<V> && sized_range<V>) {
             return iterator<false>(
-                __RXX ranges::end(view_), std::ranges::distance(view_));
+                ranges::end(view_), std::ranges::distance(view_));
         } else {
-            return sentinel<false>{__RXX ranges::end(view_)};
+            return sentinel<false>{ranges::end(view_)};
         }
     }
 
@@ -69,34 +68,33 @@ public:
     constexpr auto begin() const
     requires details::range_with_movable_reference<V const>
     {
-        return iterator<true>{__RXX ranges::begin(view_), 0};
+        return iterator<true>{ranges::begin(view_), 0};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const
     requires details::range_with_movable_reference<V const>
     {
-        if constexpr (std::ranges::common_range<V const> &&
-            std::ranges::sized_range<V const>) {
+        if constexpr (common_range<V const> && sized_range<V const>) {
             return iterator<true>(
-                __RXX ranges::end(view_), std::ranges::distance(view_));
+                ranges::end(view_), std::ranges::distance(view_));
         } else {
-            return sentinel<true>{__RXX ranges::end(view_)};
+            return sentinel<true>{ranges::end(view_)};
         }
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(view_);
+        return ranges::size(view_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(view_);
+        return ranges::size(view_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

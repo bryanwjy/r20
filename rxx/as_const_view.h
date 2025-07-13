@@ -10,6 +10,7 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/view_traits.h"
+#include "rxx/empty_view.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
 #include "rxx/ref_view.h"
@@ -82,16 +83,16 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size()
-    requires std::ranges::sized_range<V>
+    requires sized_range<V>
     {
-        return std::ranges::size(base_);
+        return __RXX ranges::size(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() const
-    requires std::ranges::sized_range<V const>
+    requires sized_range<V const>
     {
-        return std::ranges::size(base_);
+        return __RXX ranges::size(base_);
     }
 
 private:
@@ -120,7 +121,7 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
         if constexpr (constant_range<all_t<R>>) {
             return views::all(std::forward<R>(arg));
         } else if constexpr (__RXX ranges::details::is_empty_view<Type>) {
-            return std::views::empty<Element const>;
+            return views::empty<Element const>;
         } else if constexpr (__RXX ranges::details::is_span<Type>) {
             return std::span<Element const, Type::extent>(std::forward<R>(arg));
         } else if constexpr (is_constable_ref_view<R>) {
