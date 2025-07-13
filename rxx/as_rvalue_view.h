@@ -12,6 +12,7 @@
 #include "rxx/details/view_traits.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <compare>
 #include <functional>
@@ -27,7 +28,7 @@ namespace ranges {
 
 template <view V>
 requires input_range<V>
-class as_rvalue_view : public std::ranges::view_interface<as_rvalue_view<V>> {
+class as_rvalue_view : public view_interface<as_rvalue_view<V>> {
 public:
     __RXX_HIDE_FROM_ABI constexpr as_rvalue_view() noexcept(
         std::is_nothrow_default_constructible_v<V>)

@@ -11,6 +11,7 @@
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -29,8 +30,7 @@ concept chunk_by_predicate = view<V> && std::is_object_v<Pred> &&
 }
 
 template <forward_range V, details::chunk_by_predicate<V> Pred>
-class chunk_by_view :
-    public std::ranges::view_interface<chunk_by_view<V, Pred>> {
+class chunk_by_view : public view_interface<chunk_by_view<V, Pred>> {
 
     class iterator;
 

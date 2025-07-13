@@ -12,6 +12,7 @@
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -24,7 +25,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 template <input_range V>
 requires view<V>
-class to_input_view : public std::ranges::view_interface<to_input_view<V>> {
+class to_input_view : public view_interface<to_input_view<V>> {
 
     template <bool>
     class iterator;

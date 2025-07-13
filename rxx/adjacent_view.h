@@ -12,6 +12,7 @@
 #include "rxx/details/tuple_functions.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <array>
 #include <compare>
@@ -41,7 +42,7 @@ using repeat_type_t RXX_NODEBUG = decltype(repeat<T>(make_index_sequence_v<N>));
 
 template <forward_range V, size_t N>
 requires view<V> && (N > 0)
-class adjacent_view : public std::ranges::view_interface<adjacent_view<V, N>> {
+class adjacent_view : public view_interface<adjacent_view<V, N>> {
 
     struct as_sentinel_t {};
     __RXX_HIDE_FROM_ABI static constexpr as_sentinel_t as_sentinel{};

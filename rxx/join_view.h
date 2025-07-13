@@ -15,6 +15,7 @@
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
 #include "rxx/take_view.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -28,7 +29,7 @@ namespace ranges {
 
 template <input_range V>
 requires view<V> && input_range<range_reference_t<V>>
-class join_view : public std::ranges::view_interface<join_view<V>> {
+class join_view : public view_interface<join_view<V>> {
 
     template <bool Const>
     class iterator;

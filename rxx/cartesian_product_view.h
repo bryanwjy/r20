@@ -14,6 +14,7 @@
 #include "rxx/details/tuple_functions.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -75,7 +76,7 @@ __RXX_HIDE_FROM_ABI constexpr auto cartesian_product_common_arg_end(R& range) {
 template <input_range First, forward_range... Vs>
 requires (view<First> && ... && view<Vs>)
 class cartesian_product_view :
-    public std::ranges::view_interface<cartesian_product_view<First, Vs...>> {
+    public view_interface<cartesian_product_view<First, Vs...>> {
 
     template <bool>
     class iterator;

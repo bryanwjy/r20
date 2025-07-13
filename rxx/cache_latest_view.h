@@ -12,6 +12,7 @@
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -24,8 +25,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 template <input_range V>
 requires view<V>
-class cache_latest_view :
-    public std::ranges::view_interface<cache_latest_view<V>> {
+class cache_latest_view : public view_interface<cache_latest_view<V>> {
     using CacheT RXX_NODEBUG =
         std::conditional_t<std::is_reference_v<range_reference_t<V>>,
             std::add_pointer_t<range_reference_t<V>>, range_reference_t<V>>;

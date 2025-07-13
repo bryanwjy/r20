@@ -10,6 +10,7 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <compare>
 #include <iterator>
@@ -29,7 +30,7 @@ concept range_with_movable_reference =
 
 template <view V>
 requires details::range_with_movable_reference<V>
-class enumerate_view : public std::ranges::view_interface<enumerate_view<V>> {
+class enumerate_view : public view_interface<enumerate_view<V>> {
     template <bool IsConst>
     class iterator;
     template <bool IsConst>

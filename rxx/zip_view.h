@@ -12,6 +12,7 @@
 #include "rxx/details/tuple_functions.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <compare>
 #include <functional>
@@ -48,7 +49,7 @@ constexpr T abs(T val) noexcept {
 
 template <input_range... Rs>
 requires (... && view<Rs>) && (sizeof...(Rs) > 0)
-class zip_view : public std::ranges::view_interface<zip_view<Rs...>> {
+class zip_view : public view_interface<zip_view<Rs...>> {
 
     template <bool IsConst>
     class iterator;

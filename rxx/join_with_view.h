@@ -16,6 +16,7 @@
 #include "rxx/details/variant_base.h"
 #include "rxx/primitives.h"
 #include "rxx/single_view.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -68,8 +69,7 @@ concept bidirectional_common = bidirectional_range<R> && common_range<R>;
 template <input_range V, forward_range P>
 requires view<V> && view<P> && input_range<range_reference_t<V>> &&
     details::concatable<range_reference_t<V>, P>
-class join_with_view :
-    public std::ranges::view_interface<join_with_view<V, P>> {
+class join_with_view : public view_interface<join_with_view<V, P>> {
     using InnerRange RXX_NODEBUG = range_reference_t<V>;
 
     template <bool Const>

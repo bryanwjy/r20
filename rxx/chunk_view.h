@@ -15,6 +15,7 @@
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
 #include "rxx/take_view.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -28,7 +29,7 @@ namespace ranges {
 
 template <view V>
 requires input_range<V>
-class chunk_view : public std::ranges::view_interface<chunk_view<V>> {
+class chunk_view : public view_interface<chunk_view<V>> {
     class outer_iterator;
     class inner_iterator;
 
@@ -105,7 +106,7 @@ public:
     using iterator_concept = std::input_iterator_tag;
     using difference_type = range_difference_t<V>;
 
-    struct value_type : public std::ranges::view_interface<value_type> {
+    struct value_type : public view_interface<value_type> {
         friend outer_iterator;
 
         __RXX_HIDE_FROM_ABI constexpr explicit value_type(
@@ -270,7 +271,7 @@ private:
 
 template <view V>
 requires forward_range<V>
-class chunk_view<V> : public std::ranges::view_interface<chunk_view<V>> {
+class chunk_view<V> : public view_interface<chunk_view<V>> {
 
     // Clang<16  has a bug, which prevents out-of-line definition of this
     // iterator

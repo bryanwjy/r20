@@ -10,6 +10,7 @@
 #include "rxx/details/view_traits.h"
 #include "rxx/get_element.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -81,7 +82,7 @@ template <std::move_constructible T,
 requires std::is_object_v<T> && std::same_as<T, std::remove_cv_t<T>> &&
     (details::integer_like_with_usable_difference_type<Bound> ||
         std::same_as<Bound, std::unreachable_sentinel_t>)
-class repeat_view : public std::ranges::view_interface<repeat_view<T, Bound>> {
+class repeat_view : public view_interface<repeat_view<T, Bound>> {
     class iterator;
 
     using index_type RXX_NODEBUG =

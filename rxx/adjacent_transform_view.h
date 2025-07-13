@@ -13,6 +13,7 @@
 #include "rxx/details/referenceable.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 #include "rxx/zip_transform_view.h"
 
 #include <compare>
@@ -55,7 +56,7 @@ requires view<V> && (N > 0) && std::is_object_v<F> &&
     details::referenceable<
         details::repeat_invoke_result_t<F&, range_reference_t<V>, N>>
 class adjacent_transform_view :
-    public std::ranges::view_interface<adjacent_transform_view<V, F, N>> {
+    public view_interface<adjacent_transform_view<V, F, N>> {
     using InnerView RXX_NODEBUG = adjacent_view<V, N>;
     template <bool Const>
     using inner_iterator RXX_NODEBUG =

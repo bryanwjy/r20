@@ -13,6 +13,7 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -40,7 +41,7 @@ concept slide_caches_first = !slide_caches_nothing<V> && !slide_caches_last<V>;
 
 template <forward_range V>
 requires view<V>
-class slide_view : public std::ranges::view_interface<slide_view<V>> {
+class slide_view : public view_interface<slide_view<V>> {
     template <bool>
     class iterator;
     class sentinel;

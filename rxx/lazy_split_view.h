@@ -16,6 +16,7 @@
 #include "rxx/details/variant_base.h"
 #include "rxx/primitives.h"
 #include "rxx/single_view.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -43,8 +44,7 @@ requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
         std::ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
-class lazy_split_view :
-    public std::ranges::view_interface<lazy_split_view<V, P>> {
+class lazy_split_view : public view_interface<lazy_split_view<V, P>> {
 
     template <bool>
     class outer_iterator;
@@ -154,7 +154,7 @@ public:
     using iterator_concept = std::conditional_t<forward_range<Base>,
         std::forward_iterator_tag, std::input_iterator_tag>;
     using difference_type = range_difference_t<Base>;
-    struct value_type : std::ranges::view_interface<value_type> {
+    struct value_type : view_interface<value_type> {
     public:
         friend outer_iterator;
 

@@ -10,6 +10,7 @@
 #include "rxx/details/referenceable.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 #include "rxx/zip_view.h"
 
 #include <compare>
@@ -29,7 +30,7 @@ requires (... && view<Views>) &&
     details::referenceable<
         std::invoke_result_t<F&, range_reference_t<Views>...>>
 class zip_transform_view :
-    public std::ranges::view_interface<zip_transform_view<F, Views...>> {
+    public view_interface<zip_transform_view<F, Views...>> {
     using InnerView = zip_view<Views...>;
     template <bool Const>
     using ziperator = iterator_t<details::const_if<Const, InnerView>>;

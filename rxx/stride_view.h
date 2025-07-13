@@ -14,6 +14,7 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/primitives.h"
+#include "rxx/view_interface.h"
 
 #include <cassert>
 #include <compare>
@@ -27,7 +28,7 @@ namespace ranges {
 
 template <input_range V>
 requires view<V>
-class stride_view : public std::ranges::view_interface<stride_view<V>> {
+class stride_view : public view_interface<stride_view<V>> {
     template <bool>
     class iterator;
 
