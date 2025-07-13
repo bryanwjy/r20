@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -119,7 +120,7 @@ private:
 };
 
 template <typename R, typename Pred>
-chunk_by_view(R&&, Pred) -> chunk_by_view<std::views::all_t<R>, Pred>;
+chunk_by_view(R&&, Pred) -> chunk_by_view<views::all_t<R>, Pred>;
 
 template <forward_range V, details::chunk_by_predicate<V> Pred>
 class chunk_by_view<V, Pred>::iterator {

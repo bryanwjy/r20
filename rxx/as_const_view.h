@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -96,7 +97,7 @@ private:
 };
 
 template <typename R>
-as_const_view(R&&) -> as_const_view<std::views::all_t<R>>;
+as_const_view(R&&) -> as_const_view<views::all_t<R>>;
 
 namespace views {
 namespace details {
@@ -114,8 +115,8 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
         R&& arg) const noexcept(noexcept(as_const_view(std::declval<R>()))) {
         using Type = std::remove_cvref_t<R>;
         using Element = std::remove_reference_t<range_reference_t<R>>;
-        if constexpr (constant_range<std::views::all_t<R>>) {
-            return std::views::all(std::forward<R>(arg));
+        if constexpr (constant_range<all_t<R>>) {
+            return views::all(std::forward<R>(arg));
         } else if constexpr (__RXX ranges::details::is_empty_view<Type>) {
             return std::views::empty<Element const>;
         } else if constexpr (__RXX ranges::details::is_span<Type>) {

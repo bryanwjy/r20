@@ -1,6 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -136,8 +137,7 @@ private:
 };
 
 template <typename F, typename... Rs>
-zip_transform_view(F, Rs&&...)
-    -> zip_transform_view<F, std::views::all_t<Rs>...>;
+zip_transform_view(F, Rs&&...) -> zip_transform_view<F, views::all_t<Rs>...>;
 
 template <std::move_constructible F, input_range... Views>
 requires (... && view<Views>) &&

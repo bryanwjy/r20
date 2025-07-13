@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -89,7 +90,7 @@ private:
 };
 
 template <typename R>
-chunk_view(R&&, range_difference_t<R>) -> chunk_view<std::views::all_t<R>>;
+chunk_view(R&&, range_difference_t<R>) -> chunk_view<views::all_t<R>>;
 
 template <view V>
 requires input_range<V>

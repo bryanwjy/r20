@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -188,8 +189,7 @@ private:
 };
 
 template <typename... Vs>
-cartesian_product_view(Vs&&...)
-    -> cartesian_product_view<std::views::all_t<Vs>...>;
+cartesian_product_view(Vs&&...) -> cartesian_product_view<views::all_t<Vs>...>;
 
 template <input_range First, forward_range... Vs>
 requires (view<First> && ... && view<Vs>)
@@ -506,16 +506,14 @@ struct cartesian_product_t {
 
     template <typename... Rs>
     requires requires {
-        cartesian_product_view<std::views::all_t<Rs>...>(std::declval<Rs>()...);
+        cartesian_product_view<all_t<Rs>...>(std::declval<Rs>()...);
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        Rs&&... args) const
-        noexcept(noexcept(cartesian_product_view<std::views::all_t<Rs>...>(
-            std::declval<Rs>()...)))
-            -> decltype(cartesian_product_view<std::views::all_t<Rs>...>(
-                std::declval<Rs>()...)) {
-        return cartesian_product_view<std::views::all_t<Rs>...>(
-            std::forward<Rs>(args)...);
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
+    operator()(Rs&&... args) const noexcept(
+        noexcept(cartesian_product_view<all_t<Rs>...>(std::declval<Rs>()...)))
+        -> decltype(cartesian_product_view<all_t<Rs>...>(
+            std::declval<Rs>()...)) {
+        return cartesian_product_view<all_t<Rs>...>(std::forward<Rs>(args)...);
     }
 };
 } // namespace details

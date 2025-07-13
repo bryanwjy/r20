@@ -5,6 +5,7 @@
 
 #include "rxx/access.h"
 #include "rxx/adjacent_view.h"
+#include "rxx/all.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
@@ -421,16 +422,15 @@ struct adjacent_transform_t :
 
     template <viewable_range V, typename F>
     requires requires {
-        adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
+        adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
             std::declval<V>(), std::declval<F>());
     }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         V&& arg, F&& func) const
-        noexcept(noexcept(
-            adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>, N>(
-                std::declval<V>(), std::declval<F>()))) {
-        return adjacent_transform_view<std::views::all_t<V>, std::decay_t<F>,
-            N>(std::forward<V>(arg), std::forward<F>(func));
+        noexcept(noexcept(adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
+            std::declval<V>(), std::declval<F>()))) {
+        return adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
+            std::forward<V>(arg), std::forward<F>(func));
     }
 
     template <viewable_range V, typename F>

@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
@@ -138,7 +139,7 @@ private:
 };
 
 template <typename... Rs>
-zip_view(Rs&&...) -> zip_view<std::views::all_t<Rs>...>;
+zip_view(Rs&&...) -> zip_view<views::all_t<Rs>...>;
 
 namespace details {
 
@@ -439,14 +440,12 @@ struct zip_t {
     }
 
     template <typename... Rs>
-    requires requires {
-        zip_view<std::views::all_t<Rs>...>(std::declval<Rs>()...);
-    }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(Rs&&... args) const noexcept(
-        noexcept(zip_view<std::views::all_t<Rs>...>(std::declval<Rs>()...)))
-        -> decltype(zip_view<std::views::all_t<Rs>...>(std::declval<Rs>()...)) {
-        return zip_view<std::views::all_t<Rs>...>(std::forward<Rs>(args)...);
+    requires requires { zip_view<all_t<Rs>...>(std::declval<Rs>()...); }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        Rs&&... args) const
+        noexcept(noexcept(zip_view<all_t<Rs>...>(std::declval<Rs>()...)))
+            -> decltype(zip_view<all_t<Rs>...>(std::declval<Rs>()...)) {
+        return zip_view<all_t<Rs>...>(std::forward<Rs>(args)...);
     }
 };
 } // namespace details

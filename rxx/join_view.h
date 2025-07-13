@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/as_lvalue.h"
@@ -137,7 +138,7 @@ private:
 };
 
 template <typename R>
-explicit join_view(R&&) -> join_view<std::views::all_t<R>>;
+explicit join_view(R&&) -> join_view<views::all_t<R>>;
 
 namespace details {
 
@@ -434,12 +435,12 @@ namespace views {
 namespace details {
 struct join_t : __RXX ranges::details::adaptor_closure<join_t> {
     template <typename R>
-    requires requires { join_view<std::views::all_t<R&&>>(std::declval<R>()); }
+    requires requires { join_view<all_t<R&&>>(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
     operator()(R&& arg) RXX_CONST_CALL
-        noexcept(noexcept(join_view<std::views::all_t<R&&>>(std::declval<R>())))
-            -> decltype(join_view<std::views::all_t<R&&>>(std::declval<R>())) {
-        return join_view<std::views::all_t<R&&>>(std::forward<R>(arg));
+        noexcept(noexcept(join_view<all_t<R&&>>(std::declval<R>())))
+            -> decltype(join_view<all_t<R&&>>(std::declval<R>())) {
+        return join_view<all_t<R&&>>(std::forward<R>(arg));
     }
 
 #if RXX_LIBSTDCXX

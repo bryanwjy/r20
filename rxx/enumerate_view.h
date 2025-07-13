@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -113,7 +114,7 @@ private:
 };
 
 template <typename R>
-enumerate_view(R&&) -> enumerate_view<std::views::all_t<R>>;
+enumerate_view(R&&) -> enumerate_view<views::all_t<R>>;
 
 template <view V>
 requires details::range_with_movable_reference<V>
@@ -347,14 +348,12 @@ namespace views {
 namespace details {
 struct enumerate_t : __RXX ranges::details::adaptor_closure<enumerate_t> {
     template <viewable_range R>
-    requires requires {
-        enumerate_view<std::views::all_t<R>>(std::declval<R>());
-    }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(R&& arg) const noexcept(
-        noexcept(enumerate_view<std::views::all_t<R>>(std::declval<R>())))
-        -> decltype(enumerate_view<std::views::all_t<R>>(std::declval<R>())) {
-        return enumerate_view<std::views::all_t<R>>(std::forward<R>(arg));
+    requires requires { enumerate_view<all_t<R>>(std::declval<R>()); }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
+        R&& arg) const
+        noexcept(noexcept(enumerate_view<all_t<R>>(std::declval<R>())))
+            -> decltype(enumerate_view<all_t<R>>(std::declval<R>())) {
+        return enumerate_view<all_t<R>>(std::forward<R>(arg));
     }
 
 #if RXX_LIBSTDCXX

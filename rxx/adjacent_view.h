@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -435,13 +436,13 @@ struct adjacent_t : __RXX ranges::details::adaptor_closure<adjacent_t<N>> {
 
     template <viewable_range R>
     requires (N == 0) ||
-        requires { adjacent_view<std::views::all_t<R>, N>(std::declval<R>()); }
+        requires { adjacent_view<all_t<R>, N>(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
         R&& arg) const {
         if constexpr (N == 0) {
             return std::views::empty<std::tuple<>>;
         } else {
-            return adjacent_view<std::views::all_t<R>, N>(std::forward<R>(arg));
+            return adjacent_view<all_t<R>, N>(std::forward<R>(arg));
         }
     }
 };

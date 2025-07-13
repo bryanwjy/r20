@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -104,7 +105,7 @@ private:
 };
 
 template <typename R>
-as_rvalue_view(R&&) -> as_rvalue_view<std::views::all_t<R>>;
+as_rvalue_view(R&&) -> as_rvalue_view<views::all_t<R>>;
 
 namespace views {
 namespace details {

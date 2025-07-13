@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
@@ -64,7 +65,7 @@ public:
         , pattern_{std::move(pattern)} {}
 
     template <input_range R>
-    requires std::constructible_from<V, std::views::all_t<R>> &&
+    requires std::constructible_from<V, views::all_t<R>> &&
                  std::constructible_from<P, single_view<range_value_t<R>>>
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         R&& range, range_value_t<R> pattern)
@@ -462,12 +463,11 @@ private:
 };
 
 template <typename R, typename P>
-lazy_split_view(R&&, P&&)
-    -> lazy_split_view<std::views::all_t<R>, std::views::all_t<P>>;
+lazy_split_view(R&&, P&&) -> lazy_split_view<views::all_t<R>, views::all_t<P>>;
 
 template <input_range R>
 lazy_split_view(R&&, range_value_t<R>)
-    -> lazy_split_view<std::views::all_t<R>, single_view<range_value_t<R>>>;
+    -> lazy_split_view<views::all_t<R>, single_view<range_value_t<R>>>;
 
 namespace views {
 namespace details {

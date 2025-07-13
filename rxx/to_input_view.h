@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/access.h"
+#include "rxx/all.h"
 #include "rxx/concepts.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
@@ -97,7 +98,7 @@ private:
 };
 
 template <typename R>
-to_input_view(R&&) -> to_input_view<std::views::all_t<R>>;
+to_input_view(R&&) -> to_input_view<views::all_t<R>>;
 
 template <input_range V>
 requires view<V>
