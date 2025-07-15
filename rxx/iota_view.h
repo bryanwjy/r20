@@ -16,7 +16,6 @@ using std::ranges::iota_view;
 
 namespace views {
 inline namespace cpo {
-template <typename T>
 inline constexpr std::decay_t<decltype(std::views::iota)> iota{};
 }
 } // namespace views

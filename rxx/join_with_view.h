@@ -9,6 +9,7 @@
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/common_reference.h"
+#include "rxx/details/concat.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
@@ -28,39 +29,6 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 namespace details {
-
-template <typename... Ts>
-using concat_reference_t = common_reference_t<range_reference_t<Ts>...>;
-template <typename... Ts>
-using concat_value_t = std::common_type_t<range_value_t<Ts>...>;
-template <typename... Ts>
-using concat_rvalue_reference_t =
-    common_reference_t<range_rvalue_reference_t<Ts>...>;
-
-template <typename Ref, typename RRef, typename It>
-concept concat_indirectly_readable_impl = requires(It const it) {
-    { *it } -> std::convertible_to<Ref>;
-    { std::ranges::iter_move(it) } -> std::convertible_to<RRef>;
-};
-
-template <typename... Ts>
-concept concat_indirectly_readable =
-    std::common_reference_with<concat_reference_t<Ts...>&&,
-        concat_value_t<Ts...>&> &&
-    std::common_reference_with<concat_reference_t<Ts...>&&,
-        concat_rvalue_reference_t<Ts...>&&> &&
-    std::common_reference_with<concat_rvalue_reference_t<Ts...>&&,
-        concat_value_t<Ts...> const&> &&
-    (... &&
-        concat_indirectly_readable_impl<concat_reference_t<Ts...>,
-            concat_rvalue_reference_t<Ts...>, iterator_t<Ts>>);
-
-template <typename... Ts>
-concept concatable = requires {
-    typename concat_reference_t<Ts...>;
-    typename concat_value_t<Ts...>;
-    typename concat_rvalue_reference_t<Ts...>;
-} && concat_indirectly_readable<Ts...>;
 
 template <typename R>
 concept bidirectional_common = bidirectional_range<R> && common_range<R>;

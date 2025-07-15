@@ -64,13 +64,11 @@ struct template_element<I, List<Head, Tail...>> :
     template_element<I - 1, List<Tail...>> {};
 
 struct valueless_t {
-    __RXX_HIDE_FROM_ABI explicit inline constexpr valueless_t() noexcept =
-        default;
+    __RXX_HIDE_FROM_ABI explicit constexpr valueless_t() noexcept = default;
 };
 
 struct dispatch_t {
-    __RXX_HIDE_FROM_ABI explicit inline constexpr dispatch_t() noexcept =
-        default;
+    __RXX_HIDE_FROM_ABI explicit constexpr dispatch_t() noexcept = default;
 };
 
 inline constexpr valueless_t valueless{};
@@ -85,49 +83,43 @@ union multi_union<Head, Tail...> {
     __RXX_HIDE_FROM_ABI static constexpr bool is_last_union =
         (sizeof...(Tail) == 1);
 
+    __RXX_HIDE_FROM_ABI constexpr multi_union() noexcept = delete;
+
     __RXX_HIDE_FROM_ABI explicit(explicit_default_constructible<
-        Head>) inline constexpr multi_union() noexcept(std::
-            is_nothrow_default_constructible_v<Head>)
-    requires std::is_default_constructible_v<Head>
+        first_type>) constexpr multi_union() noexcept
+    requires std::is_trivially_default_constructible_v<first_type> &&
+        std::is_trivially_default_constructible_v<second_type>
     = default;
 
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union(
-        multi_union const&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union(
-        multi_union const&) noexcept(std::
-                                         is_nothrow_copy_constructible_v<
-                                             first_type> &&
-        std::is_nothrow_copy_constructible_v<second_type>)
+    __RXX_HIDE_FROM_ABI constexpr multi_union(multi_union const&) = delete;
+    __RXX_HIDE_FROM_ABI constexpr multi_union(multi_union const&) noexcept
     requires std::is_copy_constructible_v<first_type> &&
         std::is_copy_constructible_v<second_type> &&
         std::is_trivially_copy_constructible_v<first_type> &&
         std::is_trivially_copy_constructible_v<second_type>
     = default;
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union(multi_union&&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union(multi_union&&) noexcept(
-        std::is_nothrow_move_constructible_v<first_type> &&
-        std::is_nothrow_move_constructible_v<second_type>)
+
+    __RXX_HIDE_FROM_ABI constexpr multi_union(multi_union&&) = delete;
+    __RXX_HIDE_FROM_ABI constexpr multi_union(multi_union&&) noexcept
     requires std::is_move_constructible_v<first_type> &&
         std::is_move_constructible_v<second_type> &&
         std::is_trivially_move_constructible_v<first_type> &&
         std::is_trivially_move_constructible_v<second_type>
     = default;
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union& operator=(
+
+    __RXX_HIDE_FROM_ABI constexpr multi_union& operator=(
         multi_union const&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union&
-    operator=(multi_union const&) noexcept(
-        std::is_nothrow_copy_assignable_v<first_type> &&
-        std::is_nothrow_copy_assignable_v<second_type>)
+    __RXX_HIDE_FROM_ABI constexpr multi_union& operator=(
+        multi_union const&) noexcept
     requires std::is_copy_assignable_v<first_type> &&
         std::is_copy_assignable_v<second_type> &&
         std::is_trivially_copy_assignable_v<first_type> &&
         std::is_trivially_copy_assignable_v<second_type>
     = default;
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union& operator=(
+
+    __RXX_HIDE_FROM_ABI constexpr multi_union& operator=(
         multi_union&&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr multi_union& operator=(
-        multi_union&&) noexcept(std::is_nothrow_move_assignable_v<first_type> &&
-        std::is_nothrow_move_assignable_v<second_type>)
+    __RXX_HIDE_FROM_ABI constexpr multi_union& operator=(multi_union&&) noexcept
     requires std::is_move_assignable_v<first_type> &&
         std::is_move_assignable_v<second_type> &&
         std::is_trivially_move_assignable_v<first_type> &&
@@ -136,7 +128,7 @@ union multi_union<Head, Tail...> {
 
     template <typename... Args>
     requires std::is_constructible_v<first_type, Args...>
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(
         std::in_place_type_t<first_type>,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<first_type,
         Args...>)
@@ -144,23 +136,21 @@ union multi_union<Head, Tail...> {
 
     template <typename... Args>
     requires std::is_constructible_v<first_type, Args...>
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
-        std::in_place_index_t<0>,
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(std::in_place_index_t<0>,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<first_type,
         Args...>)
         : first{std::forward<Args>(args)...} {}
 
     template <typename F, typename... Args>
     requires std::is_nothrow_invocable_r_v<first_type, F, Args...>
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
-        generating_index_t<0>, F&& f,
-        Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(generating_index_t<0>,
+        F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
         : first{invoke_r<first_type>(
               std::forward<F>(f), std::forward<Args>(args)...)} {}
 
     template <typename F, typename... Args>
     requires std::is_nothrow_invocable_r_v<first_type, F, Args...>
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(
         generating_type_t<first_type>, F&& f,
         Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
         : first{invoke_r<first_type>(
@@ -169,7 +159,7 @@ union multi_union<Head, Tail...> {
     template <typename U, typename... Args>
     requires (!is_last_union &&
         std::is_constructible_v<second_type, std::in_place_type_t<U>, Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(
         std::in_place_type_t<U> tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<second_type,
         std::in_place_type_t<U>, Args...>)
@@ -179,8 +169,7 @@ union multi_union<Head, Tail...> {
     requires (!is_last_union &&
         std::is_constructible_v<second_type, std::in_place_index_t<N - 1>,
             Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
-        std::in_place_index_t<N>,
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(std::in_place_index_t<N>,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<second_type,
         std::in_place_index_t<N>, Args...>)
         : second{std::in_place_index<N - 1>, std::forward<Args>(args)...} {}
@@ -189,23 +178,21 @@ union multi_union<Head, Tail...> {
     requires (!is_last_union &&
         std::is_constructible_v<second_type, generating_index_t<N - 1>, F,
             Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
-        generating_index_t<N>, F&& f,
-        Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(generating_index_t<N>,
+        F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
         : second{generating_index<N - 1>, std::forward<F>(f),
               std::forward<Args>(args)...} {}
 
     template <typename U, typename F, typename... Args>
     requires (!is_last_union &&
         std::is_constructible_v<second_type, generating_type_t<U>, F, Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
-        generating_type_t<U> tag, F&& f,
-        Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(generating_type_t<U> tag,
+        F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
         : second{tag, std::forward<F>(f), std::forward<Args>(args)...} {}
 
     template <typename... Args>
     requires (is_last_union && std::is_constructible_v<second_type, Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(
         std::in_place_type_t<second_type>,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<second_type,
         Args...>)
@@ -213,8 +200,7 @@ union multi_union<Head, Tail...> {
 
     template <typename... Args>
     requires (is_last_union && std::is_constructible_v<second_type, Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
-        std::in_place_index_t<1>,
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(std::in_place_index_t<1>,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<second_type,
         Args...>)
         : second{std::forward<Args>(args)...} {}
@@ -222,31 +208,30 @@ union multi_union<Head, Tail...> {
     template <typename F, typename... Args>
     requires (
         is_last_union && std::is_nothrow_invocable_r_v<second_type, F, Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
-        generating_index_t<1>, F&& f,
-        Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(generating_index_t<1>,
+        F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
         : second{invoke_r<second_type>(
               std::forward<F>(f), std::forward<Args>(args)...)} {}
 
     template <typename F, typename... Args>
     requires (
         is_last_union && std::is_nothrow_invocable_r_v<second_type, F, Args...>)
-    __RXX_HIDE_FROM_ABI explicit inline constexpr multi_union(
+    __RXX_HIDE_FROM_ABI explicit constexpr multi_union(
         generating_type_t<second_type>, F&& f,
         Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
         : second{invoke_r<second_type>(
               std::forward<F>(f), std::forward<Args>(args)...)} {}
 
-    __RXX_HIDE_FROM_ABI inline constexpr ~multi_union() noexcept
+    __RXX_HIDE_FROM_ABI constexpr ~multi_union() noexcept
     requires std::is_trivially_destructible_v<first_type> &&
         std::is_trivially_destructible_v<second_type>
     = default;
-    __RXX_HIDE_FROM_ABI inline constexpr ~multi_union() noexcept {}
+    __RXX_HIDE_FROM_ABI constexpr ~multi_union() noexcept {}
 
 #if RXX_CXX23
     template <size_t I, typename Self>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN, NODISCARD)
-    inline constexpr decltype(auto) get(this Self&& self) noexcept {
+    constexpr decltype(auto) get(this Self&& self) noexcept {
         static_assert(I <= sizeof...(Tail));
         if constexpr (I == 0) {
             return forward_like<Self>(self.first);
@@ -260,7 +245,7 @@ union multi_union<Head, Tail...> {
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN, NODISCARD)
-    inline constexpr auto get() const& noexcept -> decltype(auto) {
+    constexpr auto get() const& noexcept -> decltype(auto) {
         static_assert(I <= sizeof...(Tail));
         if constexpr (I == 0) {
             return (first);
@@ -273,7 +258,7 @@ union multi_union<Head, Tail...> {
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN, NODISCARD)
-    inline constexpr auto get() & noexcept -> decltype(auto) {
+    constexpr auto get() & noexcept -> decltype(auto) {
         static_assert(I <= sizeof...(Tail));
         if constexpr (I == 0) {
             return (first);
@@ -286,7 +271,7 @@ union multi_union<Head, Tail...> {
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN, NODISCARD)
-    inline constexpr auto get() const&& noexcept -> decltype(auto) {
+    constexpr auto get() const&& noexcept -> decltype(auto) {
         static_assert(I <= sizeof...(Tail));
         if constexpr (I == 0) {
             return std::move(first);
@@ -299,7 +284,7 @@ union multi_union<Head, Tail...> {
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN, NODISCARD)
-    inline constexpr auto get() && noexcept -> decltype(auto) {
+    constexpr auto get() && noexcept -> decltype(auto) {
         static_assert(I <= sizeof...(Tail));
         if constexpr (I == 0) {
             return std::move(first);
@@ -326,7 +311,7 @@ __RXX_HIDE_FROM_ABI inline constexpr auto jump_table_for<T<Args...>> =
     }(std::index_sequence_for<Args...>{});
 
 template <typename T, typename U>
-__RXX_HIDE_FROM_ABI inline constexpr T make_from_multi_union(size_t index,
+__RXX_HIDE_FROM_ABI constexpr T make_from_multi_union(size_t index,
     U&& arg) noexcept([]<size_t... Is>(std::index_sequence<Is...>) {
     return (... &&
         std::is_nothrow_constructible_v<T, std::in_place_index_t<Is>,
@@ -355,34 +340,37 @@ class variant_base {
         !place_index_in_tail;
 
     struct container {
+        __RXX_HIDE_FROM_ABI constexpr container() noexcept(
+            std::is_nothrow_constructible_v<union_type>) = default;
+
         template <typename T, typename... Args>
-        __RXX_HIDE_FROM_ABI inline constexpr container(
+        __RXX_HIDE_FROM_ABI constexpr container(
             std::in_place_type_t<T> tag, Args&&... args)
             : union_{std::in_place, tag, std::forward<Args>(args)...}
             , index_{template_index_v<T, union_type>} {}
 
         template <size_t I, typename... Args>
-        __RXX_HIDE_FROM_ABI inline constexpr container(
+        __RXX_HIDE_FROM_ABI constexpr container(
             std::in_place_index_t<I> tag, Args&&... args)
             : union_{std::in_place, tag, std::forward<Args>(args)...}
             , index_{I} {}
 
         template <typename T, typename F, typename... Args>
-        __RXX_HIDE_FROM_ABI inline constexpr container(
+        __RXX_HIDE_FROM_ABI constexpr container(
             generating_type_t<T> tag, F&& callable, Args&&... args)
             : union_{std::in_place, tag, std::forward<F>(callable),
                   std::forward<Args>(args)...}
             , index_{template_index_v<T, union_type>} {}
 
         template <size_t I, typename F, typename... Args>
-        __RXX_HIDE_FROM_ABI inline constexpr container(
+        __RXX_HIDE_FROM_ABI constexpr container(
             generating_index_t<I> tag, F&& callable, Args&&... args)
             : union_{std::in_place, tag, std::forward<F>(callable),
                   std::forward<Args>(args)...}
             , index_{I} {}
 
         template <typename U>
-        __RXX_HIDE_FROM_ABI inline constexpr container(dispatch_t, size_t index,
+        __RXX_HIDE_FROM_ABI constexpr container(dispatch_t, size_t index,
             U&& arg) noexcept(noexcept(make_from_multi_union<union_type>(index,
             std::declval<U>())))
         requires allow_external_overlap
@@ -393,43 +381,40 @@ class variant_base {
                   }}
             , index_(index) {}
 
-        __RXX_HIDE_FROM_ABI inline constexpr container(
-            container const&) = delete;
-        __RXX_HIDE_FROM_ABI inline constexpr container(
-            container const&) noexcept
+        __RXX_HIDE_FROM_ABI constexpr container(container const&) = delete;
+        __RXX_HIDE_FROM_ABI constexpr container(container const&) noexcept
         requires ((... && std::is_copy_constructible_v<Ts>) &&
                      (... && std::is_trivially_copy_constructible_v<Ts>))
         = default;
-        __RXX_HIDE_FROM_ABI inline constexpr container(container&&) = delete;
-        __RXX_HIDE_FROM_ABI inline constexpr container(container&&) noexcept
+        __RXX_HIDE_FROM_ABI constexpr container(container&&) = delete;
+        __RXX_HIDE_FROM_ABI constexpr container(container&&) noexcept
         requires ((... && std::is_move_constructible_v<Ts>) &&
                      (... && std::is_trivially_move_constructible_v<Ts>))
         = default;
-        __RXX_HIDE_FROM_ABI inline constexpr container& operator=(
+        __RXX_HIDE_FROM_ABI constexpr container& operator=(
             container const&) = delete;
-        __RXX_HIDE_FROM_ABI inline constexpr container& operator=(
+        __RXX_HIDE_FROM_ABI constexpr container& operator=(
             container const&) noexcept
         requires ((... && std::is_copy_assignable_v<Ts>) &&
                      (... && std::is_trivially_copy_assignable_v<Ts>))
         = default;
-        __RXX_HIDE_FROM_ABI inline constexpr container& operator=(
+        __RXX_HIDE_FROM_ABI constexpr container& operator=(
             container&&) = delete;
-        __RXX_HIDE_FROM_ABI inline constexpr container& operator=(
-            container&&) noexcept
+        __RXX_HIDE_FROM_ABI constexpr container& operator=(container&&) noexcept
         requires ((... && std::is_move_assignable_v<Ts>) &&
                      (... && std::is_trivially_move_assignable_v<Ts>))
         = default;
 
-        __RXX_HIDE_FROM_ABI inline constexpr ~container() noexcept
+        __RXX_HIDE_FROM_ABI constexpr ~container() noexcept
         requires ((... && std::is_trivially_destructible_v<Ts>))
         = default;
-        __RXX_HIDE_FROM_ABI inline constexpr ~container() noexcept
+        __RXX_HIDE_FROM_ABI constexpr ~container() noexcept
         requires ((... || !std::is_trivially_destructible_v<Ts>))
         {
             destroy_member();
         }
 
-        __RXX_HIDE_FROM_ABI inline constexpr void destroy_union() noexcept
+        __RXX_HIDE_FROM_ABI constexpr void destroy_union() noexcept
         requires (allow_external_overlap &&
             (... && std::is_trivially_destructible_v<Ts>))
         {
@@ -437,7 +422,7 @@ class variant_base {
                 RXX_BUILTIN_addressof(union_.data));
         }
 
-        __RXX_HIDE_FROM_ABI inline constexpr void destroy_union() noexcept
+        __RXX_HIDE_FROM_ABI constexpr void destroy_union() noexcept
         requires (allow_external_overlap &&
             (... || !std::is_trivially_destructible_v<Ts>))
         {
@@ -447,7 +432,7 @@ class variant_base {
         }
 
         template <typename U, typename... Args>
-        __RXX_HIDE_FROM_ABI inline constexpr U*
+        __RXX_HIDE_FROM_ABI constexpr U*
         construct_union(std::in_place_type_t<U> tag, Args&&... args) noexcept(
             std::is_nothrow_constructible_v<U, Args...>)
         requires (allow_external_overlap)
@@ -462,7 +447,7 @@ class variant_base {
         }
 
         template <size_t I, typename... Args>
-        __RXX_HIDE_FROM_ABI inline constexpr template_element_t<I, union_type>*
+        __RXX_HIDE_FROM_ABI constexpr template_element_t<I, union_type>*
         construct_union(std::in_place_index_t<I> tag, Args&&... args) noexcept(
             std::is_nothrow_constructible_v<template_element_t<I, union_type>,
                 Args...>)
@@ -480,7 +465,7 @@ class variant_base {
         RXX_ATTRIBUTES(NO_UNIQUE_ADDRESS) index_type index_;
 
     private:
-        __RXX_HIDE_FROM_ABI inline constexpr void destroy_member() noexcept {
+        __RXX_HIDE_FROM_ABI constexpr void destroy_member() noexcept {
             jump_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
                     destroy_at(
@@ -491,8 +476,7 @@ class variant_base {
     };
 
     template <typename U>
-    __RXX_HIDE_FROM_ABI static inline constexpr container make_container(
-        size_t index,
+    __RXX_HIDE_FROM_ABI static constexpr container make_container(size_t index,
         U&& arg) noexcept([]<size_t... Is>(std::index_sequence<Is...>) {
         return (... &&
             std::is_nothrow_constructible_v<container,
@@ -511,50 +495,50 @@ class variant_base {
     }
 
 public:
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base() noexcept(
+    __RXX_HIDE_FROM_ABI constexpr variant_base() noexcept = delete;
+
+    __RXX_HIDE_FROM_ABI constexpr variant_base() noexcept(
         std::is_nothrow_default_constructible_v<
             template_element_t<0, variant_base>>)
+    requires std::default_initializable<template_element_t<0, variant_base>>
         : variant_base{std::in_place_index<0>} {}
 
-    __RXX_HIDE_FROM_ABI inline constexpr ~variant_base() noexcept = default;
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(
-        variant_base const&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(
-        variant_base const&) noexcept((... &&
-        std::is_nothrow_copy_constructible_v<Ts>))
+    __RXX_HIDE_FROM_ABI constexpr ~variant_base() noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base const&) = delete;
+    __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base const&) noexcept(
+        (... && std::is_nothrow_copy_constructible_v<Ts>))
     requires ((... && std::is_copy_constructible_v<Ts>) &&
                  (... && std::is_trivially_copy_constructible_v<Ts>))
     = default;
 
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(
+    __RXX_HIDE_FROM_ABI constexpr variant_base(
         variant_base const& other) noexcept((... &&
         std::is_nothrow_copy_constructible_v<Ts>))
     requires ((... && std::is_copy_constructible_v<Ts>) &&
         !(... && std::is_trivially_copy_constructible_v<Ts>))
         : variant_base(dispatch, other.index(), other.union_ref()) {}
 
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(variant_base&&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(variant_base&&) noexcept
+    __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) = delete;
+    __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) noexcept
     requires ((... && std::is_move_constructible_v<Ts>) &&
                  (... && std::is_trivially_move_constructible_v<Ts>))
     = default;
 
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(
-        variant_base&& other) noexcept((... &&
-        std::is_nothrow_move_constructible_v<Ts>))
+    __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&& other) noexcept(
+        (... && std::is_nothrow_move_constructible_v<Ts>))
     requires ((... && std::is_move_constructible_v<Ts>) &&
         !(... && std::is_trivially_move_constructible_v<Ts>))
         : variant_base(dispatch, other.index(), std::move(other.union_ref())) {}
 
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base& operator=(
+    __RXX_HIDE_FROM_ABI constexpr variant_base& operator=(
         variant_base const&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base& operator=(
+    __RXX_HIDE_FROM_ABI constexpr variant_base& operator=(
         variant_base const&) noexcept
     requires ((... && std::is_copy_assignable_v<Ts>) &&
                  (... && std::is_trivially_copy_assignable_v<Ts>))
     = default;
 
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base&
+    __RXX_HIDE_FROM_ABI constexpr variant_base&
     operator=(variant_base const& other) noexcept(
         (... && std::is_nothrow_copy_assignable_v<Ts>)&&(
             ... && std::is_nothrow_copy_constructible_v<Ts>))
@@ -579,14 +563,14 @@ public:
         return *this;
     }
 
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base& operator=(
+    __RXX_HIDE_FROM_ABI constexpr variant_base& operator=(
         variant_base&&) = delete;
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base& operator=(
+    __RXX_HIDE_FROM_ABI constexpr variant_base& operator=(
         variant_base&&) noexcept
     requires ((... && std::is_move_assignable_v<Ts>) &&
                  (... && std::is_trivially_move_assignable_v<Ts>))
     = default;
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base&
+    __RXX_HIDE_FROM_ABI constexpr variant_base&
     operator=(variant_base&& other) noexcept(
         (... && std::is_nothrow_move_assignable_v<Ts>)&&(
             ... && std::is_nothrow_move_constructible_v<Ts>))
@@ -613,21 +597,21 @@ public:
     }
 
     template <typename U, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr explicit variant_base(
+    __RXX_HIDE_FROM_ABI constexpr explicit variant_base(
         std::in_place_type_t<U> tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<container,
         std::in_place_type_t<U>, Args...>)
         : container_{std::in_place, tag, std::forward<Args>(args)...} {}
 
     template <size_t I, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr explicit variant_base(
+    __RXX_HIDE_FROM_ABI constexpr explicit variant_base(
         std::in_place_index_t<I> tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<container,
         std::in_place_index_t<I>, Args...>)
         : container_{std::in_place, tag, std::forward<Args>(args)...} {}
 
     template <typename U, typename F, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr explicit variant_base(
+    __RXX_HIDE_FROM_ABI constexpr explicit variant_base(
         generating_type_t<U> tag, F&& callable,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<container,
         generating_type_t<U>, Args...>)
@@ -635,67 +619,67 @@ public:
               std::forward<Args>(args)...} {}
 
     template <size_t I, typename F, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr explicit variant_base(
+    __RXX_HIDE_FROM_ABI constexpr explicit variant_base(
         generating_index_t<I> tag, F&& callable,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<container,
         generating_index_t<I>, F, Args...>)
         : container_{std::in_place, tag, std::forward<F>(callable),
               std::forward<Args>(args)...} {}
 
-    __RXX_HIDE_FROM_ABI inline constexpr size_t index() const noexcept {
+    __RXX_HIDE_FROM_ABI constexpr size_t index() const noexcept {
         return container_.data.index_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto union_ref() const& noexcept -> decltype(auto) {
+    constexpr auto union_ref() const& noexcept -> decltype(auto) {
         return (container_.data.union_.data);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto union_ref() & noexcept -> decltype(auto) {
+    constexpr auto union_ref() & noexcept -> decltype(auto) {
         return (container_.data.union_.data);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto union_ref() const&& noexcept -> decltype(auto) {
+    constexpr auto union_ref() const&& noexcept -> decltype(auto) {
         return std::move(container_.data.union_.data);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto union_ref() && noexcept -> decltype(auto) {
+    constexpr auto union_ref() && noexcept -> decltype(auto) {
         return std::move(container_.data.union_.data);
     }
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto value_ref() const& noexcept -> decltype(auto) {
+    constexpr auto value_ref() const& noexcept -> decltype(auto) {
         static_assert(I < template_size_v<union_type>);
         return union_ref().template get<I>();
     }
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto value_ref() & noexcept -> decltype(auto) {
+    constexpr auto value_ref() & noexcept -> decltype(auto) {
         static_assert(I < template_size_v<union_type>);
         return union_ref().template get<I>();
     }
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto value_ref() const&& noexcept -> decltype(auto) {
+    constexpr auto value_ref() const&& noexcept -> decltype(auto) {
         static_assert(I < template_size_v<union_type>);
         return std::move(union_ref().template get<I>());
     }
 
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    inline constexpr auto value_ref() && noexcept -> decltype(auto) {
+    constexpr auto value_ref() && noexcept -> decltype(auto) {
         static_assert(I < template_size_v<union_type>);
         return std::move(union_ref().template get<I>());
     }
 
     template <size_t I, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr auto
+    __RXX_HIDE_FROM_ABI constexpr auto
     reinitialize_value(Args&&... args) noexcept(
         std::is_nothrow_constructible_v<template_element_t<I, union_type>,
             Args...>) {
@@ -714,7 +698,7 @@ public:
     }
 
     template <size_t I, typename F, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr auto
+    __RXX_HIDE_FROM_ABI constexpr auto
     regenerate_value(F&& callable, Args&&... args) noexcept(
         std::is_nothrow_invocable_r_v<template_element_t<I, union_type>, F,
             Args...>) {
@@ -780,23 +764,21 @@ public:
 
 private:
     template <typename U>
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(dispatch_t tag,
-        size_t index,
+    __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_t tag, size_t index,
         U&& arg) noexcept(std::is_nothrow_constructible_v<container, dispatch_t,
         size_t, U>)
     requires (allow_external_overlap)
         : container_{std::in_place, tag, index, std::forward<U>(arg)} {}
 
     template <typename U>
-    __RXX_HIDE_FROM_ABI inline constexpr variant_base(dispatch_t, size_t index,
+    __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_t, size_t index,
         U&& arg) noexcept(noexcept(make_container(index, std::declval<U>())))
     requires place_index_in_tail
         : container_{generating,
               [&]() { return make_container(index, std::forward<U>(arg)); }} {}
 
     template <size_t I, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr auto
-    construct_value(Args&&... args) noexcept(
+    __RXX_HIDE_FROM_ABI constexpr auto construct_value(Args&&... args) noexcept(
         std::is_nothrow_constructible_v<template_element_t<I, union_type>,
             Args...>) {
         if constexpr (place_index_in_tail) {
@@ -810,7 +792,7 @@ private:
     }
 
     template <size_t I, typename F, typename... Args>
-    __RXX_HIDE_FROM_ABI inline constexpr auto
+    __RXX_HIDE_FROM_ABI constexpr auto
     generate_value(F&& callable, Args&&... args) noexcept(
         std::is_nothrow_invocable_r_v<template_element_t<I, union_type>, F,
             Args...>) {
@@ -825,7 +807,7 @@ private:
         }
     }
 
-    __RXX_HIDE_FROM_ABI inline constexpr void destroy() noexcept {
+    __RXX_HIDE_FROM_ABI constexpr void destroy() noexcept {
         if constexpr (place_index_in_tail) {
             destroy_at(RXX_BUILTIN_addressof(container_.data));
         } else {
