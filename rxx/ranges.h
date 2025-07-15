@@ -1,6 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+// IWYU pragma: begin_exports
 #include "rxx/access.h"
 #include "rxx/adjacent_transform_view.h"
 #include "rxx/adjacent_view.h"
@@ -13,6 +14,7 @@
 #include "rxx/chunk_by_view.h"
 #include "rxx/chunk_view.h"
 #include "rxx/common_view.h"
+#include "rxx/concat_view.h"
 #include "rxx/concepts.h"
 #include "rxx/counted.h"
 #include "rxx/details/simple_view.h"
@@ -42,3 +44,4 @@
 #include "rxx/view_interface.h"
 #include "rxx/zip_transform_view.h"
 #include "rxx/zip_view.h"
+// IWYU pragma: end_exports
