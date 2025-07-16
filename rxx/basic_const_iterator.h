@@ -414,12 +414,14 @@ using const_sentinel = typename details::const_sentinel<S>::type;
 
 template <std::input_iterator I>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr const_iterator<I> make_const_iterator(I it) {
+constexpr const_iterator<I> make_const_iterator(I it) noexcept(
+    std::is_nothrow_convertible_v<I, const_iterator<I>>) {
     return it;
 }
 template <std::semiregular S>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr const_sentinel<S> make_const_sentinel(S s) {
+constexpr const_sentinel<S> make_const_sentinel(S s) noexcept(
+    std::is_nothrow_convertible_v<S, const_sentinel<S>>) {
     return s;
 }
 

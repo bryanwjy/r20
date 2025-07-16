@@ -81,7 +81,7 @@ struct advance_t final {
         It& iter, Sent bound) RXX_CONST_CALL {
         if constexpr (std::assignable_from<It&, Sent>) {
             iter = std::move(bound);
-        } else if constexpr (sized_sentinel_for<Sent, It>) {
+        } else if constexpr (std::sized_sentinel_for<Sent, It>) {
             operator()(iter, bound - iter);
         } else {
             while (iter != bound) {
@@ -143,7 +143,7 @@ struct distance_t final {
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL void
     operator&() RXX_CONST_CALL = delete;
 
-    template <typename It, sentinel_for<It> Sent>
+    template <typename It, std::sentinel_for<It> Sent>
     requires (!std::sized_sentinel_for<Sent, It>)
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL
         constexpr iter_difference_t<It>
@@ -156,7 +156,7 @@ struct distance_t final {
         return count;
     }
 
-    template <typename It, sized_sentinel_for<std::decay_t<It>> Sent>
+    template <typename It, std::sized_sentinel_for<std::decay_t<It>> Sent>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr iter_difference_t<std::decay_t<It>> operator()(
         It&& first, Sent last) RXX_CONST_CALL {
@@ -202,14 +202,14 @@ struct next_t final {
         return arg;
     }
 
-    template <std::input_or_output_iterator It, sentinel_for<It> Sent>
+    template <std::input_or_output_iterator It, std::sentinel_for<It> Sent>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr It operator()(It arg, Sent bound) RXX_CONST_CALL {
         ranges::advance(arg, bound);
         return arg;
     }
 
-    template <std::input_or_output_iterator It, sentinel_for<It> Sent>
+    template <std::input_or_output_iterator It, std::sentinel_for<It> Sent>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr It operator()(
         It arg, iter_difference_t<It> offset, Sent bound) RXX_CONST_CALL {
