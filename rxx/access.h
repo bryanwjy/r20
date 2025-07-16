@@ -7,6 +7,7 @@
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/iterator.h"
 
+#include <cassert>
 #include <concepts>
 #include <initializer_list>
 #include <type_traits>
@@ -390,8 +391,10 @@ template <typename T>
 concept member_empty = requires(T&& arg) { bool(arg.empty()); };
 
 template <typename T>
-concept size_invocable =
-    !member_empty<T> && requires(T&& arg) { ranges::size(arg); };
+concept size_invocable_only = requires(T&& arg) { ranges::size(arg); };
+
+template <typename T>
+concept size_invocable = !member_empty<T> && size_invocable_only<T>;
 
 template <typename T>
 concept comparable_begin_and_end =
@@ -403,21 +406,21 @@ concept comparable_begin_and_end =
 struct empty_t {
     template <member_empty T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr bool operator()(T&& arg) const
+    RXX_STATIC_CALL constexpr bool operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(bool(arg.empty()))) {
         return bool(arg.empty());
     }
 
     template <size_invocable T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr bool operator()(T&& arg) const
+    RXX_STATIC_CALL constexpr bool operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(ranges::size(arg))) {
         return ranges::size(arg) == 0;
     }
 
     template <comparable_begin_and_end T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr bool operator()(T&& arg) const
+    RXX_STATIC_CALL constexpr bool operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(bool(ranges::begin(arg) == ranges::end(arg)))) {
         return ranges::begin(arg) == ranges::end(arg);
     }
@@ -431,38 +434,161 @@ inline constexpr ranges::details::empty_t empty{};
 
 namespace details {
 
-void reserve_hint(...) noexcept = delete;
+void rbegin(...) = delete;
 template <typename T>
-concept member_reserve_hint = borrowable<T> && requires(T&& val) {
-    { __RXX_AUTOCAST(val.reserve_hint()) } -> integer_like;
+concept member_rbegin = borrowable<T> && requires(T& arg) {
+    { __RXX_AUTOCAST(arg.rbegin()) } -> std::input_or_output_iterator;
 };
 
 template <typename T>
-concept unqualified_reserve_hint = !member_reserve_hint<T> && borrowable<T> &&
+concept unqualified_rbegin = !member_rbegin<T> && borrowable<T> &&
+    class_or_enum<std::remove_reference_t<T>> && requires(T& arg) {
+        { __RXX_AUTOCAST(rbegin(arg)) } -> std::input_or_output_iterator;
+    };
+
+template <typename T>
+concept reversable = !unqualified_rbegin<T> && borrowable<T> &&
+    std::bidirectional_iterator<iterator_t<T>> &&
+    std::same_as<sentinel_t<T>, iterator_t<T>>;
+
+struct rbegin_t {
+    template <member_rbegin T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(arg.rbegin())) {
+        return arg.rbegin();
+    }
+
+    template <unqualified_rbegin T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(rbegin(arg))) {
+        return rbegin(arg);
+    }
+
+    template <reversable T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(std::make_reverse_iterator(ranges::end(arg)))) {
+        return std::make_reverse_iterator(ranges::end(arg));
+    }
+};
+
+void rend(...) = delete;
+template <typename T>
+concept member_rend = borrowable<T> && requires(T& arg) {
+    {
+        __RXX_AUTOCAST(arg.rend())
+    } -> std::sentinel_for<decltype(rbegin_t{}(std::declval<T>()))>;
+};
+
+template <typename T>
+concept unqualified_rend = !member_rend<T> && borrowable<T> &&
+    class_or_enum<std::remove_reference_t<T>> && requires(T& arg) {
+        {
+            __RXX_AUTOCAST(rend(arg))
+        } -> std::sentinel_for<decltype(rbegin_t{}(std::declval<T>()))>;
+    };
+
+struct rend_t {
+    template <member_rend T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(arg.rend())) {
+        return arg.rend();
+    }
+
+    template <unqualified_rend T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(rend(arg))) {
+        return rend(arg);
+    }
+
+    template <reversable T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(std::make_reverse_iterator(ranges::begin(arg)))) {
+        return std::make_reverse_iterator(ranges::begin(arg));
+    }
+};
+
+struct crbegin_t {
+    template <borrowable T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(std::make_const_iterator(
+            ranges::rbegin(possibly_const_range(arg)))))
+    requires requires {
+        std::make_const_iterator(ranges::rbegin(possibly_const_range(arg)));
+    }
+    {
+        auto& crange = possibly_const_range(arg);
+        return const_iterator<decltype(ranges::rbegin(crange))>{
+            ranges::rbegin(crange)};
+    }
+};
+
+struct crend_t {
+    template <borrowable T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(
+            std::make_const_sentinel(ranges::rend(possibly_const_range(arg)))))
+    requires requires {
+        std::make_const_sentinel(ranges::rend(possibly_const_range(arg)));
+    }
+    {
+        auto& crange = possibly_const_range(arg);
+        return const_sentinel<decltype(ranges::rend(crange))>{
+            ranges::rend(crange)};
+    }
+};
+
+struct cdata_t {
+    template <borrowable T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(ranges::data(possibly_const_range(arg))))
+    requires requires { ranges::data(possibly_const_range(arg)); }
+    {
+        return ranges::data(possibly_const_range(arg));
+    }
+};
+
+void reserve_hint(...) noexcept = delete;
+
+template <typename T>
+concept member_reserve_hint =
+    !size_invocable_only<T> && borrowable<T> && requires(T&& val) {
+        { __RXX_AUTOCAST(val.reserve_hint()) } -> integer_like;
+    };
+
+template <typename T>
+concept unqualified_reserve_hint =
+    !size_invocable_only<T> && !member_reserve_hint<T> && borrowable<T> &&
     class_or_enum<std::remove_cvref_t<T>> && requires(T&& val) {
         { __RXX_AUTOCAST(reserve_hint(val)) } -> integer_like;
     };
 
 struct reserve_hint_t {
-    template <typename T>
-    requires requires(T&& arg) { ranges::size(arg); }
+    template <borrowable T>
+    requires size_invocable_only<T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
     operator()(T&& arg) RXX_CONST_CALL noexcept {
         return ranges::size(arg);
     }
 
-    template <typename T>
-    requires member_reserve_hint<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL
+    template <member_reserve_hint T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(__RXX_AUTOCAST(arg.reserve_hint()))) {
         return __RXX_AUTOCAST(arg.reserve_hint());
     }
 
-    template <typename T>
-    requires unqualified_reserve_hint<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL
+    template <unqualified_reserve_hint T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(__RXX_AUTOCAST(reserve_hint(arg)))) {
         return __RXX_AUTOCAST(reserve_hint(arg));
     }
@@ -470,9 +596,13 @@ struct reserve_hint_t {
 } // namespace details
 
 inline namespace cpo {
+inline constexpr ranges::details::rbegin_t rbegin{};
+inline constexpr ranges::details::rend_t rend{};
+inline constexpr ranges::details::crbegin_t crbegin{};
+inline constexpr ranges::details::crend_t crend{};
+inline constexpr ranges::details::cdata_t cdata{};
 inline constexpr ranges::details::reserve_hint_t reserve_hint{};
 } // namespace cpo
-
 } // namespace ranges
 
 RXX_DEFAULT_NAMESPACE_END
