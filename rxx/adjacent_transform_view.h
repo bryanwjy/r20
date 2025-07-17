@@ -427,8 +427,8 @@ struct adjacent_transform_t :
         adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
             std::declval<V>(), std::declval<F>());
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        V&& arg, F&& func) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(V&& arg, F&& func) RXX_CONST_CALL
         noexcept(noexcept(adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
             std::declval<V>(), std::declval<F>()))) {
         return adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
@@ -437,7 +437,7 @@ struct adjacent_transform_t :
 
     template <viewable_range V, typename F>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto operator()(V&& arg, F&& func) const
+    RXX_STATIC_CALL constexpr auto operator()(V&& arg, F&& func) RXX_CONST_CALL
         noexcept(noexcept(zip_transform(std::declval<F>())))
     requires (N == 0)
     {
@@ -452,8 +452,8 @@ struct adjacent_transform_t :
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename F>
     requires std::constructible_from<std::decay_t<F>, F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        F&& func) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(F&& func) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(*this),

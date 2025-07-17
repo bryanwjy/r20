@@ -349,8 +349,8 @@ struct zip_transform_t {
     requires std::move_constructible<std::decay_t<F>> &&
         std::regular_invocable<std::decay_t<F>&> &&
         std::is_object_v<std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        F&&) const noexcept {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(F&&) RXX_CONST_CALL noexcept {
         return std::views::empty<
             std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>;
     }
@@ -359,8 +359,8 @@ struct zip_transform_t {
     requires (sizeof...(Rs) > 0) && requires {
         zip_transform_view(std::declval<F>(), std::declval<Rs>()...);
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(F&& func, Rs&&... views) const noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(F&& func, Rs&&... views) RXX_CONST_CALL noexcept(
         noexcept(zip_transform_view(std::declval<F>(), std::declval<Rs>()...)))
         -> decltype(zip_transform_view(
             std::declval<F>(), std::declval<Rs>()...)) {

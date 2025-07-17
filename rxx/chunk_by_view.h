@@ -205,9 +205,9 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
     requires requires {
         chunk_by_view(std::declval<R>(), std::declval<Pred>());
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(R&& arg,
-        Pred&& pred) const noexcept(noexcept(chunk_by_view(std::forward<R>(arg),
-        std::forward<Pred>(pred)))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(R&& arg, Pred&& pred) RXX_CONST_CALL noexcept(noexcept(
+        chunk_by_view(std::forward<R>(arg), std::forward<Pred>(pred)))) {
         return chunk_by_view(std::forward<R>(arg), std::forward<Pred>(pred));
     }
 
@@ -218,8 +218,8 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename Pred>
     requires std::constructible_from<std::decay_t<Pred>, Pred>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        Pred&& pred) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(Pred&& pred) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<Pred>, Pred>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(*this),

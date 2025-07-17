@@ -431,14 +431,14 @@ namespace views {
 namespace details {
 struct zip_t {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto operator()() const noexcept {
+    RXX_STATIC_CALL constexpr auto operator()() RXX_CONST_CALL noexcept {
         return empty_view<std::tuple<>>{};
     }
 
     template <typename... Rs>
     requires requires { zip_view<all_t<Rs>...>(std::declval<Rs>()...); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        Rs&&... args) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(Rs&&... args) RXX_CONST_CALL
         noexcept(noexcept(zip_view<all_t<Rs>...>(std::declval<Rs>()...)))
             -> decltype(zip_view<all_t<Rs>...>(std::declval<Rs>()...)) {
         return zip_view<all_t<Rs>...>(std::forward<Rs>(args)...);

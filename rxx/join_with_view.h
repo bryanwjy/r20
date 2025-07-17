@@ -575,10 +575,9 @@ namespace details {
 struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
     template <typename R, typename P>
     requires requires { join_with_view(std::declval<R>(), std::declval<P>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        R&& range, P&& pattern) const
-        noexcept(
-            noexcept(join_with_view(std::declval<R>(), std::declval<P>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(R&& range, P&& pattern) RXX_CONST_CALL noexcept(
+        noexcept(join_with_view(std::declval<R>(), std::declval<P>()))) {
         return join_with_view(std::forward<R>(range), std::forward<P>(pattern));
     }
 
@@ -591,8 +590,8 @@ struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        D&& delimiter) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(D&& delimiter) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(*this),

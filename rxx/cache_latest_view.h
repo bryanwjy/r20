@@ -207,8 +207,8 @@ struct cache_latest_t : __RXX ranges::details::adaptor_closure<cache_latest_t> {
 
     template <viewable_range R>
     requires requires { cache_latest_view(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        R&& arg) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(R&& arg) RXX_CONST_CALL
         noexcept(noexcept(cache_latest_view(std::declval<R>()))) {
         return cache_latest_view(std::forward<R>(arg));
     }

@@ -92,8 +92,8 @@ struct advance_t final {
 
     template <std::input_or_output_iterator It, std::sentinel_for<It> Sent>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr iter_difference_t<It> operator()(
-        It& iter, iter_difference_t<It> offset, Sent bound) const {
+    RXX_STATIC_CALL constexpr iter_difference_t<It> operator()(
+        It& iter, iter_difference_t<It> offset, Sent bound) RXX_CONST_CALL {
         if constexpr (std::sized_sentinel_for<Sent, It>) {
             auto const diff = bound - iter;
 
@@ -225,14 +225,14 @@ struct prev_t final {
 
     template <std::bidirectional_iterator It>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr It operator()(It iter) RXX_CONST_CALL {
+    RXX_STATIC_CALL constexpr It operator()(It iter) RXX_CONST_CALL {
         --iter;
         return iter;
     }
 
     template <std::bidirectional_iterator It>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr It operator()(
+    RXX_STATIC_CALL constexpr It operator()(
         It iter, iter_difference_t<It> offset) RXX_CONST_CALL {
         ranges::advance(iter, -offset);
         return iter;
@@ -240,7 +240,7 @@ struct prev_t final {
 
     template <std::bidirectional_iterator It>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr It operator()(
+    RXX_STATIC_CALL constexpr It operator()(
         It iter, iter_difference_t<It> offset, It bound) RXX_CONST_CALL {
         ranges::advance(iter, -offset, bound);
         return iter;

@@ -55,16 +55,16 @@ public:
 
     template <has_adl_get<I> T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
-    inline constexpr decltype(auto) operator()(T&& t RXX_LIFETIMEBOUND) const
-        noexcept(nothrow_adl_get<T>()) {
+    RXX_STATIC_CALL constexpr decltype(auto) operator()(
+        T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL noexcept(nothrow_adl_get<T>()) {
         return get<I>(std::forward<T>(t));
     }
 
     template <has_member_get<I> T>
     requires (!has_adl_get<T, I>)
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE,
-        NODISCARD) inline constexpr decltype(auto)
-    operator()(T&& t RXX_LIFETIMEBOUND) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD) RXX_STATIC_CALL
+        constexpr decltype(auto)
+        operator()(T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL
         noexcept(nothrow_member_get<T>()) {
         return std::forward<T>(t).template get<I>();
     }

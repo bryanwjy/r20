@@ -200,8 +200,9 @@ struct to_input_t : __RXX ranges::details::adaptor_closure<to_input_t> {
 
     template <viewable_range R>
     requires requires { to_input_view(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        R&& arg) const noexcept(noexcept(to_input_view(std::declval<R>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(R&& arg) RXX_CONST_CALL
+        noexcept(noexcept(to_input_view(std::declval<R>()))) {
         if constexpr (input_range<R> && !common_range<R> && !forward_range<R>) {
             return std::views::all(std::forward<R>(arg));
         } else {

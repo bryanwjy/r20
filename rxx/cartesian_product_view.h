@@ -504,8 +504,8 @@ struct cartesian_product_t {
     requires requires {
         cartesian_product_view<all_t<Rs>...>(std::declval<Rs>()...);
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(Rs&&... args) const noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(Rs&&... args) RXX_CONST_CALL noexcept(
         noexcept(cartesian_product_view<all_t<Rs>...>(std::declval<Rs>()...)))
         -> decltype(cartesian_product_view<all_t<Rs>...>(
             std::declval<Rs>()...)) {

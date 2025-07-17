@@ -477,10 +477,9 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
 
     template <typename R, typename P>
     requires requires { lazy_split_view(std::declval<R>(), std::declval<P>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        R&& range, P&& pattern) const
-        noexcept(
-            noexcept(lazy_split_view(std::declval<R>(), std::declval<P>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(R&& range, P&& pattern) RXX_CONST_CALL noexcept(
+        noexcept(lazy_split_view(std::declval<R>(), std::declval<P>()))) {
         return lazy_split_view(
             std::forward<R>(range), std::forward<P>(pattern));
     }
@@ -494,8 +493,8 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename P>
     requires std::constructible_from<std::decay_t<P>, P>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        P&& pattern) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(P&& pattern) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(*this),
