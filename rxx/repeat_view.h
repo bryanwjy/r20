@@ -420,8 +420,8 @@ struct repeat_t {
     requires requires(T&& value) {
         ranges::repeat_view<std::decay_t<T>>(std::forward<T>(value));
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto
-    operator()(T&& value) const noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& value) RXX_CONST_CALL noexcept(
         noexcept(ranges::repeat_view<std::decay_t<T>>(std::forward<T>(value))))
         -> decltype(ranges::repeat_view<std::decay_t<T>>(
             std::forward<T>(value))) {
@@ -433,8 +433,8 @@ struct repeat_t {
         ranges::repeat_view(
             std::forward<T>(value), std::forward<Bound>(sentinel));
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        T&& value, Bound&& sentinel) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& value, Bound&& sentinel) RXX_CONST_CALL
         noexcept(noexcept(ranges::repeat_view(
             std::forward<T>(value), std::forward<Bound>(sentinel))))
             -> decltype(ranges::repeat_view(

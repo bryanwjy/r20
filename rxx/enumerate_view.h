@@ -348,8 +348,8 @@ namespace details {
 struct enumerate_t : __RXX ranges::details::adaptor_closure<enumerate_t> {
     template <viewable_range R>
     requires requires { enumerate_view<all_t<R>>(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        R&& arg) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(R&& arg) RXX_CONST_CALL
         noexcept(noexcept(enumerate_view<all_t<R>>(std::declval<R>())))
             -> decltype(enumerate_view<all_t<R>>(std::declval<R>())) {
         return enumerate_view<all_t<R>>(std::forward<R>(arg));

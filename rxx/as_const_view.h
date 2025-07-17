@@ -114,8 +114,9 @@ inline constexpr bool is_constable_ref_view<ref_view<R>> =
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
     template <viewable_range R>
     requires requires { as_const_view(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        R&& arg) const noexcept(noexcept(as_const_view(std::declval<R>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(R&& arg) RXX_CONST_CALL
+        noexcept(noexcept(as_const_view(std::declval<R>()))) {
         using Type = std::remove_cvref_t<R>;
         using Element = std::remove_reference_t<range_reference_t<R>>;
         if constexpr (constant_range<all_t<R>>) {

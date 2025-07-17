@@ -678,14 +678,14 @@ namespace details {
 struct concat_t {
     template <typename... Ts>
     requires requires { concat_view(std::declval<Ts>()...); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator()(
-        Ts&&... args) const {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(Ts&&... args) RXX_CONST_CALL {
         return concat_view(std::forward<Ts>(args)...);
     }
 
     template <input_range R>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto operator()(R&& args) const {
+    RXX_STATIC_CALL constexpr auto operator()(R&& args) RXX_CONST_CALL {
         return __RXX ranges::views::all(std::forward<R>(args));
     }
 };
