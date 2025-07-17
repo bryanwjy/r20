@@ -192,14 +192,14 @@ public:
     template <details::not_const_iterator Ot>
     requires details::constant_iterator<Ot> && std::convertible_to<It, Ot>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Ot() const& noexcept(static_cast<Ot>(current_)) {
+    operator Ot() const& noexcept(noexcept(static_cast<Ot>(current_))) {
         return static_cast<Ot>(current_);
     }
 
     template <details::not_const_iterator Ot>
     requires details::constant_iterator<Ot> && std::convertible_to<It, Ot>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Ot() && noexcept(static_cast<Ot>(std::move(current_))) {
+    operator Ot() && noexcept(noexcept(static_cast<Ot>(std::move(current_)))) {
         return static_cast<Ot>(std::move(current_));
     }
 
@@ -414,12 +414,14 @@ using const_sentinel = typename details::const_sentinel<S>::type;
 
 template <std::input_iterator I>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr const_iterator<I> make_const_iterator(I it) {
+constexpr const_iterator<I> make_const_iterator(I it) noexcept(
+    std::is_nothrow_convertible_v<I, const_iterator<I>>) {
     return it;
 }
 template <std::semiregular S>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr const_sentinel<S> make_const_sentinel(S s) {
+constexpr const_sentinel<S> make_const_sentinel(S s) noexcept(
+    std::is_nothrow_convertible_v<S, const_sentinel<S>>) {
     return s;
 }
 
