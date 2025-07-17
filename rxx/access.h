@@ -358,17 +358,15 @@ struct size_func_t {
 
     template <typename T, size_t N>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    RXX_STATIC_CALL constexpr auto operator()(T (&)[N]) RXX_CONST_CALL noexcept
-    requires (sizeof(T) >= 0) // Disallow incomplete element types.
-    {
+    RXX_STATIC_CALL constexpr auto operator()(
+        T (&)[N]) RXX_CONST_CALL noexcept {
         return N;
     }
 
     template <typename T, size_t N>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    RXX_STATIC_CALL constexpr auto operator()(T (&&)[N]) RXX_CONST_CALL noexcept
-    requires (sizeof(T) >= 0) // Disallow incomplete element types.
-    {
+    RXX_STATIC_CALL constexpr auto operator()(
+        T (&&)[N]) RXX_CONST_CALL noexcept {
         return N;
     }
 
@@ -656,11 +654,13 @@ constexpr auto as_const_pointer(T const* ptr) noexcept {
 
 struct cdata_t {
     template <borrowable T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+    requires range<T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(ranges::data(possibly_const_range(arg))))
-            -> std::remove_reference_t<iter_const_reference_t<iterator_t<T>>>*
-    requires requires { ranges::data(possibly_const_range(arg)); }
+    requires requires {
+        as_const_pointer(ranges::data(possibly_const_range(arg)));
+    }
     {
         return as_const_pointer(ranges::data(possibly_const_range(arg)));
     }
