@@ -192,14 +192,14 @@ public:
     template <details::not_const_iterator Ot>
     requires details::constant_iterator<Ot> && std::convertible_to<It, Ot>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Ot() const& noexcept(static_cast<Ot>(current_)) {
+    operator Ot() const& noexcept(noexcept(static_cast<Ot>(current_))) {
         return static_cast<Ot>(current_);
     }
 
     template <details::not_const_iterator Ot>
     requires details::constant_iterator<Ot> && std::convertible_to<It, Ot>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Ot() && noexcept(static_cast<Ot>(std::move(current_))) {
+    operator Ot() && noexcept(noexcept(static_cast<Ot>(std::move(current_)))) {
         return static_cast<Ot>(std::move(current_));
     }
 
