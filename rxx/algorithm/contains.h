@@ -7,6 +7,7 @@
 #include "rxx/algorithm/search.h"
 #include "rxx/concepts.h"
 #include "rxx/functional/equal_to.h"
+#include "rxx/functional/identity.h"
 #include "rxx/iterator.h"
 #include "rxx/primitives.h"
 
@@ -16,7 +17,7 @@ namespace ranges {
 namespace details {
 struct contains_t {
     template <std::input_iterator I, std::sentinel_for<I> S,
-        typename Proj = std::identity, typename T = projected_value_t<I, Proj>>
+        typename Proj = identity, typename T = projected_value_t<I, Proj>>
     requires std::indirect_binary_predicate<equal_to, std::projected<I, Proj>,
         T const*>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
@@ -24,7 +25,7 @@ struct contains_t {
         return ranges::find(std::move(first), last, value, proj) != last;
     }
 
-    template <input_range R, typename Proj = std::identity,
+    template <input_range R, typename Proj = identity,
         typename T = projected_value_t<iterator_t<R>, Proj>>
     requires std::indirect_binary_predicate<equal_to,
         std::projected<iterator_t<R>, Proj>, T const*>
@@ -51,8 +52,8 @@ private:
 public:
     template <std::forward_iterator I1, std::sentinel_for<I1> S1,
         std::forward_iterator I2, std::sentinel_for<I2> S2,
-        typename Pred = equal_to, typename Proj1 = std::identity,
-        typename Proj2 = std::identity>
+        typename Pred = equal_to, typename Proj1 = identity,
+        typename Proj2 = identity>
     requires std::indirectly_comparable<I1, I2, Pred, Proj1, Proj2>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
     operator()(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {},
@@ -63,7 +64,7 @@ public:
     }
 
     template <forward_range R1, forward_range R2, typename Pred = equal_to,
-        typename Proj1 = std::identity, typename Proj2 = std::identity>
+        typename Proj1 = identity, typename Proj2 = identity>
     requires std::indirectly_comparable<iterator_t<R1>, iterator_t<R2>, Pred,
         Proj1, Proj2>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
