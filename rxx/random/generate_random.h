@@ -157,6 +157,7 @@ struct generate_random_t {
 };
 } // namespace details
 
+// warning: untested API!
 inline namespace cpo {
 inline constexpr details::generate_random_t generate_random{};
 }
