@@ -10,7 +10,9 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::swap_ranges;
+}
 
 template <typename I1, typename I2>
 using swap_ranges_result = in_in_result<I1, I2>;

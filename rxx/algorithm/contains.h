@@ -76,7 +76,9 @@ public:
 };
 } // namespace details
 
+inline namespace cpo {
 inline constexpr details::contains_t contains{};
 inline constexpr details::contains_subrange_t contains_subrange{};
+} // namespace cpo
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

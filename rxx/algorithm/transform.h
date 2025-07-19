@@ -10,7 +10,9 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::transform;
+}
 
 template <typename I, typename O>
 using unary_transform_result = in_out_result<I, O>;

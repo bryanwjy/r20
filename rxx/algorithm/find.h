@@ -7,10 +7,10 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
-
+inline namespace cpo {
 using std::ranges::find;
 using std::ranges::find_if;
 using std::ranges::find_if_not;
-
+} // namespace cpo
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

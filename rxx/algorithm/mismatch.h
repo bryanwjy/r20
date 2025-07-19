@@ -10,7 +10,9 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::mismatch;
+}
 
 template <typename I1, typename I2>
 using mismatch_result = in_in_result<I1, I2>;

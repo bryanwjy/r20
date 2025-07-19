@@ -3,13 +3,11 @@
 
 #include "rxx/config.h"
 
-#include "rxx/functional/is_transparent.h"
-
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
 struct identity {
-    using is_transparent = details::is_transparent;
+    using is_transparent = void;
 
     template <typename T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

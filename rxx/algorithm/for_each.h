@@ -10,8 +10,10 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::for_each;
 using std::ranges::for_each_n;
+} // namespace cpo
 
 template <typename I, typename F>
 using for_each_result = in_fun_result<I, F>;

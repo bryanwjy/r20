@@ -10,9 +10,11 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::is_permutation;
 using std::ranges::next_permutation;
 using std::ranges::prev_permutation;
+} // namespace cpo
 
 template <typename I>
 using next_permutation_result = in_found_result<I>;

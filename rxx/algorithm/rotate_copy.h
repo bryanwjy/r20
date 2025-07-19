@@ -10,7 +10,10 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::rotate_copy;
+}
+
 template <typename I, typename O>
 using rotate_copy_result = in_out_result<I, O>;
 

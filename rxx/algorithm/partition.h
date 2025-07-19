@@ -10,11 +10,13 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::is_partitioned;
 using std::ranges::partition;
 using std::ranges::partition_copy;
 using std::ranges::partition_point;
 using std::ranges::stable_partition;
+} // namespace cpo
 
 template <typename I, typename O1, typename O2>
 using partition_copy_result = in_out_out_result<I, O1, O2>;

@@ -10,6 +10,7 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::clamp;
 using std::ranges::max;
 using std::ranges::max_element;
@@ -17,6 +18,7 @@ using std::ranges::min;
 using std::ranges::min_element;
 using std::ranges::minmax;
 using std::ranges::minmax_element;
+} // namespace cpo
 
 template <typename T>
 using minmax_result = min_max_result<T>;

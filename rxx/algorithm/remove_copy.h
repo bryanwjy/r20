@@ -10,8 +10,10 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::remove_copy;
 using std::ranges::remove_copy_if;
+} // namespace cpo
 
 template <typename I, typename O>
 using remove_copy_result = in_out_result<I, O>;

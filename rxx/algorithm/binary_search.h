@@ -8,6 +8,7 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::binary_search;
 using std::ranges::equal_range;
 using std::ranges::lower_bound;
