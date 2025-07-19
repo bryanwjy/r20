@@ -8,12 +8,19 @@
 
 #include <concepts>
 #include <iterator>
-#include <ranges>
 #include <type_traits>
+
+#if __has_include(<__ranges/dangling.h>)
+#  include <__ranges/dangling.h>
+#elif RXX_LIBCXX
+#  error "Unsupported compilation"
+#endif
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
+
+using std::ranges::dangling;
 
 template <range R>
 using range_reference_t = iter_reference_t<iterator_t<R>>;

@@ -9,6 +9,7 @@
 #include "rxx/as_const_view.h"
 #include "rxx/as_rvalue_view.h"
 #include "rxx/basic_istream_view.h"
+#include "rxx/borrow_traits.h"
 #include "rxx/cache_latest_view.h"
 #include "rxx/cartesian_product_view.h"
 #include "rxx/chunk_by_view.h"
