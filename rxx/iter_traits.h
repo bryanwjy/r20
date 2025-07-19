@@ -22,4 +22,9 @@ using iter_const_rvalue_reference_t =
     std::common_reference_t<iter_value_t<It> const&&,
         iter_rvalue_reference_t<It>>;
 
+template <std::indirectly_readable I,
+    std::indirectly_regular_unary_invocable<I> Proj>
+using projected_value_t =
+    std::remove_cvref_t<std::invoke_result_t<Proj&, std::iter_value_t<I>&>>;
+
 RXX_DEFAULT_NAMESPACE_END
