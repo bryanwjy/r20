@@ -4,29 +4,38 @@
 #include "rxx/config.h"
 
 #include <concepts>
-#if __has_include(<__algorithm/in_fun_result.h>)
-#  include <__algorithm/in_fun_result.h>
-#endif
-#if __has_include(<__algorithm/in_in_result.h>)
-#  include <__algorithm/in_in_result.h>
-#endif
-#if __has_include(<__algorithm/in_out_result.h>)
-#  include <__algorithm/in_out_result.h>
-#endif
-#if __has_include(<__algorithm/in_in_out_result.h>)
-#  include <__algorithm/in_in_out_result.h>
-#endif
-#if __has_include(<__algorithm/in_out_out_result.h>)
-#  include <__algorithm/in_out_out_result.h>
-#endif
-#if __has_include(<__algorithm/min_max_result.h>)
-#  include <__algorithm/min_max_result.h>
-#endif
-#if __has_include(<__algorithm/in_found_result.h>)
-#  include <__algorithm/in_found_result.h>
-#endif
 
-#if !RXX_LIBCXX
+#if RXX_LIBCXX
+
+#  if __has_include(<__algorithm/in_fun_result.h>)
+#    include <__algorithm/in_fun_result.h>
+#  endif
+#  if __has_include(<__algorithm/in_in_result.h>)
+#    include <__algorithm/in_in_result.h>
+#  endif
+#  if __has_include(<__algorithm/in_out_result.h>)
+#    include <__algorithm/in_out_result.h>
+#  endif
+#  if __has_include(<__algorithm/in_in_out_result.h>)
+#    include <__algorithm/in_in_out_result.h>
+#  endif
+#  if __has_include(<__algorithm/in_out_out_result.h>)
+#    include <__algorithm/in_out_out_result.h>
+#  endif
+#  if __has_include(<__algorithm/min_max_result.h>)
+#    include <__algorithm/min_max_result.h>
+#  endif
+#  if __has_include(<__algorithm/in_found_result.h>)
+#    include <__algorithm/in_found_result.h>
+#  endif
+
+#elif RXX_LIBSTDCXX
+
+#  if __has_include(<bits/ranges_algobase.h>)
+#    include <bits/ranges_algobase.h>
+#  endif
+
+#else
 #  include <algorithm>
 #endif
 
