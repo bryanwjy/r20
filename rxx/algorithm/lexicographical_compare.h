@@ -8,7 +8,9 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
+inline namespace cpo {
 using std::ranges::lexicographical_compare;
+}
 
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

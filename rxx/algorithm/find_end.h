@@ -7,8 +7,8 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
-
+inline namespace cpo {
 using std::ranges::find_end;
-
+}
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

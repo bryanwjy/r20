@@ -248,12 +248,13 @@ public:
 };
 } // namespace details
 
+inline namespace cpo {
 inline constexpr details::fold_left_t fold_left;
 inline constexpr details::fold_left_first_t fold_left_first;
 inline constexpr details::fold_right_t fold_right;
 inline constexpr details::fold_right_last_t fold_right_last;
 inline constexpr details::fold_left_with_iter_t fold_left_with_iter;
 inline constexpr details::fold_left_first_with_iter_t fold_left_first_with_iter;
-
+} // namespace cpo
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

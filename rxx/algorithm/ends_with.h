@@ -127,7 +127,9 @@ public:
 };
 } // namespace details
 
+inline namespace cpo {
 inline constexpr details::ends_with_t ends_with{};
+}
 
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END
