@@ -13,11 +13,11 @@ namespace ranges {
 
 template <range R>
 using borrowed_iterator_t =
-    std::conditional_t<borrowed_range, iterator_t<R>, dangling>;
+    std::conditional_t<borrowed_range<R>, iterator_t<R>, dangling>;
 
 template <range R>
 using borrowed_subrange_t =
-    std::conditional_t<subrange<iterator_t<R>>, iterator_t<R>, dangling>;
+    std::conditional_t<borrowed_range<R>, subrange<iterator_t<R>>, dangling>;
 
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

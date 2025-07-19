@@ -22,6 +22,7 @@
 #endif
 
 /* extern C++ for MSVC > C++20, no effect anywhere else */
+/* Note: Does not apply to all std entities */
 #define RXX_STD_NAMESPACE_BEGIN                                              \
     RXX_EXTERN_CXX_BEGIN namespace RXX_ATTRIBUTE(TYPE_VISIBILITY("default")) \
         std {                                                                \

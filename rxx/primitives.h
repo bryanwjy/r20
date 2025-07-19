@@ -20,7 +20,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
 
-using std::dangling;
+using std::ranges::dangling;
 
 template <range R>
 using range_reference_t = iter_reference_t<iterator_t<R>>;
