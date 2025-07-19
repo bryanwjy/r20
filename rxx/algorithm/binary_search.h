@@ -13,6 +13,7 @@ using std::ranges::binary_search;
 using std::ranges::equal_range;
 using std::ranges::lower_bound;
 using std::ranges::upper_bound;
+} // namespace cpo
 
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END
