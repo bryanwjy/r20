@@ -6,7 +6,7 @@
 #include "rxx/functional/is_transparent.h"
 
 #include <concepts>
-#include <cstddef>
+#include <cstdint>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
