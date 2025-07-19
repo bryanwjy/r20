@@ -3,12 +3,14 @@
 
 #include "rxx/config.h"
 
+#include <algorithm>
+
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
-namespace details {
-struct is_transparent {};
-} // namespace details
+inline namespace cpo {
+using std::ranges::equal;
+}
 
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

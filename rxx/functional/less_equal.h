@@ -3,7 +3,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/functional/is_transparent.h"
 #include "rxx/functional/less.h"
 
 #include <concepts>
@@ -12,7 +11,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 
 struct less_equal : private less {
-    using is_transparent = details::is_transparent;
+    using is_transparent = void;
 
     template <typename L, typename R>
     requires std::totally_ordered_with<L, R>

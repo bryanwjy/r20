@@ -3,8 +3,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/functional/is_transparent.h"
-
 #include <concepts>
 #include <cstdint>
 #include <type_traits>
@@ -34,7 +32,7 @@ concept builtin_ptr_less =
 } // namespace details
 
 struct less {
-    using is_transparent = details::is_transparent;
+    using is_transparent = void;
 
     template <typename L, typename R>
     requires std::totally_ordered_with<L, R>
