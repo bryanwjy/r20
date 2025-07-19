@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "rxx/algorithm/return_types.h"
+
 #include <algorithm>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -15,6 +17,9 @@ using std::ranges::partial_sort;
 using std::ranges::partial_sort_copy;
 using std::ranges::sort;
 using std::ranges::stable_sort;
+
+template <typename I, typename O>
+using partial_sort_copy_result = in_out_result<I, O>;
 
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END
