@@ -40,8 +40,8 @@ concept indirectly_binary_left_foldable = std::copy_constructible<F> &&
 class fold_left_with_iter_t {
 protected:
     template <typename O, typename I, typename S, typename T, typename F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    static constexpr auto impl(I first, S last, T&& init, F&& func) {
+    __RXX_HIDE_FROM_ABI static constexpr auto impl(
+        I first, S last, T&& init, F&& func) {
         using SecondType =
             std::decay_t<std::invoke_result_t<F&, T, iter_reference_t<I>>>;
         using Result = fold_left_with_iter_result<O, SecondType>;
@@ -99,8 +99,7 @@ struct fold_left_t : private fold_left_with_iter_t {
 struct fold_left_first_with_iter_t {
 protected:
     template <typename O, typename I, typename S, typename F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    static constexpr auto impl(I first, S last, F&& func) {
+    __RXX_HIDE_FROM_ABI static constexpr auto impl(I first, S last, F&& func) {
         using SecondType = decltype(fold_left_t{}(
             std::move(first), last, iter_value_t<I>(*first), func));
         using Result = ranges::fold_left_first_with_iter_result<O,
@@ -176,8 +175,8 @@ concept indirectly_binary_right_foldable =
 struct fold_right_t {
 protected:
     template <typename I, typename S, typename T, typename F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    static constexpr auto impl(I first, S last, T&& init, F&& func) {
+    __RXX_HIDE_FROM_ABI static constexpr auto impl(
+        I first, S last, T&& init, F&& func) {
         using Result =
             std::decay_t<std::invoke_result_t<F&, iter_reference_t<I>, T>>;
         if (first == last) {
@@ -214,8 +213,7 @@ public:
 struct fold_right_last_t : private fold_right_t {
 private:
     template <typename I, typename S, typename F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    static constexpr auto impl(I first, S last, F&& func) {
+    __RXX_HIDE_FROM_ABI static constexpr auto impl(I first, S last, F&& func) {
         using Result = decltype(fold_right_t::impl(
             first, last, iter_value_t<I>(*first), std::move(func)));
 
