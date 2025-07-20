@@ -122,8 +122,10 @@ private:
         I ifirst, S1 ilast, O ofirst, Pred&& stop_copying) {
         O idx = ofirst;
         RXX_TRY {
-            for (; ifirst != ilast && !stop_copying(idx); ++ifirst, ++idx) {
-                ::new (RXX_BUILTIN_addressof(*idx)) V(*ifirst);
+            for (; ifirst != ilast && !stop_copying(idx);
+                 (void)++ifirst, (void)++idx) {
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
+                    V(*ifirst);
             }
         } RXX_CATCH(...) {
             destroy_t::impl(ofirst, idx);
@@ -143,7 +145,7 @@ public:
         using value_type = std::remove_reference_t<iter_reference_t<O>>;
 
         return impl<value_type>(std::move(ifirst), std::move(ilast),
-            std::move(ofirst), ranges::equal_to{});
+            std::move(ofirst), [&](auto&& iter) { return iter == olast; });
     }
 
     template <input_range I, nothrow_forward_range O>
@@ -163,8 +165,10 @@ private:
         I ifirst, iter_difference_t<I> count, O ofirst, Pred&& stop_copying) {
         O idx = ofirst;
         RXX_TRY {
-            for (; count > 0 && !stop_copying(idx); ++ifirst, ++idx, --count)
-                ::new (RXX_BUILTIN_addressof(*idx)) V(*ifirst);
+            for (; count > 0 && !stop_copying(idx);
+                 ++ifirst, (void)++idx, --count)
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
+                    V(*ifirst);
         } RXX_CATCH(...) {
             destroy_t::impl(ofirst, idx);
             RXX_RETHROW();
@@ -182,8 +186,8 @@ public:
         operator()(I ifirst, iter_difference_t<I> count, O ofirst,
             S olast) RXX_CONST_CALL {
         using value_type = std::remove_reference_t<iter_reference_t<O>>;
-        return impl<value_type>(
-            std::move(ifirst), count, std::move(ofirst), ranges::equal_to{});
+        return impl<value_type>(std::move(ifirst), count, std::move(ofirst),
+            [&](auto&& iter) { return iter == olast; });
     }
 };
 
@@ -195,8 +199,10 @@ private:
         I ifirst, S1 ilast, O ofirst, Pred&& stop_moving, Move&& imove) {
         auto idx = ofirst;
         RXX_TRY {
-            for (; ifirst != ilast && !stop_moving(idx); ++idx, ++ifirst) {
-                ::new (RXX_BUILTIN_addressof(*idx)) V(imove(ifirst));
+            for (; ifirst != ilast && !stop_moving(idx);
+                 ++idx, (void)++ifirst) {
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
+                    V(imove(ifirst));
             }
         } RXX_CATCH(...) {
             destroy_t::impl(ofirst, idx);
@@ -215,8 +221,9 @@ public:
         RXX_STATIC_CALL constexpr uninitialized_move_result<I, O>
         operator()(I ifirst, S1 ilast, O ofirst, S2 olast) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<O>>;
-        return impl<V>(std::move(ifirst), std::move(ilast), std::move(ofirst),
-            ranges::equal_to{}, ranges::iter_move);
+        return impl<V>(
+            std::move(ifirst), std::move(ilast), std::move(ofirst),
+            [&](auto&& iter) { return iter == olast; }, ranges::iter_move);
     }
 
     template <input_range R, nothrow_forward_range O>
@@ -238,8 +245,10 @@ private:
         Move&& imove) {
         auto idx = ofirst;
         RXX_TRY {
-            for (; count > 0 && !stop_moving(idx); ++ifirst, ++idx, --count) {
-                ::new (RXX_BUILTIN_addressof(*idx)) V(imove(ifirst));
+            for (; count > 0 && !stop_moving(idx);
+                 ++ifirst, (void)++idx, --count) {
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
+                    V(imove(ifirst));
             }
         } RXX_CATCH(...) {
             destroy_t::impl(ofirst, idx);
@@ -252,14 +261,16 @@ private:
 public:
     template <std::input_iterator I, nothrow_forward_iterator O,
         nothrow_sentinel_for<O> S>
-    requires std::constructible_from<iter_value_t<O>, iter_reference_t<I>>
+    requires std::constructible_from<iter_value_t<O>,
+        iter_rvalue_reference_t<I>>
     __RXX_HIDE_FROM_ABI
         RXX_STATIC_CALL constexpr uninitialized_move_n_result<I, O>
         operator()(I ifirst, iter_difference_t<I> count, O ofirst,
             S olast) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<O>>;
-        return impl<V>(std::move(ifirst), count, std::move(ofirst),
-            ranges::equal_to{}, ranges::iter_move);
+        return impl<V>(
+            std::move(ifirst), count, std::move(ofirst),
+            [&](auto&& iter) { return iter == olast; }, ranges::iter_move);
     }
 };
 
@@ -270,7 +281,7 @@ private:
         auto idx = first;
         RXX_TRY {
             for (; idx != last; ++idx)
-                ::new (RXX_BUILTIN_addressof(*idx)) V;
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx))) V;
         } RXX_CATCH(...) {
             destroy_t::impl(first, idx);
             RXX_RETHROW();
@@ -304,7 +315,7 @@ private:
         auto idx = first;
         RXX_TRY {
             for (; count > 0; ++idx, --count) {
-                ::new (RXX_BUILTIN_addressof(*idx)) V;
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx))) V;
             }
         } RXX_CATCH(...) {
             destroy_t::impl(first, idx);
@@ -331,7 +342,7 @@ private:
         I idx = first;
         RXX_TRY {
             for (; idx != last; ++idx) {
-                ::new (RXX_BUILTIN_addressof(*idx)) V(val);
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx))) V(val);
             }
         } RXX_CATCH(...) {
             destroy_t::impl(first, idx);
@@ -365,7 +376,7 @@ private:
         I idx = first;
         RXX_TRY {
             for (; count > 0; ++idx, --count) {
-                ::new (RXX_BUILTIN_addressof(*idx)) V(val);
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx))) V(val);
             }
         } RXX_CATCH(...) {
             destroy_t::impl(first, idx);
@@ -392,7 +403,7 @@ private:
         auto idx = first;
         RXX_TRY {
             for (; idx != last; ++idx)
-                ::new (RXX_BUILTIN_addressof(*idx)) V();
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx))) V();
         } RXX_CATCH(...) {
             destroy_t::impl(first, idx);
             RXX_RETHROW();
@@ -426,7 +437,7 @@ private:
         auto idx = first;
         RXX_TRY {
             for (; count > 0; ++idx, --count) {
-                ::new (RXX_BUILTIN_addressof(*idx)) V();
+                ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx))) V();
             }
         } RXX_CATCH(...) {
             destroy_t::impl(first, idx);
