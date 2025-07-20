@@ -77,4 +77,38 @@ namespace views {}
 
 namespace views = ranges::views;
 
+#if RXX_WITH_EXCEPTIONS
+
+#  define RXX_THROW(...) throw(__VA_ARGS__)
+#  define RXX_RETHROW(...) throw
+#  define RXX_TRY try
+#  define RXX_CATCH(...) catch (__VA_ARGS__)
+#else
+#  include <cassert>
+
+namespace details {
+template <typename>
+constexpr bool always_false() {
+    return false;
+}
+constexpr bool catch_statement(auto&&) {
+    return false;
+}
+} // namespace details
+
+#  define RXX_THROW(...)                                            \
+      assert(__RXX details::always_false<decltype(__VA_ARGS__)>()); \
+      RXX_BUILTIN_unreachable()
+#  define RXX_RETHROW(...)        \
+      assert(false, __VA_ARGS__); \
+      RXX_BUILTIN_unreachable()
+
+#  define RXX_TRY if constexpr (true)
+
+#  define RXX_CATCH(...)                                 \
+      else if constexpr (__RXX details::catch_statement( \
+                             [](__VA_ARGS__) -> void {}))
+
+#endif
+
 RXX_PUBLIC_DEFAULT_NAMESPACE_END

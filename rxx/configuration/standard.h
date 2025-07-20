@@ -105,11 +105,11 @@
 #else /* ifdef RXX_CXX */
 
 /* Not C++, so only define qualifiers usable on global functions/variables */
-#  define RXX_CONSTEXPR_CXX14 const
+#  define RXX_CONSTEXPR_CXX14
 #  define RXX_INLINE_CXX17
-#  define RXX_CONSTEXPR_CXX17 const
-#  define RXX_CONSTEXPR_CXX20 const
-#  define RXX_CONSTEXPR_CXX23 const
+#  define RXX_CONSTEXPR_CXX17
+#  define RXX_CONSTEXPR_CXX20
+#  define RXX_CONSTEXPR_CXX23
 #  define RXX_CONSTEVAL
 
 #endif /* ifdef RXX_CXX */
