@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/details/class_or_enum.h"
 #include "rxx/details/integer_like.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/iterator.h"
@@ -71,9 +72,6 @@ inline constexpr bool is_initializer_list<std::initializer_list<T>> = true;
 template <typename T>
 concept borrowable = std::is_lvalue_reference_v<T> ||
     enable_borrowed_range<std::remove_cvref_t<T>>;
-template <typename T>
-concept class_or_enum =
-    std::is_class_v<T> || std::is_union_v<T> || std::is_enum_v<T>;
 
 __RXX_HIDE_FROM_ABI void begin(...) noexcept = delete;
 
