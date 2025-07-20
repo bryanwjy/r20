@@ -100,4 +100,4 @@ AttributeMacros: []
 StatementMacros: ['RXX_DEFAULT_NAMESPACE_BEGIN', 'RXX_DEFAULT_NAMESPACE_END']
 Macros:
 - '__RXX=::rxx::'
-
+- RXX_CATCH(X)=else if ([](X){ return true; }())

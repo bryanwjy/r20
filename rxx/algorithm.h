@@ -43,7 +43,6 @@
 #include "rxx/algorithm/starts_with.h"
 #include "rxx/algorithm/swap_ranges.h"
 #include "rxx/algorithm/transform.h"
-#include "rxx/algorithm/uninitialized.h"
 #include "rxx/algorithm/unique.h"
 #include "rxx/algorithm/unique_copy.h"
 // IWYU pragma: end_exports
