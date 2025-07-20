@@ -1,7 +1,8 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
-#include "rxx/details/common_reference.h"
+#include "rxx/ranges/primitives.h"
+#include "rxx/type_traits/common_reference.h"
 
 #include <concepts>
 #include <ranges>

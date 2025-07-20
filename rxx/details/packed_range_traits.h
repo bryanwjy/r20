@@ -2,8 +2,8 @@
 #pragma once
 #include "rxx/config.h"
 
-#include "rxx/concepts.h"
 #include "rxx/details/const_if.h"
+#include "rxx/ranges/concepts.h"
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

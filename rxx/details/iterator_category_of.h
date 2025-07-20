@@ -4,7 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/details/const_if.h"
-#include "rxx/primitives.h"
+#include "rxx/ranges/primitives.h"
 
 #include <ranges>
 

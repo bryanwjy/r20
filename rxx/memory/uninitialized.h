@@ -4,13 +4,13 @@
 #include "rxx/config.h"
 
 #include "rxx/algorithm/return_types.h"
-#include "rxx/borrow_traits.h"
-#include "rxx/concepts.h"
 #include "rxx/details/construct_at.h"
 #include "rxx/details/destroy_at.h"
 #include "rxx/functional/equal_to.h"
-#include "rxx/iter_traits.h"
-#include "rxx/primitives.h"
+#include "rxx/iterator/iter_traits.h"
+#include "rxx/ranges/borrow_traits.h"
+#include "rxx/ranges/concepts.h"
+#include "rxx/ranges/primitives.h"
 
 #include <concepts>
 #include <new>

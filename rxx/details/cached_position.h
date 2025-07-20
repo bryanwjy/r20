@@ -3,9 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "rxx/concepts.h"
 #include "rxx/details/non_propagating_cache.h"
-#include "rxx/primitives.h"
+#include "rxx/ranges/concepts.h"
+#include "rxx/ranges/primitives.h"
 
 #include <cassert>
 #include <ranges>

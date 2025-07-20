@@ -1,8 +1,8 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
-#include "rxx/concepts.h"
-#include "rxx/primitives.h"
+#include "rxx/ranges/concepts.h"
+#include "rxx/ranges/primitives.h"
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

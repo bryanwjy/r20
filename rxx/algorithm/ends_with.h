@@ -5,11 +5,11 @@
 
 #include "rxx/algorithm/equal.h"
 #include "rxx/algorithm/starts_with.h"
-#include "rxx/concepts.h"
 #include "rxx/functional/equal_to.h"
 #include "rxx/functional/identity.h"
 #include "rxx/iterator.h"
-#include "rxx/primitives.h"
+#include "rxx/ranges/concepts.h"
+#include "rxx/ranges/primitives.h"
 
 #include <functional>
 

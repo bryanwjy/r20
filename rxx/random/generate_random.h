@@ -7,10 +7,10 @@
 #include "rxx/algorithm/equal.h"
 #include "rxx/algorithm/generate.h"
 #include "rxx/algorithm/starts_with.h"
-#include "rxx/borrow_traits.h"
-#include "rxx/concepts.h"
 #include "rxx/iterator.h"
-#include "rxx/primitives.h"
+#include "rxx/ranges/borrow_traits.h"
+#include "rxx/ranges/concepts.h"
+#include "rxx/ranges/primitives.h"
 
 #include <functional>
 #include <random>
