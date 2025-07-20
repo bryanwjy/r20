@@ -5,5 +5,7 @@
 
 #include "rxx/basic_const_iterator.h"
 #include "rxx/iter_traits.h"
+#include "rxx/iterator/iter_move.h"
+#include "rxx/iterator/iter_swap.h"
 
 #include <iterator>
