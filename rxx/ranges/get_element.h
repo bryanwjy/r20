@@ -33,10 +33,9 @@ private:
         return false;
     }
 
-    template <typename T>
-    requires requires { std::declval<T>().template get<I>(); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI,
-        NODISCARD) static consteval auto nothrow_member_get() noexcept {
+    template <has_member_get<I> T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static consteval auto nothrow_member_get() noexcept {
         return noexcept(std::declval<T>().template get<I>());
     }
 
@@ -45,10 +44,9 @@ private:
     static consteval auto nothrow_adl_get() noexcept {
         return false;
     }
-    template <typename T>
-    requires requires { get<I>(std::declval<T>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI,
-        NODISCARD) static consteval auto nothrow_adl_get() noexcept {
+    template <has_adl_get<I> T>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static consteval auto nothrow_adl_get() noexcept {
         return noexcept(get<I>(std::declval<T>()));
     }
 
@@ -58,15 +56,15 @@ public:
     template <has_adl_get<I> T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
     RXX_STATIC_CALL constexpr decltype(auto) operator()(
-        T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL noexcept(nothrow_adl_get<T>()) {
+        T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL
+        noexcept(nothrow_adl_get<T>()) {
         return get<I>(std::forward<T>(t));
     }
 
     template <has_member_get<I> T>
-    requires (!has_adl_get<T, I>)
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD) RXX_STATIC_CALL
-        constexpr decltype(auto)
-        operator()(T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
+    RXX_STATIC_CALL constexpr decltype(auto) operator()(
+        T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL
         noexcept(nothrow_member_get<T>()) {
         return std::forward<T>(t).template get<I>();
     }
@@ -100,9 +98,11 @@ inline std::make_index_sequence<std::tuple_size_v<T>> sequence_for{};
 } // namespace details::tuple
 
 template <typename T>
-concept tuple_like = details::tuple::has_size<std::remove_cvref_t<T>> &&
+concept tuple_like =
     []<size_t... Is>(std::index_sequence<Is...>) {
         return (... && details::tuple::has_element<std::remove_cvref_t<T>, Is>);
-    }(details::tuple::sequence_for<std::remove_cvref_t<T>>);
+    }(details::tuple::sequence_for<std::remove_cvref_t<T>>) ||
+    (details::tuple::has_size<std::remove_cvref_t<T>> &&
+        std::tuple_size_v<std::remove_cvref_t<T>> == 0);
 
 RXX_DEFAULT_NAMESPACE_END

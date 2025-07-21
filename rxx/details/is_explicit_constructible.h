@@ -26,12 +26,12 @@ inline constexpr bool is_explicit_constructible_v<T, Head, Mid, Tail...> =
 
 template <typename T, typename Head>
 requires std::is_constructible_v<T, Head>
-inline constexpr bool is_explicit_constructible_v =
+inline constexpr bool is_explicit_constructible_v<T, Head> =
     !std::is_convertible_v<Head, T>;
 
 template <typename T>
 requires std::is_default_constructible_v<T>
-inline constexpr bool is_explicit_constructible_v =
+inline constexpr bool is_explicit_constructible_v<T> =
     !requires { details::implicit_conv<T>({}); };
 
 RXX_DEFAULT_NAMESPACE_END

@@ -13,13 +13,13 @@
 #include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/tuple.h"
 
 #include <array>
 #include <compare>
 #include <functional>
 #include <iterator>
 #include <ranges>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -33,7 +33,7 @@ using always_type RXX_NODEBUG = T;
 
 template <typename T, size_t... Is>
 __RXX_HIDE_FROM_ABI auto repeat(std::index_sequence<Is...>) noexcept
-    -> std::tuple<always_type<Is, T>...>;
+    -> tuple<always_type<Is, T>...>;
 
 template <size_t N, typename T>
 using repeat_type_t RXX_NODEBUG = decltype(repeat<T>(make_index_sequence_v<N>));
@@ -441,7 +441,7 @@ struct adjacent_t : __RXX ranges::details::adaptor_closure<adjacent_t<N>> {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
     operator()(R&& arg) RXX_CONST_CALL {
         if constexpr (N == 0) {
-            return std::views::empty<std::tuple<>>;
+            return std::views::empty<tuple<>>;
         } else {
             return adjacent_view<all_t<R>, N>(std::forward<R>(arg));
         }
