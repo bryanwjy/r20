@@ -8,6 +8,7 @@
 #include "rxx/details/destroy_at.h"
 #include "rxx/details/jump_table.h"
 #include "rxx/details/overlappable_if.h"
+#include "rxx/details/template_access.h"
 
 #include <concepts>
 #include <functional>
@@ -23,45 +24,9 @@ using size_constant = std::integral_constant<size_t, I>;
 template <typename...>
 union multi_union;
 
-template <size_t I, typename List>
-struct template_element {};
-
-template <size_t I, typename List>
-using template_element_t = typename template_element<I, List>::type;
-
-template <template <typename...> class List, typename Head, typename... Tail>
-struct template_element<0, List<Head, Tail...>> {
-    using type RXX_NODEBUG = Head;
-};
-
-template <typename List>
-inline constexpr size_t template_size_v = 0;
-
-template <template <typename...> class List, typename... Args>
-inline constexpr size_t template_size_v<List<Args...>> = sizeof...(Args);
-
-template <typename T, typename TList>
-inline constexpr size_t template_index_v = static_cast<size_t>(-1);
-
-template <typename T, template <typename...> class TList, typename... Tail>
-inline constexpr size_t template_index_v<T, TList<T, Tail...>> = 0;
-
-template <typename T, template <typename...> class TList, typename Head,
-    typename... Tail>
-inline constexpr size_t template_index_v<T, TList<Head, Tail...>> =
-    1 + template_index_v<T, TList<Tail...>>;
-
-template <typename List>
-struct template_size {};
-
-template <template <typename...> class List, typename... Args>
-struct template_size<List<Args...>> :
-    std::integral_constant<size_t, template_size_v<List<Args...>>> {};
-
-template <size_t I, template <typename...> class List, typename Head,
-    typename... Tail>
-struct template_element<I, List<Head, Tail...>> :
-    template_element<I - 1, List<Tail...>> {};
+using __RXX details::template_element_t;
+using __RXX details::template_index_v;
+using __RXX details::template_size_v;
 
 struct valueless_t {
     __RXX_HIDE_FROM_ABI explicit constexpr valueless_t() noexcept = default;

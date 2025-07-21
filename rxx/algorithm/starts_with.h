@@ -4,10 +4,10 @@
 #include "rxx/config.h"
 
 #include "rxx/algorithm/mismatch.h"
-#include "rxx/concepts.h"
 #include "rxx/functional/equal_to.h"
 #include "rxx/functional/identity.h"
 #include "rxx/iterator.h"
+#include "rxx/ranges/concepts.h"
 
 #include <functional>
 

@@ -3,11 +3,11 @@
 
 #include "rxx/config.h"
 
-#include "rxx/access.h"
 #include "rxx/algorithm/return_types.h"
-#include "rxx/borrow_traits.h"
-#include "rxx/concepts.h"
 #include "rxx/iterator.h"
+#include "rxx/ranges/access.h"
+#include "rxx/ranges/borrow_traits.h"
+#include "rxx/ranges/concepts.h"
 
 #include <concepts>
 #include <utility>

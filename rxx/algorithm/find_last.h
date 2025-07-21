@@ -4,12 +4,12 @@
 #include "rxx/config.h"
 
 #include "rxx/algorithm/find.h"
-#include "rxx/borrow_traits.h"
 #include "rxx/functional/equal_to.h"
 #include "rxx/functional/identity.h"
-#include "rxx/iter_traits.h"
-#include "rxx/primitives.h"
-#include "rxx/subrange.h"
+#include "rxx/iterator/iter_traits.h"
+#include "rxx/ranges/borrow_traits.h"
+#include "rxx/ranges/primitives.h"
+#include "rxx/ranges/subrange.h"
 
 #include <algorithm>
 #include <functional>

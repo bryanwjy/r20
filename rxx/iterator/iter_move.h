@@ -4,7 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/details/class_or_enum.h"
-#include "rxx/iter_traits.h"
+#include "rxx/iterator/iter_traits.h"
 
 #include <iterator>
 #include <type_traits>

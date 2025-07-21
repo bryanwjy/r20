@@ -8,8 +8,6 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-namespace ranges::details {
-
 template <typename T, typename U>
 __RXX_HIDE_FROM_ABI constexpr auto&& forward_like(U&& x) noexcept {
     constexpr bool is_adding_const =
@@ -24,7 +22,5 @@ __RXX_HIDE_FROM_ABI constexpr auto&& forward_like(U&& x) noexcept {
     else
         return std::move(x);
 }
-
-} // namespace ranges::details
 
 RXX_DEFAULT_NAMESPACE_END

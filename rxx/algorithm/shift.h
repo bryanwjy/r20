@@ -4,11 +4,11 @@
 #include "rxx/config.h"
 
 #include "rxx/algorithm/move.h"
-#include "rxx/borrow_traits.h"
-#include "rxx/concepts.h"
 #include "rxx/iterator.h"
-#include "rxx/primitives.h"
-#include "rxx/subrange.h"
+#include "rxx/ranges/borrow_traits.h"
+#include "rxx/ranges/concepts.h"
+#include "rxx/ranges/primitives.h"
+#include "rxx/ranges/subrange.h"
 
 #include <algorithm>
 #include <cassert>
