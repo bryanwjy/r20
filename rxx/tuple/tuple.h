@@ -71,6 +71,10 @@ public:
     __RXX_HIDE_FROM_ABI constexpr storage& operator=(storage&&) = default;
 
 protected:
+    __RXX_HIDE_FROM_ABI constexpr storage()
+    requires (... && std::default_initializable<template_element_t<Is, D>>)
+        : element<D, Is>{}... {}
+
     template <typename... Us>
     requires (sizeof...(Us) == element_count) &&
         (... && std::constructible_from<template_element_t<Is, D>, Us>)

@@ -59,7 +59,8 @@ class zip_view : public view_interface<zip_view<Rs...>> {
     class sentinel;
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr zip_view() noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr zip_view() noexcept(
+        std::is_nothrow_default_constructible_v<tuple<Rs...>>) = default;
 
     __RXX_HIDE_FROM_ABI constexpr explicit zip_view(Rs... views) noexcept(
         (... && std::is_nothrow_move_constructible_v<Rs>))
@@ -193,7 +194,8 @@ public:
     using difference_type =
         std::common_type_t<range_difference_t<details::const_if<Const, Rs>>...>;
 
-    __RXX_HIDE_FROM_ABI constexpr iterator() = default;
+    __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
+        std::is_nothrow_default_constructible_v<current_type>) = default;
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other)
     requires Const &&
         (... &&
@@ -374,7 +376,8 @@ class zip_view<Rs...>::sentinel {
         : end_(std::move(end)) {}
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr sentinel() = default;
+    __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
+        std::is_nothrow_default_constructible_v<end_type>) = default;
 
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other)
     requires Const &&
