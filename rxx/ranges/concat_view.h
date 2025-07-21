@@ -9,16 +9,15 @@
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/tuple_functions.h"
 #include "rxx/details/variant_base.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/tuple.h"
 
 #include <concepts>
-#include <iterator>
-#include <ranges>
-#include <tuple>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -33,7 +32,7 @@ class concat_view : public view_interface<concat_view<Vs...>> {
     class iterator;
 
     template <size_t I>
-    using View = std::tuple_element_t<I, std::tuple<Vs...>>;
+    using View = std::tuple_element_t<I, tuple<Vs...>>;
 
 public:
     __RXX_HIDE_FROM_ABI constexpr concat_view() noexcept(
@@ -126,7 +125,7 @@ public:
                 std::common_type_t<Vs...>>))
     requires (... && sized_range<Vs>)
     {
-        return std::apply(
+        return apply(
             [](auto... sizes) {
                 using Type = std::common_type_t<decltype(sizes)...>;
                 return (... + to_unsigned_like<Type>(sizes));
@@ -142,7 +141,7 @@ public:
                 std::common_type_t<range_size_t<Vs const>...>>))
     requires (... && sized_range<Vs const>)
     {
-        return std::apply(
+        return apply(
             [](auto... sizes) {
                 using Type = std::common_type_t<decltype(sizes)...>;
                 return (... + to_unsigned_like<Type>(sizes));
@@ -151,7 +150,7 @@ public:
     }
 
 private:
-    std::tuple<Vs...> views_;
+    tuple<Vs...> views_;
 };
 
 template <typename... Rs>
@@ -229,7 +228,7 @@ consteval bool all_but_first_sized_range() noexcept {
 
 template <bool Const, typename... Vs>
 consteval bool all_nothrow_iter_swappable() noexcept {
-    return (...&& noexcept(std::ranges::iter_swap(
+    return (...&& noexcept(ranges::iter_swap(
         std::declval<iterator_t<details::const_if<Const, Vs>> const&>(),
         std::declval<iterator_t<details::const_if<Const, Vs>> const&>())));
 }
@@ -468,19 +467,19 @@ public:
                     [&]<size_t Iy>(
                         details::size_constant<Iy>) -> difference_type {
                         if constexpr (Ix > Iy) {
-                            auto const diff_y = std::ranges::distance(
+                            auto const diff_y = ranges::distance(
                                 right.it_.template value_ref<Iy>(),
                                 right.template get_end<Iy>());
-                            auto const diff_x = std::ranges::distance(
-                                left.template get_begin<Ix>(),
-                                left.it_.template value_ref<Ix>());
+                            auto const diff_x =
+                                ranges::distance(left.template get_begin<Ix>(),
+                                    left.it_.template value_ref<Ix>());
 
                             difference_type result = 0;
                             [&]<size_t... Is>(std::index_sequence<Is...>) {
                                 (...,
-                                    (result += std::ranges::size(
-                                         left.template get_view<Is + Iy +
-                                             1>())));
+                                    (result +=
+                                        ranges::size(left.template get_view<Is +
+                                                     Iy + 1>())));
                             }(std::make_index_sequence<Ix - Iy - 1>{});
 
                             return diff_y + result + diff_x;
@@ -509,13 +508,13 @@ public:
         return details::jump_table_for<base_iter>(
             [&]<size_t Ix>(details::size_constant<Ix>) -> difference_type {
                 auto const diff_x =
-                    std::ranges::distance(left.it_.template value_ref<Ix>(),
+                    ranges::distance(left.it_.template value_ref<Ix>(),
                         left.template get_end<Ix>());
 
                 difference_type result = 0;
                 [&]<size_t... Is>(std::index_sequence<Is...>) {
                     (...,
-                        (result += std::ranges::distance(
+                        (result += ranges::distance(
                              left.template get_view<Ix + 1 + Is>())));
                 }(std::make_index_sequence<(sizeof...(Vs) - Ix - 1)>{});
 
@@ -538,7 +537,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(iterator const& self) noexcept((... &&
-        (std::is_nothrow_invocable_v<decltype(std::ranges::iter_move),
+        (std::is_nothrow_invocable_v<decltype(ranges::iter_move),
              iterator_t<details::const_if<Const, Vs>> const&> &&
             std::is_nothrow_convertible_v<
                 range_rvalue_reference_t<details::const_if<Const, Vs>>,
@@ -548,14 +547,13 @@ public:
             details::concat_rvalue_reference_t<details::const_if<Const, Vs>...>;
         return details::jump_table_for<base_iter>(
             [&]<size_t I>(details::size_constant<I>) -> Ref {
-                return std::ranges::iter_move(self.it_.template value_ref<I>());
+                return ranges::iter_move(self.it_.template value_ref<I>());
             },
             self.it_.index());
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr void
-    iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(std::ranges::swap(*left, *right)) &&
+    __RXX_HIDE_FROM_ABI friend constexpr void iter_swap(iterator const& left,
+        iterator const& right) noexcept(noexcept(ranges::swap(*left, *right)) &&
         details::all_nothrow_iter_swappable<Const, Vs...>())
     requires std::swappable_with<std::iter_reference_t<iterator>,
                  std::iter_reference_t<iterator>> &&
@@ -570,12 +568,10 @@ public:
                             std::is_same_v<
                                 details::template_element_t<Ix, base_iter>,
                                 details::template_element_t<Iy, base_iter>>) {
-                            std::ranges::iter_swap(
-                                left.it_.template value_ref<Ix>(),
+                            ranges::iter_swap(left.it_.template value_ref<Ix>(),
                                 right.it_.template value_ref<Iy>());
                         } else {
-                            std::ranges::swap(
-                                *left.it_.template value_ref<Ix>(),
+                            ranges::swap(*left.it_.template value_ref<Ix>(),
                                 *right.it_.template value_ref<Iy>());
                         }
                     },
@@ -645,7 +641,7 @@ private:
         if constexpr (I == sizeof...(Vs) - 1) {
             get_iter<I>() += to_underlying_diff_type<I>(steps);
         } else {
-            auto const n_size = std::ranges::distance(get_view<I>());
+            auto const n_size = ranges::distance(get_view<I>());
             if (offset + steps < n_size)
                 get_iter<I>() += to_underlying_diff_type<I>(steps);
             else {
@@ -663,7 +659,7 @@ private:
         } else if (offset >= steps) {
             get_iter<I>() -= to_underlying_diff_type<I>(steps);
         } else {
-            auto prev_size = std::ranges::distance(get_view<I - 1>());
+            auto prev_size = ranges::distance(get_view<I - 1>());
             it_.template reinitialize_value<I - 1>(get_end<I - 1>());
             advance_bwd<I - 1>(prev_size, steps - offset);
         }

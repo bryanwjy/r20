@@ -42,6 +42,7 @@
 #include "rxx/ranges/to.h"
 #include "rxx/ranges/to_input_view.h"
 #include "rxx/ranges/transform_view.h"
+#include "rxx/ranges/view_base.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/ranges/zip_transform_view.h"
 #include "rxx/ranges/zip_view.h"

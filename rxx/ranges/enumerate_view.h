@@ -6,16 +6,15 @@
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/tuple.h"
 
 #include <compare>
-#include <iterator>
-#include <ranges>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -57,8 +56,7 @@ public:
     requires (!details::simple_view<V>)
     {
         if constexpr (common_range<V> && sized_range<V>) {
-            return iterator<false>(
-                ranges::end(view_), std::ranges::distance(view_));
+            return iterator<false>(ranges::end(view_), ranges::distance(view_));
         } else {
             return sentinel<false>{ranges::end(view_)};
         }
@@ -76,8 +74,7 @@ public:
     requires details::range_with_movable_reference<V const>
     {
         if constexpr (common_range<V const> && sized_range<V const>) {
-            return iterator<true>(
-                ranges::end(view_), std::ranges::distance(view_));
+            return iterator<true>(ranges::end(view_), ranges::distance(view_));
         } else {
             return sentinel<true>{ranges::end(view_)};
         }
@@ -136,8 +133,8 @@ public:
             return std::input_iterator_tag{};
     }());
     using difference_type = range_difference_t<Base>;
-    using value_type = std::tuple<difference_type, range_value_t<Base>>;
-    using reference_type = std::tuple<difference_type, range_reference_t<Base>>;
+    using value_type = tuple<difference_type, range_value_t<Base>>;
+    using reference_type = tuple<difference_type, range_reference_t<Base>>;
 
     __RXX_HIDE_FROM_ABI constexpr iterator()
     requires std::default_initializable<iterator_t<Base>>
@@ -270,10 +267,10 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(iterator const& self) noexcept(
-        noexcept(std::ranges::iter_move(self.current_)) &&
+        noexcept(ranges::iter_move(self.current_)) &&
         std::is_nothrow_move_constructible_v<range_rvalue_reference_t<Base>>) {
-        return std::tuple<difference_type, range_rvalue_reference_t<Base>>{
-            self.pos_, std::ranges::iter_move(self.current_)};
+        return tuple<difference_type, range_rvalue_reference_t<Base>>{
+            self.pos_, ranges::iter_move(self.current_)};
     }
 
 private:

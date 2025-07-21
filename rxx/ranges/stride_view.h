@@ -10,6 +10,7 @@
 #include "rxx/details/iterator_category_of.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -18,8 +19,6 @@
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -62,14 +61,14 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return iterator<false>{*this, __RXX ranges::begin(base_)};
+        return iterator<false>{*this, ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires range<V const>
     {
-        return iterator<true>{*this, __RXX ranges::begin(base_)};
+        return iterator<true>{*this, ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -78,10 +77,10 @@ public:
     {
         if constexpr (common_range<V> && sized_range<V> && forward_range<V>) {
             auto const missing =
-                (stride_ - std::ranges::distance(base_) % stride_) % stride_;
-            return iterator<false>{*this, __RXX ranges::end(base_), missing};
+                (stride_ - ranges::distance(base_) % stride_) % stride_;
+            return iterator<false>{*this, ranges::end(base_), missing};
         } else if constexpr (common_range<V> && !bidirectional_range<V>) {
-            return iterator<false>{*this, __RXX ranges::end(base_)};
+            return iterator<false>{*this, ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -94,11 +93,11 @@ public:
         if constexpr (common_range<V const> && sized_range<V const> &&
             forward_range<V const>) {
             auto const missing =
-                (stride_ - std::ranges::distance(base_) % stride_) % stride_;
-            return iterator<true>{*this, __RXX ranges::end(base_), missing};
+                (stride_ - ranges::distance(base_) % stride_) % stride_;
+            return iterator<true>{*this, ranges::end(base_), missing};
         } else if constexpr (common_range<V const> &&
             !bidirectional_range<V const>) {
-            return iterator<true>{*this, __RXX ranges::end(base_)};
+            return iterator<true>{*this, ranges::end(base_)};
         } else {
             return std::default_sentinel;
         }
@@ -109,7 +108,7 @@ public:
     requires sized_range<V>
     {
         return details::to_unsigned_like(
-            details::ceil_div(std::ranges::distance(base_), stride_));
+            details::ceil_div(ranges::distance(base_), stride_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -117,7 +116,7 @@ public:
     requires sized_range<V const>
     {
         return details::to_unsigned_like(
-            details::ceil_div(std::ranges::distance(base_), stride_));
+            details::ceil_div(ranges::distance(base_), stride_));
     }
 
 private:
@@ -205,7 +204,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
         assert(current_ != end_);
-        missing_ = std::ranges::advance(current_, stride_, end_);
+        missing_ = ranges::advance(current_, stride_, end_);
         return *this;
     }
 
@@ -222,7 +221,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
     requires bidirectional_range<Base>
     {
-        std::ranges::advance(current_, missing_ - stride_);
+        ranges::advance(current_, missing_ - stride_);
         missing_ = 0;
         return *this;
     }
@@ -239,11 +238,10 @@ public:
     requires random_access_range<Base>
     {
         if (offset > 0) {
-            assert(
-                std::ranges::distance(current_, end_) > stride_ * (offset - 1));
-            missing_ = std::ranges::advance(current_, stride_ * offset, end_);
+            assert(ranges::distance(current_, end_) > stride_ * (offset - 1));
+            missing_ = ranges::advance(current_, stride_ * offset, end_);
         } else if (offset < 0) {
-            std::ranges::advance(current_, stride_ * offset + missing_);
+            ranges::advance(current_, stride_ * offset + missing_);
             missing_ = 0;
         }
         return *this;
@@ -377,23 +375,23 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr range_rvalue_reference_t<Base>
     iter_move(iterator const& iter) noexcept(
-        noexcept(std::ranges::iter_move(iter.current_))) {
-        return std::ranges::iter_move(iter.current_);
+        noexcept(ranges::iter_move(iter.current_))) {
+        return ranges::iter_move(iter.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(std::ranges::iter_swap(left.current_, right.current_)))
+        noexcept(ranges::iter_swap(left.current_, right.current_)))
     requires std::indirectly_swappable<iterator_t<Base>>
     {
-        std::ranges::iter_swap(left.current_, right.current_);
+        ranges::iter_swap(left.current_, right.current_);
     }
 
 private:
     __RXX_HIDE_FROM_ABI constexpr iterator(Parent& parent,
         iterator_t<Base> current, range_difference_t<Base> missing = 0)
         : current_{std::move(current)}
-        , end_{__RXX ranges::end(parent.base_)}
+        , end_{ranges::end(parent.base_)}
         , stride_{parent.stride_}
         , missing_{missing} {}
 

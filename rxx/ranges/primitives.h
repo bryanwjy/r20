@@ -63,9 +63,9 @@ struct advance_t final {
     template <std::input_or_output_iterator It>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr void operator()(
         It& iter, iter_difference_t<It> offset) RXX_CONST_CALL {
-        if constexpr (std::random_access_iterator<It>)
+        if constexpr (std::random_access_iterator<It>) {
             iter += offset;
-        else if constexpr (std::bidirectional_iterator<It>) {
+        } else if constexpr (std::bidirectional_iterator<It>) {
             if (offset > 0) {
                 do {
                     ++iter;
@@ -101,45 +101,39 @@ struct advance_t final {
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr iter_difference_t<It>
     operator()(
         It& iter, iter_difference_t<It> offset, Sent bound) RXX_CONST_CALL {
+        // Adapted from libc++'s implementation
         if constexpr (std::sized_sentinel_for<Sent, It>) {
-            auto const diff = bound - iter;
-
-            if (diff == 0) {
-                return offset;
-            } else if (diff > 0 ? offset >= diff : offset <= diff) {
-                (*this)(iter, bound);
+            // If |n| >= |bound_sentinel - i|, equivalent to `ranges::advance(i,
+            // bound_sentinel)`.
+            // magnitude_ge(a, b) returns |a| >= |b|, assuming they have the
+            // same sign.
+            auto magnitude_ge = [](auto lhs, auto rhs) {
+                return lhs == 0 ? rhs == 0 : lhs > 0 ? lhs >= rhs : lhs <= rhs;
+            };
+            if (auto const diff = bound - iter; magnitude_ge(offset, diff)) {
+                operator()(iter, bound);
                 return offset - diff;
-            } else if (offset != 0) [[likely]] {
-                // n and bound must not lead in opposite directions:
-                assert((offset < 0) == (diff < 0));
-
-                (*this)(iter, offset);
-                return 0;
-            } else {
-                return 0;
             }
-        } else if (iter == bound || offset == 0) {
-            return offset;
-        } else if (offset > 0) {
-            iter_difference_t<It> count = 0;
-            do {
-                ++iter;
-                ++count;
-            } while (count != offset && iter != bound);
-            return offset - count;
 
-        } else if constexpr (std::bidirectional_iterator<It> &&
-            std::same_as<It, Sent>) {
-
-            iter_difference_t<It> count = 0;
-            do {
-                --iter;
-                --count;
-            } while (count != offset && iter != bound);
-            return offset - count;
+            operator()(iter, offset);
+            return 0;
         } else {
-            // cannot decrement a non-bidirectional iterator
-            assert(offset >= 0);
+            // Otherwise, if `n` is non-negative, while `bool(i !=
+            // bound_sentinel)` is true, increments `i` but at most `n` times.
+            while (offset > 0 && iter != bound) {
+                ++iter;
+                --offset;
+            }
+
+            // Otherwise, while `bool(i != bound_sentinel)` is true, decrements
+            // `i` but at most `-n` times.
+            if constexpr (std::bidirectional_iterator<It> &&
+                std::same_as<It, Sent>) {
+                while (offset < 0 && iter != bound) {
+                    --iter;
+                    ++offset;
+                }
+            }
             return offset;
         }
     }

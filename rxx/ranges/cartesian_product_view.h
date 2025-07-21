@@ -9,18 +9,17 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/tuple_functions.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
+#include "rxx/ranges/single_view.h"
 #include "rxx/ranges/view_interface.h"
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -67,7 +66,7 @@ __RXX_HIDE_FROM_ABI constexpr auto cartesian_product_common_arg_end(R& range) {
     if constexpr (common_range<R>) {
         return ranges::end(range);
     } else {
-        return ranges::begin(range) + std::ranges::distance(range);
+        return ranges::begin(range) + ranges::distance(range);
     }
 }
 } // namespace details
@@ -129,7 +128,7 @@ public:
 
         return iterator<false>(
             *this, [&]<size_t... Is>(std::index_sequence<0, Is...>) {
-                return std::tuple{begin_or_first_end(get_element<0>(bases_)),
+                return tuple{begin_or_first_end(get_element<0>(bases_)),
                     ranges::begin(get_element<Is>(bases_))...};
             }(details::make_index_sequence_v<sizeof...(Vs) + 1>));
     }
@@ -149,7 +148,7 @@ public:
 
         return iterator<true>(
             *this, [&]<size_t... Is>(std::index_sequence<0, Is...>) {
-                return std::tuple{begin_or_first_end(get_element<0>(bases_)),
+                return tuple{begin_or_first_end(get_element<0>(bases_)),
                     ranges::begin(get_element<Is>(bases_))...};
             }(details::make_index_sequence_v<sizeof...(Vs) + 1>));
     }
@@ -184,7 +183,7 @@ public:
     }
 
 private:
-    std::tuple<First, Vs...> bases_;
+    tuple<First, Vs...> bases_;
 };
 
 template <typename... Vs>
@@ -212,12 +211,10 @@ public:
             return std::input_iterator_tag{};
         }
     }());
-    using value_type =
-        std::tuple<range_value_t<details::const_if<Const, First>>,
-            range_value_t<details::const_if<Const, Vs>>...>;
-    using reference =
-        std::tuple<range_reference_t<details::const_if<Const, First>>,
-            range_reference_t<details::const_if<Const, Vs>>...>;
+    using value_type = tuple<range_value_t<details::const_if<Const, First>>,
+        range_value_t<details::const_if<Const, Vs>>...>;
+    using reference = tuple<range_reference_t<details::const_if<Const, First>>,
+        range_reference_t<details::const_if<Const, Vs>>...>;
     using difference_type = typename cartesian_product_view::difference_type;
 
     __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
@@ -328,7 +325,7 @@ public:
         Vs...>
     {
         auto output = [&]<size_t... Is>(std::index_sequence<Is...>) {
-            return std::tuple{ranges::end(get_element<0>(iter.parent_->bases_)),
+            return tuple{ranges::end(get_element<0>(iter.parent_->bases_)),
                 ranges::begin(get_element<1 + Is>(iter.parent_->bases_))...};
         }(details::make_index_sequence_v<sizeof...(Vs)>);
 
@@ -373,7 +370,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(iterator const& iter) {
-        return details::transform(std::ranges::iter_move, iter.current_);
+        return details::transform(ranges::iter_move, iter.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void iter_swap(
@@ -384,7 +381,7 @@ public:
         std::indirectly_swappable<iterator_t<details::const_if<Const, Vs>>>)
     {
         [&]<size_t... Is>(std::index_sequence<Is...>) {
-            (std::ranges::iter_swap(get_element<Is>(left.current_),
+            (ranges::iter_swap(get_element<Is>(left.current_),
                  get_element<Is>(right.current_)),
                 ...);
         }(details::make_index_sequence_v<1 + sizeof...(Vs)>);
@@ -392,7 +389,7 @@ public:
 
 private:
     __RXX_HIDE_FROM_ABI constexpr iterator(Parent& parent,
-        std::tuple<iterator_t<details::const_if<Const, First>>,
+        tuple<iterator_t<details::const_if<Const, First>>,
             iterator_t<details::const_if<Const, Vs>>...>
             current) noexcept((std::
                                    is_nothrow_move_constructible_v<iterator_t<
@@ -487,7 +484,7 @@ private:
     }
 
     Parent* parent_ = nullptr;
-    std::tuple<iterator_t<details::const_if<Const, First>>,
+    tuple<iterator_t<details::const_if<Const, First>>,
         iterator_t<details::const_if<Const, Vs>>...>
         current_;
 };
@@ -497,7 +494,7 @@ namespace details {
 struct cartesian_product_t {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator()() const noexcept {
-        return std::views::single(std::tuple{});
+        return views::single(tuple{});
     }
 
     template <typename... Rs>

@@ -14,6 +14,7 @@
 #include <array>
 #include <compare>
 #include <type_traits>
+#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -546,6 +547,11 @@ public:
         }(details::tuple::sequence_for<tuple>);
     }
 };
+
+template <typename... Us>
+tuple(Us...) -> tuple<Us...>;
+template <typename T1, typename T2>
+tuple(std::pair<T1, T2>) -> tuple<T1, T2>;
 
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }

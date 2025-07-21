@@ -20,7 +20,6 @@
 
 #include <compare>
 #include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

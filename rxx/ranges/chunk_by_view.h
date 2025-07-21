@@ -3,10 +3,12 @@
 
 #include "rxx/config.h"
 
+#include "rxx/algorithm.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -17,8 +19,6 @@
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -90,8 +90,8 @@ private:
                 *pred_, std::forward<T>(left), std::forward<U>(right));
         };
 
-        return std::ranges::next(
-            std::ranges::adjacent_find(current, ranges::end(base_), pred), 1,
+        return ranges::next(
+            ranges::adjacent_find(current, ranges::end(base_), pred), 1,
             ranges::end(base_));
     }
 
@@ -110,9 +110,8 @@ private:
                 *pred_, std::forward<U>(right), std::forward<T>(left));
         };
 
-        return std::ranges::prev(
-            std::ranges::adjacent_find(reversed, pred).base(), 1,
-            std::move(first));
+        return ranges::prev(
+            ranges::adjacent_find(reversed, pred).base(), 1, std::move(first));
     }
 
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};

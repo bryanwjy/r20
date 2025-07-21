@@ -10,6 +10,7 @@
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -19,8 +20,6 @@
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -371,16 +370,16 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr decltype(auto) iter_move(iterator const& iter) noexcept(
-        noexcept(std::ranges::iter_move(*iter.inner_))) {
-        return std::ranges::iter_move(*iter.inner_);
+        noexcept(ranges::iter_move(*iter.inner_))) {
+        return ranges::iter_move(*iter.inner_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(std::ranges::iter_swap(*left.inner_, *right.inner_)))
+        noexcept(ranges::iter_swap(*left.inner_, *right.inner_)))
     requires std::indirectly_swappable<InnerIter>
     {
-        return std::ranges::iter_swap(*left.inner_, *right.inner_);
+        return ranges::iter_swap(*left.inner_, *right.inner_);
     }
 
 private:

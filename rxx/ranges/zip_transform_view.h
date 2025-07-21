@@ -7,16 +7,16 @@
 #include "rxx/details/movable_box.h"
 #include "rxx/details/referenceable.h"
 #include "rxx/details/simple_view.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
+#include "rxx/ranges/empty_view.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/ranges/zip_view.h"
+#include "rxx/tuple/apply.h"
 
 #include <compare>
-#include <iterator>
-#include <ranges>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -177,7 +177,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr decltype(auto) operator*() const {
-        return std::apply(
+        return apply(
             [&](auto const&... iters) -> decltype(auto) {
                 return std::invoke(*parent_->func_, *iters...);
             },
@@ -232,7 +232,7 @@ public:
     constexpr decltype(auto) operator[](difference_type offset) const
     requires random_access_range<Base<Const>>
     {
-        return std::apply(
+        return apply(
             [&]<typename... It>(It const&... iters) -> decltype(auto) {
                 return std::invoke(
                     *parent_->func_, iters[iter_difference_t<It>(offset)]...);
@@ -351,7 +351,7 @@ struct zip_transform_t {
         std::is_object_v<std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
     operator()(F&&) RXX_CONST_CALL noexcept {
-        return std::views::empty<
+        return views::empty<
             std::decay_t<std::invoke_result_t<std::decay_t<F>&>>>;
     }
 

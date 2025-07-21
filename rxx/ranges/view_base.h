@@ -7,6 +7,8 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
-using std::ranges::owning_view;
+
+using std::ranges::view_base;
+
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

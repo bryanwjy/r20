@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/algorithm.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/ceil_div.h"
@@ -10,6 +11,7 @@
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -20,8 +22,6 @@
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -73,7 +73,7 @@ public:
     requires sized_range<V>
     {
         return details::to_unsigned_like(
-            details::ceil_div(std::ranges::distance(base_), size_));
+            details::ceil_div(ranges::distance(base_), size_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -81,7 +81,7 @@ public:
     requires sized_range<V const>
     {
         return details::to_unsigned_like(
-            details::ceil_div(std::ranges::distance(base_), size_));
+            details::ceil_div(ranges::distance(base_), size_));
     }
 
 private:
@@ -127,9 +127,8 @@ public:
         __RXX_HIDE_FROM_ABI constexpr auto size() const
         requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
         {
-            return details::to_unsigned_like(
-                std::ranges::min(parent_->remainder_,
-                    ranges::end(parent_->base_) - *parent_->current_));
+            return details::to_unsigned_like(ranges::min(parent_->remainder_,
+                ranges::end(parent_->base_) - *parent_->current_));
         }
 
     private:
@@ -146,7 +145,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr outer_iterator& operator++() {
         assert(*this != std::default_sentinel);
-        std::ranges::advance(*parent_->current_, parent_->remainder_,
+        ranges::advance(*parent_->current_, parent_->remainder_,
             ranges::end(parent_->base_));
         parent_->remainder_ = parent_->size_;
         return *this;
@@ -237,7 +236,7 @@ public:
         std::default_sentinel_t, inner_iterator const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        return std::ranges::min(right.parent_->remainder_,
+        return ranges::min(right.parent_->remainder_,
             ranges::end(right.parent_->base_) - *right.parent_->current_);
     }
 
@@ -250,17 +249,17 @@ public:
 
     __RXX_HIDE_FROM_ABI friend constexpr range_rvalue_reference_t<V>
     iter_move(inner_iterator const& self) noexcept(
-        noexcept(std::ranges::iter_move(*self.parent_->current_))) {
-        return std::ranges::iter_move(*self.parent_->current_);
+        noexcept(ranges::iter_move(*self.parent_->current_))) {
+        return ranges::iter_move(*self.parent_->current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(inner_iterator const& left, inner_iterator const& right) noexcept(
-        noexcept(std::ranges::iter_swap(
+        noexcept(ranges::iter_swap(
             *left.parent_->current_, *right.parent_->current_)))
     requires std::indirectly_swappable<iterator_t<V>>
     {
-        return std::ranges::iter_swap(
+        return ranges::iter_swap(
             *left.parent_->current_, *right.parent_->current_);
     }
 
@@ -324,12 +323,12 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
 
         __RXX_HIDE_FROM_ABI constexpr value_type operator*() const {
             assert(current_ != end_);
-            return std::views::take(subrange(current_, end_), size_);
+            return views::take(subrange(current_, end_), size_);
         }
 
         __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
             assert(current_ != end_);
-            missing_ = std::ranges::advance(current_, size_, end_);
+            missing_ = ranges::advance(current_, size_, end_);
             return *this;
         }
 
@@ -342,7 +341,7 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
         __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
         requires bidirectional_range<Base>
         {
-            std::ranges::advance(current_, missing_ - size_);
+            ranges::advance(current_, missing_ - size_);
             missing_ = 0;
             return *this;
         }
@@ -360,11 +359,10 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
         requires random_access_range<Base>
         {
             if (offset > 0) {
-                assert(std::ranges::distance(current_, end_) >
-                    size_ * (offset - 1));
-                missing_ = std::ranges::advance(current_, size_ * offset, end_);
+                assert(ranges::distance(current_, end_) > size_ * (offset - 1));
+                missing_ = ranges::advance(current_, size_ * offset, end_);
             } else if (offset < 0) {
-                std::ranges::advance(current_, size_ * offset + missing_);
+                ranges::advance(current_, size_ * offset + missing_);
                 missing_ = 0;
             }
             return *this;
@@ -522,7 +520,7 @@ public:
     {
         if constexpr (common_range<V> && sized_range<V>) {
             auto const missing =
-                (size_ - std::ranges::distance(base_) % size_) % size_;
+                (size_ - ranges::distance(base_) % size_) % size_;
             return iterator<false>(this, ranges::end(base_), missing);
         } else if constexpr (common_range<V> && !bidirectional_range<V>) {
             return iterator<false>(this, ranges::end(base_));
@@ -536,7 +534,7 @@ public:
     {
         if constexpr (common_range<V const> && sized_range<V const>) {
             auto const missing =
-                (size_ - std::ranges::distance(base_) % size_) % size_;
+                (size_ - ranges::distance(base_) % size_) % size_;
             return iterator<true>(this, ranges::end(base_), missing);
         } else if constexpr (common_range<V const> &&
             !bidirectional_range<V const>) {
@@ -550,14 +548,14 @@ public:
     requires sized_range<V>
     {
         return details::to_unsigned_like(
-            details::ceil_div(std::ranges::distance(base_), size_));
+            details::ceil_div(ranges::distance(base_), size_));
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto size() const
     requires sized_range<V const>
     {
         return details::to_unsigned_like(
-            details::ceil_div(std::ranges::distance(base_), size_));
+            details::ceil_div(ranges::distance(base_), size_));
     }
 
 private:
