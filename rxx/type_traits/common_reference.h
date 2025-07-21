@@ -219,8 +219,7 @@ struct std::basic_common_reference<T, U, TQual, UQual> {
     using type = typename decltype( //
         []<size_t... Is>(std::index_sequence<Is...>) {
             using Result = std::tuple< //
-                __RXX common_reference_t<
-                    TQual<std::tuple_element_t<Is, T>>...,
+                __RXX common_reference_t<TQual<std::tuple_element_t<Is, T>>,
                     UQual<std::tuple_element_t<Is, U>> //
                     >...                               //
                 >;

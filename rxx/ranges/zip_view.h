@@ -3,10 +3,13 @@
 
 #include "rxx/config.h"
 
+#include "rxx/algorithm/minmax.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/tuple_functions.h"
+#include "rxx/iterator/iter_move.h"
+#include "rxx/iterator/iter_swap.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -112,7 +115,7 @@ public:
             [](auto... sizes) {
                 using common = std::make_unsigned_t<
                     std::common_type_t<decltype(sizes)...>>;
-                return std::ranges::min({common(sizes)...});
+                return ranges::min({common(sizes)...});
             },
             details::transform(ranges::size, views_));
     }
@@ -125,7 +128,7 @@ public:
             [](auto... sizes) {
                 using common = std::make_unsigned_t<
                     std::common_type_t<decltype(sizes)...>>;
-                return std::ranges::min({common(sizes)...});
+                return ranges::min({common(sizes)...});
             },
             details::transform(ranges::size, views_));
     }
@@ -326,7 +329,7 @@ public:
             details::transform(std::minus<>(), left.current_, right.current_);
         return std::apply(
             [](auto... val) {
-                return std::ranges::min(
+                return ranges::min(
                     {difference_type(val)...}, [](auto lhs, auto rhs) {
                         return details::abs(lhs) < details::abs(rhs);
                     });
@@ -336,25 +339,24 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(iterator const& self) noexcept(
-        (...&& noexcept(std::ranges::iter_move(std::declval<
+        (...&& noexcept(ranges::iter_move(std::declval<
             iterator_t<details::const_if<Const, Rs>> const&>()))) &&
         (std::is_nothrow_move_constructible_v<
              range_rvalue_reference_t<details::const_if<Const, Rs>>> &&
             ...)) {
-        return details::transform(std::ranges::iter_move, self.current_);
+        return details::transform(ranges::iter_move, self.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept((
-        noexcept(std::ranges::iter_swap(
+        noexcept(ranges::iter_swap(
             std::declval<iterator_t<details::const_if<Const, Rs>> const&>(),
             std::declval<iterator_t<details::const_if<Const, Rs>> const&>())) &&
         ...))
     requires (... &&
         std::indirectly_swappable<iterator_t<details::const_if<Const, Rs>>>)
     {
-        details::for_each(
-            std::ranges::iter_swap, left.current_, right.current_);
+        details::for_each(ranges::iter_swap, left.current_, right.current_);
     }
 
 private:
@@ -405,10 +407,9 @@ public:
             [](auto... val) {
                 using diff_type = std::common_type_t<
                     range_difference_t<details::const_if<OtherConst, Rs>>...>;
-                return std::ranges::min(
-                    {diff_type(val)...}, [](auto lhs, auto rhs) {
-                        return details::abs(lhs) < details::abs(rhs);
-                    });
+                return ranges::min({diff_type(val)...}, [](auto lhs, auto rhs) {
+                    return details::abs(lhs) < details::abs(rhs);
+                });
             },
             diff);
     }

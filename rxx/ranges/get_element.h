@@ -5,7 +5,6 @@
 
 #include <array>
 #include <concepts>
-#include <functional>
 #include <type_traits>
 #include <utility>
 
@@ -16,11 +15,14 @@ namespace details {
 
 template <size_t, typename T>
 __RXX_HIDE_FROM_ABI void get(T&&) = delete;
-template <typename T, size_t I>
-concept has_adl_get = requires(T&& t) { get<I>(std::forward<T>(t)); };
+
 template <typename T, size_t I>
 concept has_member_get =
     requires(T&& t) { std::forward<T>(t).template get<I>(); };
+
+template <typename T, size_t I>
+concept has_adl_get =
+    !has_member_get<T, I> && requires(T&& t) { get<I>(std::forward<T>(t)); };
 
 template <size_t I>
 struct get_element_t {
@@ -79,9 +81,7 @@ inline constexpr details::get_element_t<I> get_element{};
 
 } // namespace ranges
 
-namespace details {
-namespace tuple {
-
+namespace details::tuple {
 template <size_t>
 struct has_value;
 
@@ -97,8 +97,7 @@ concept has_element = has_size<T> && requires(T t) {
 
 template <has_size T>
 inline std::make_index_sequence<std::tuple_size_v<T>> sequence_for{};
-} // namespace tuple
-} // namespace details
+} // namespace details::tuple
 
 template <typename T>
 concept tuple_like = details::tuple::has_size<std::remove_cvref_t<T>> &&
