@@ -7,16 +7,15 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/view_traits.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/tuple.h"
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -125,14 +124,26 @@ public:
         }
     }
 
+    template <tuple_like ArgsT, tuple_like ArgsB = tuple<>>
+    requires requires {
+        { make_from_tuple<T>(std::declval<ArgsT>()) } -> std::same_as<T>;
+        {
+            make_from_tuple<Bound>(std::declval<ArgsB>())
+        } -> std::same_as<Bound>;
+    }
+    __RXX_HIDE_FROM_ABI constexpr explicit repeat_view(
+        std::piecewise_construct_t, ArgsT args, ArgsB bound_args = {})
+        : value_(make_from_tuple<T>(std::move(args)))
+        , bound_(make_from_tuple<Bound>(std::move(bound_args))) {}
+
     template <typename... Args, typename... BoundArgs>
     requires std::constructible_from<T, Args...> &&
                  std::constructible_from<Bound, BoundArgs...>
     __RXX_HIDE_FROM_ABI constexpr explicit repeat_view(
-        std::piecewise_construct_t, std::tuple<Args...> args,
-        std::tuple<BoundArgs...> bound_args = std::tuple<>{})
-        : value_{std::make_from_tuple<T>(std::move(args))}
-        , bound_{std::make_from_tuple<T>(std::move(bound_args))} {}
+        std::piecewise_construct_t, tuple<Args...> args,
+        tuple<BoundArgs...> bound_args = tuple<>{})
+        : value_{make_from_tuple<T>(std::move(args))}
+        , bound_{make_from_tuple<Bound>(std::move(bound_args))} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr iterator begin() const {
         return iterator(RXX_BUILTIN_addressof(*value_));
@@ -167,7 +178,7 @@ public:
         if constexpr (sized_range<repeat_view>) {
             return repeat_view<T, difference_t>(*self.value_,
                 std::min<difference_t>(
-                    std::ranges::distance(self), std::forward<N>(n)));
+                    ranges::distance(self), std::forward<N>(n)));
         } else {
             return repeat_view<T, difference_t>(
                 *self.value_, static_cast<difference_t>(std::forward<N>(n)));
@@ -184,7 +195,7 @@ public:
         if constexpr (sized_range<repeat_view>) {
             return repeat_view<T, difference_t>(*self.value_,
                 std::min<difference_t>(
-                    std::ranges::distance(self), std::forward<N>(n)));
+                    ranges::distance(self), std::forward<N>(n)));
         } else {
             return repeat_view<T, difference_t>(
                 *self.value_, static_cast<difference_t>(std::forward<N>(n)));
@@ -199,7 +210,7 @@ public:
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
         if constexpr (sized_range<repeat_view>) {
-            auto const dist = std::ranges::distance(self);
+            auto const dist = ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 std::min<difference_t>(dist, std::forward<N>(n)));
         } else {
@@ -216,7 +227,7 @@ public:
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
         if constexpr (sized_range<repeat_view>) {
-            auto const dist = std::ranges::distance(self);
+            auto const dist = ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 std::min<difference_t>(dist, std::forward<N>(n)));
         } else {
@@ -233,7 +244,7 @@ public:
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
         if constexpr (sized_range<repeat_view>) {
-            auto const dist = std::ranges::distance(self);
+            auto const dist = ranges::distance(self);
             return repeat_view<T, difference_t>(*self.value_,
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));
         } else {
@@ -249,7 +260,7 @@ public:
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
         if constexpr (sized_range<repeat_view>) {
-            auto const dist = std::ranges::distance(self);
+            auto const dist = ranges::distance(self);
             return repeat_view<T, difference_t>(*self.value_,
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));
         } else {
@@ -265,7 +276,7 @@ public:
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
         if constexpr (sized_range<repeat_view>) {
-            auto const dist = std::ranges::distance(self);
+            auto const dist = ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));
         } else {
@@ -281,7 +292,7 @@ public:
                 std::min<difference_t>(
                     std::declval<difference_t>(), std::forward<N>(n))))) {
         if constexpr (sized_range<repeat_view>) {
-            auto const dist = std::ranges::distance(self);
+            auto const dist = ranges::distance(self);
             return repeat_view<T, difference_t>(std::move(*self.value_),
                 dist - std::min<difference_t>(dist, std::forward<N>(n)));
         } else {

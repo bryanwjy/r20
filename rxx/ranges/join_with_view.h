@@ -11,6 +11,7 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/variant_base.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -21,8 +22,6 @@
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -64,7 +63,7 @@ public:
                      single_view<range_value_t<InnerRange>>>
     __RXX_HIDE_FROM_ABI explicit constexpr join_with_view(
         R&& base, range_value_t<InnerRange> pattern)
-        : base_{std::views::all(std::forward<R>(base))}
+        : base_{views::all(std::forward<R>(base))}
         , pattern_{views::single(std::move(pattern))} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -483,21 +482,21 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr common_reference_t<iter_rvalue_reference_t<InnerIter>,
         iter_rvalue_reference_t<PatternIter>>
-    iter_move(iterator const& iter) noexcept(noexcept(std::ranges::iter_move(
-        std::declval<PatternIter const&>())) && noexcept(std::ranges::
+    iter_move(iterator const& iter) noexcept(noexcept(ranges::iter_move(
+        std::declval<PatternIter const&>())) && noexcept(ranges::
             iter_move(std::declval<InnerIter const&>()))) {
         switch (iter.inner_.index()) {
         case 0:
-            return std::ranges::iter_move(iter.inner_.template value_ref<0>());
+            return ranges::iter_move(iter.inner_.template value_ref<0>());
         default:
-            return std::ranges::iter_move(iter.inner_.template value_ref<1>());
+            return ranges::iter_move(iter.inner_.template value_ref<1>());
         }
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(std::ranges::iter_swap(std::declval<InnerIter const&>(),
-            std::declval<InnerIter const&>())) && noexcept(std::ranges::
+        noexcept(ranges::iter_swap(std::declval<InnerIter const&>(),
+            std::declval<InnerIter const&>())) && noexcept(ranges::
                 iter_swap(std::declval<PatternIter const&>(),
                     std::declval<PatternIter const&>())) && noexcept(std::
                 ranges::iter_swap(std::declval<InnerIter const&>(),
@@ -508,18 +507,18 @@ public:
     {
         if (left.inner_.index() == 0) {
             if (right.inner_.index() == 0) {
-                std::ranges::iter_swap(left.inner_.template value_ref<0>(),
+                ranges::iter_swap(left.inner_.template value_ref<0>(),
                     right.inner_.template value_ref<0>());
             } else {
-                std::ranges::iter_swap(left.inner_.template value_ref<0>(),
+                ranges::iter_swap(left.inner_.template value_ref<0>(),
                     right.inner_.template value_ref<1>());
             }
         } else {
             if (right.inner_.index() == 0) {
-                std::ranges::iter_swap(left.inner_.template value_ref<1>(),
+                ranges::iter_swap(left.inner_.template value_ref<1>(),
                     right.inner_.template value_ref<0>());
             } else {
-                std::ranges::iter_swap(left.inner_.template value_ref<1>(),
+                ranges::iter_swap(left.inner_.template value_ref<1>(),
                     right.inner_.template value_ref<1>());
             }
         }

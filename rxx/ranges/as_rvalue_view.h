@@ -7,6 +7,8 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/view_traits.h"
+#include "rxx/functional.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -15,9 +17,6 @@
 #include "rxx/ranges/view_interface.h"
 
 #include <compare>
-#include <functional>
-#include <iterator>
-#include <ranges>
 #include <span>
 #include <tuple>
 #include <utility>
@@ -122,11 +121,11 @@ struct as_rvalue_t : __RXX ranges::details::adaptor_closure<as_rvalue_t> {
 
     template <typename R>
     requires std::same_as<range_rvalue_reference_t<R>, range_reference_t<R>> &&
-        requires { std::views::all(std::declval<R>()); }
+        requires { views::all(std::declval<R>()); }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
     operator()(R&& range) RXX_CONST_CALL
-        noexcept(noexcept(std::views::all(std::declval<R>()))) {
-        return std::views::all(std::forward<R>(range));
+        noexcept(noexcept(views::all(std::declval<R>()))) {
+        return views::all(std::forward<R>(range));
     }
 };
 } // namespace details

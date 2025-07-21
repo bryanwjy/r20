@@ -4,9 +4,9 @@
 #include "rxx/config.h"
 
 #include "rxx/details/overlappable_if.h"
+#include "rxx/tuple.h"
 
 #include <concepts>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -38,7 +38,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr auto operator()(Us&&... args) const& noexcept(
         std::is_nothrow_invocable_v<F const&, Us..., Ts const&...>)
         -> decltype(auto) {
-        return std::apply(
+        return apply(
             [&](Ts const&... bound) -> decltype(auto) {
                 return std::invoke(container_.data.func.data,
                     std::forward<Us>(args)..., bound...);
@@ -52,7 +52,7 @@ public:
     operator()(Us&&... args) const&& noexcept(
         std::is_nothrow_invocable_v<F const, Us..., Ts const...>)
         -> decltype(auto) {
-        return std::apply(
+        return apply(
             [&](Ts const&&... bound) -> decltype(auto) {
                 return std::invoke(std::move(container_.data.func.data),
                     std::forward<Us>(args)..., std::move(bound)...);
@@ -64,7 +64,7 @@ public:
     requires std::regular_invocable<F&, Us..., Ts&...>
     __RXX_HIDE_FROM_ABI constexpr auto operator()(Us&&... args) & noexcept(
         std::is_nothrow_invocable_v<F&, Us..., Ts&...>) -> decltype(auto) {
-        return std::apply(
+        return apply(
             [&](Ts&... bound) -> decltype(auto) {
                 return std::invoke(container_.data.func.data,
                     std::forward<Us>(args)..., bound...);
@@ -76,7 +76,7 @@ public:
     requires std::regular_invocable<F, Us..., Ts...>
     __RXX_HIDE_FROM_ABI constexpr auto operator()(Us&&... args) && noexcept(
         std::is_nothrow_invocable_v<F, Us..., Ts...>) -> decltype(auto) {
-        return std::apply(
+        return apply(
             [&](Ts&&... bound) -> decltype(auto) {
                 return std::invoke(std::move(container_.data.func.data),
                     std::forward<Us>(args)..., std::move(bound)...);
@@ -86,7 +86,7 @@ public:
 
 private:
     __RXX_HIDE_FROM_ABI static constexpr bool place_args_in_tail =
-        fits_in_tail_padding_v<F, std::tuple<Ts...>>;
+        fits_in_tail_padding_v<F, tuple<Ts...>>;
     __RXX_HIDE_FROM_ABI static constexpr bool allow_external_overlap =
         !place_args_in_tail;
 
@@ -109,7 +109,7 @@ private:
 
         RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)
         overlappable_if<place_args_in_tail, F> func;
-        RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) std::tuple<Ts...> args;
+        RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) tuple<Ts...> args;
     };
 
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)

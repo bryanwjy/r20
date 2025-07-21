@@ -8,6 +8,7 @@
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/ref_view.h"
+#include "rxx/ranges/transform_view.h"
 
 #include <concepts>
 #include <utility>
@@ -127,7 +128,7 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
         static_assert(input_range<range_reference_t<R>>,
             "ranges::to: unable to convert to the given container type.");
         return ranges::to<C>(
-            ref_view(range) | std::views::transform([]<typename T>(T&& item) {
+            ref_view(range) | views::transform([]<typename T>(T&& item) {
                 return ranges::to<range_value_t<C>>(std::forward<T>(item));
             }),
             std::forward<Args>(args)...);

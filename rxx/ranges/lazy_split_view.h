@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/algorithm.h"
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
@@ -11,6 +12,8 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/variant_base.h"
+#include "rxx/functional.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -21,8 +24,6 @@
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -43,7 +44,7 @@ concept tiny_range = sized_range<T> && requires {
 template <input_range V, forward_range P>
 requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
-        std::ranges::equal_to> &&
+        ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
 class lazy_split_view : public view_interface<lazy_split_view<V, P>> {
 
@@ -70,7 +71,7 @@ public:
                  std::constructible_from<P, single_view<range_value_t<R>>>
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         R&& range, range_value_t<R> pattern)
-        : base_{std::views::all(std::forward<R>(range))}
+        : base_{views::all(std::forward<R>(range))}
         , pattern_{views::single(std::move(pattern))} {}
 
     __RXX_HIDE_FROM_ABI constexpr V base() const& noexcept(
@@ -142,7 +143,7 @@ struct lazy_split_view_outer_iterator_category<Const, V> {
 template <input_range V, forward_range P>
 requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
-        std::ranges::equal_to> &&
+        ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
 template <bool Const>
 class lazy_split_view<V, P>::outer_iterator :
@@ -220,7 +221,7 @@ public:
         if (pbegin == pend) {
             ++cur();
         } else if constexpr (details::tiny_range<P>) {
-            cur() = std::ranges::find(std::move(cur()), end, *pbegin);
+            cur() = ranges::find(std::move(cur()), end, *pbegin);
             if (cur() != end) {
                 ++cur();
                 if (cur() == end) {
@@ -229,8 +230,7 @@ public:
             }
         } else {
             do {
-                auto const [b, p] =
-                    std::ranges::mismatch(cur(), end, pbegin, pend);
+                auto const [b, p] = ranges::mismatch(cur(), end, pbegin, pend);
                 if (p == pend) {
                     cur() = b;
                     if (cur() == end) {
@@ -324,7 +324,7 @@ struct lazy_split_view_inner_iterator_category<Const, V> {
 template <input_range V, forward_range P>
 requires view<V> && view<P> &&
     std::indirectly_comparable<iterator_t<V>, iterator_t<P>,
-        std::ranges::equal_to> &&
+        ranges::equal_to> &&
     (forward_range<V> || details::tiny_range<P>)
 template <bool Const>
 class lazy_split_view<V, P>::inner_iterator :
@@ -406,19 +406,19 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(inner_iterator const& iter) noexcept(
-        noexcept(std::ranges::iter_move(std::declval<iterator_t<Base>>())))
+        noexcept(ranges::iter_move(std::declval<iterator_t<Base>>())))
         -> decltype(auto) {
-        return std::ranges::iter_move(iter.outer_current());
+        return ranges::iter_move(iter.outer_current());
     }
 
     __RXX_HIDE_FROM_ABI
     friend constexpr void
     iter_swap(inner_iterator const& left, inner_iterator const& right) noexcept(
-        noexcept(std::ranges::iter_swap(
-            left.outer_current(), right.outer_current())))
+        noexcept(
+            ranges::iter_swap(left.outer_current(), right.outer_current())))
     requires std::indirectly_swappable<iterator_t<Base>>
     {
-        std::ranges::iter_swap(left.outer_current(), right.outer_current());
+        ranges::iter_swap(left.outer_current(), right.outer_current());
     }
 
 private:

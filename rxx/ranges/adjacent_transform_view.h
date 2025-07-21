@@ -16,11 +16,10 @@
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/ranges/zip_transform_view.h"
+#include "rxx/tuple/apply.h"
 
 #include <compare>
 #include <iterator>
-#include <ranges>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -208,7 +207,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr decltype(auto) operator*() const {
-        return std::apply(
+        return apply(
             [&](auto const&... iters) -> decltype(auto) {
                 return std::invoke(*parent_->func_, *iters...);
             },
@@ -263,7 +262,7 @@ public:
     constexpr decltype(auto) operator[](difference_type offset) const
     requires random_access_range<Base>
     {
-        return std::apply(
+        return apply(
             [&]<typename... It>(It const&... iters) -> decltype(auto) {
                 return std::invoke(
                     *parent_->func_, iters[iter_difference_t<It>(offset)]...);

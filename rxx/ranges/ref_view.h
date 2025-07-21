@@ -4,7 +4,6 @@
 #include "rxx/config.h"
 
 #include <ranges>
-#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {

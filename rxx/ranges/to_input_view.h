@@ -8,6 +8,7 @@
 #include "rxx/details/iterator_category_of.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -16,8 +17,6 @@
 
 #include <cassert>
 #include <compare>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -178,16 +177,16 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr range_rvalue_reference_t<Base>
     iter_move(iterator const& iter) noexcept(
-        noexcept(std::ranges::iter_move(iter.current_))) {
-        return std::ranges::iter_move(iter.current_);
+        noexcept(ranges::iter_move(iter.current_))) {
+        return ranges::iter_move(iter.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(std::ranges::iter_swap(left.current_, right.current_)))
+        noexcept(ranges::iter_swap(left.current_, right.current_)))
     requires std::indirectly_swappable<iterator_t<Base>>
     {
-        std::ranges::iter_swap(left.current_, right.current_);
+        ranges::iter_swap(left.current_, right.current_);
     }
 
 private:
@@ -204,7 +203,7 @@ struct to_input_t : __RXX ranges::details::adaptor_closure<to_input_t> {
     operator()(R&& arg) RXX_CONST_CALL
         noexcept(noexcept(to_input_view(std::declval<R>()))) {
         if constexpr (input_range<R> && !common_range<R> && !forward_range<R>) {
-            return std::views::all(std::forward<R>(arg));
+            return views::all(std::forward<R>(arg));
         } else {
             return to_input_view(std::forward<R>(arg));
         }

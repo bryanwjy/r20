@@ -17,12 +17,12 @@
 #include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/tuple.h"
 
 #include <compare>
 #include <functional>
 #include <iterator>
 #include <ranges>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -39,7 +39,7 @@ template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr bool any_equals(Tuple1 const& t1, Tuple2 const& t2) {
     auto const result = ranges::details::transform(std::equal_to<>{}, t1, t2);
-    return std::apply([](auto... value) { return (value || ...); }, result);
+    return apply([](auto... value) { return (value || ...); }, result);
 }
 
 template <typename T>
@@ -59,7 +59,8 @@ class zip_view : public view_interface<zip_view<Rs...>> {
     class sentinel;
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr zip_view() noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr zip_view() noexcept(
+        std::is_nothrow_default_constructible_v<tuple<Rs...>>) = default;
 
     __RXX_HIDE_FROM_ABI constexpr explicit zip_view(Rs... views) noexcept(
         (... && std::is_nothrow_move_constructible_v<Rs>))
@@ -111,7 +112,7 @@ public:
     constexpr auto size()
     requires (sized_range<Rs> && ...)
     {
-        return std::apply(
+        return apply(
             [](auto... sizes) {
                 using common = std::make_unsigned_t<
                     std::common_type_t<decltype(sizes)...>>;
@@ -124,7 +125,7 @@ public:
     constexpr auto size() const
     requires (sized_range<Rs const> && ...)
     {
-        return std::apply(
+        return apply(
             [](auto... sizes) {
                 using common = std::make_unsigned_t<
                     std::common_type_t<decltype(sizes)...>>;
@@ -134,7 +135,7 @@ public:
     }
 
 private:
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) std::tuple<Rs...> views_;
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) tuple<Rs...> views_;
 };
 
 template <typename... Rs>
@@ -158,8 +159,7 @@ requires (... && view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::iterator :
     public details::zip_view_iterator_category<Const, Rs...> {
-    using current_type =
-        std::tuple<iterator_t<details::const_if<Const, Rs>>...>;
+    using current_type = tuple<iterator_t<details::const_if<Const, Rs>>...>;
 
     __RXX_HIDE_FROM_ABI constexpr explicit iterator(
         current_type current) noexcept(std::
@@ -190,12 +190,12 @@ public:
         else
             return std::input_iterator_tag{};
     }());
-    using value_type =
-        std::tuple<range_value_t<details::const_if<Const, Rs>>...>;
+    using value_type = tuple<range_value_t<details::const_if<Const, Rs>>...>;
     using difference_type =
         std::common_type_t<range_difference_t<details::const_if<Const, Rs>>...>;
 
-    __RXX_HIDE_FROM_ABI constexpr iterator() = default;
+    __RXX_HIDE_FROM_ABI constexpr iterator() noexcept(
+        std::is_nothrow_default_constructible_v<current_type>) = default;
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other)
     requires Const &&
         (... &&
@@ -327,7 +327,7 @@ public:
     {
         auto const diff =
             details::transform(std::minus<>(), left.current_, right.current_);
-        return std::apply(
+        return apply(
             [](auto... val) {
                 return ranges::min(
                     {difference_type(val)...}, [](auto lhs, auto rhs) {
@@ -367,7 +367,7 @@ template <input_range... Rs>
 requires (... && view<Rs>) && (sizeof...(Rs) > 0)
 template <bool Const>
 class zip_view<Rs...>::sentinel {
-    using end_type = std::tuple<sentinel_t<details::const_if<Const, Rs>>...>;
+    using end_type = tuple<sentinel_t<details::const_if<Const, Rs>>...>;
 
     friend class zip_view;
 
@@ -376,7 +376,8 @@ class zip_view<Rs...>::sentinel {
         : end_(std::move(end)) {}
 
 public:
-    __RXX_HIDE_FROM_ABI constexpr sentinel() = default;
+    __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
+        std::is_nothrow_default_constructible_v<end_type>) = default;
 
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other)
     requires Const &&
@@ -403,7 +404,7 @@ public:
         operator-(iterator<OtherConst> const& iter, sentinel const& self) {
         auto const diff =
             details::transform(std::minus<>{}, get_current(iter), self.end_);
-        return std::apply(
+        return apply(
             [](auto... val) {
                 using diff_type = std::common_type_t<
                     range_difference_t<details::const_if<OtherConst, Rs>>...>;
@@ -433,7 +434,7 @@ namespace details {
 struct zip_t {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()() RXX_CONST_CALL noexcept {
-        return empty_view<std::tuple<>>{};
+        return empty_view<tuple<>>{};
     }
 
     template <typename... Rs>

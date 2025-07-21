@@ -4,6 +4,7 @@
 		{
 			"path": ".",
 			"name": "rxx",
+			"file_exclude_patterns": ["*.pass"]
 		},
 		{
 			"path": "../tests"

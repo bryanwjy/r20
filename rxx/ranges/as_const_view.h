@@ -7,6 +7,7 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/view_traits.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -17,11 +18,7 @@
 #include "rxx/ranges/view_interface.h"
 
 #include <compare>
-#include <functional>
-#include <iterator>
-#include <ranges>
 #include <span>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

@@ -9,17 +9,16 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
+#include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
+#include "rxx/ranges/counted.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
 
 #include <cassert>
 #include <compare>
-#include <functional>
-#include <iterator>
-#include <ranges>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -75,14 +74,14 @@ public:
         if constexpr (details::slide_caches_first<V>) {
             if (!cache_begin_) {
                 cache_begin_.set(base_,
-                    std::ranges::next(__RXX ranges::begin(base_), num_ - 1,
-                        __RXX ranges::end(base_)));
+                    ranges::next(
+                        ranges::begin(base_), num_ - 1, ranges::end(base_)));
             }
 
             return iterator<false>(
-                __RXX ranges::begin(base_), cache_begin_.get(base_), num_);
+                ranges::begin(base_), cache_begin_.get(base_), num_);
         } else {
-            return iterator<false>(__RXX ranges::begin(base_), num_);
+            return iterator<false>(ranges::begin(base_), num_);
         }
     }
 
@@ -90,7 +89,7 @@ public:
     constexpr auto begin() const
     requires details::slide_caches_nothing<V const>
     {
-        return iterator<true>(__RXX ranges::begin(base_), num_);
+        return iterator<true>(ranges::begin(base_), num_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -100,21 +99,20 @@ public:
     {
         if constexpr (details::slide_caches_nothing<V>)
             return iterator<false>(
-                __RXX ranges::begin(base_) + range_difference_t<V>(size()),
-                num_);
+                ranges::begin(base_) + range_difference_t<V>(size()), num_);
         else if constexpr (details::slide_caches_last<V>) {
             if (!cache_end_) {
                 cache_end_.set(base_,
-                    std::ranges::prev(__RXX ranges::end(base_), num_ - 1,
-                        __RXX ranges::begin(base_)));
+                    ranges::prev(
+                        ranges::end(base_), num_ - 1, ranges::begin(base_)));
             }
 
             return iterator<false>(cache_end_.get(base_), num_);
         } else if constexpr (common_range<V>) {
             return iterator<false>(
-                __RXX ranges::end(base_), __RXX ranges::end(base_), num_);
+                ranges::end(base_), ranges::end(base_), num_);
         } else {
-            return sentinel(__RXX ranges::end(base_));
+            return sentinel(ranges::end(base_));
         }
     }
 
@@ -129,8 +127,7 @@ public:
     constexpr auto size()
     requires sized_range<V>
     {
-        if (auto const value = std::ranges::distance(base_) - num_ + 1;
-            value >= 0) {
+        if (auto const value = ranges::distance(base_) - num_ + 1; value >= 0) {
             return details::to_unsigned_like(value);
         } else {
             return details::to_unsigned_like(static_cast<decltype(value)>(0));
@@ -141,8 +138,7 @@ public:
     constexpr auto size() const
     requires sized_range<V const>
     {
-        if (auto const value = std::ranges::distance(base_) - num_ + 1;
-            value >= 0) {
+        if (auto const value = ranges::distance(base_) - num_ + 1; value >= 0) {
             return details::to_unsigned_like(value);
         } else {
             return details::to_unsigned_like(static_cast<decltype(value)>(0));
@@ -199,7 +195,7 @@ public:
             return std::forward_iterator_tag{};
     }());
     using value_type =
-        decltype(std::views::counted(std::declval<iterator_t<Base> const&>(),
+        decltype(views::counted(std::declval<iterator_t<Base> const&>(),
             std::declval<range_difference_t<Base> const&>()));
     using difference_type = range_difference_t<Base>;
 
@@ -214,18 +210,18 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto operator*() const noexcept(
-        noexcept(std::views::counted(std::declval<iterator_t<Base> const&>(),
+        noexcept(views::counted(std::declval<iterator_t<Base> const&>(),
             std::declval<range_difference_t<Base> const&>()))) {
-        return std::views::counted(current_, num_);
+        return views::counted(current_, num_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto operator[](difference_type pos) const noexcept(noexcept(
-        std::views::counted(std::declval<iterator_t<Base> const&>() + pos,
+    constexpr auto operator[](difference_type pos) const noexcept(
+        noexcept(views::counted(std::declval<iterator_t<Base> const&>() + pos,
             std::declval<range_difference_t<Base> const&>())))
     requires random_access_range<Base>
     {
-        return std::views::counted(current_ + pos, num_);
+        return views::counted(current_ + pos, num_);
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
