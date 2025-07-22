@@ -3,10 +3,11 @@
 #pragma once
 
 #include "rxx/preprocessor/concatenation.h"
+#include "rxx/preprocessor/paste.h"
 
 #ifdef _GLIBCXX_RELEASE
 
-#  define __RXX_GLIBCXX_GCC_MAJOR _GLIBCXX_RELEASE
+#  define __RXX_GLIBCXX_GCC_MAJOR RXX_PASTE(_GLIBCXX_RELEASE)
 
 #elif defined(__GLIBCXX__)
 
@@ -100,7 +101,5 @@
 #  define __RXX_GLIBCXX_TO_GCC_MAJOR_20130531 4
 #  define __RXX_GLIBCXX_TO_GCC_MINOR_20130531 8
 #  define __RXX_GLIBCXX_TO_GCC_PATCH_20130531 1
-
-/* Xcode Version < 11.0 below if needed */
 
 #endif
