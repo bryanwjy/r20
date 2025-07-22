@@ -11,11 +11,11 @@
 
 #if defined(__INTEL_LLVM_COMPILER)
 #  define RXX_COMPILER_ICX 1
-#  define RXX_COMPILER_ICX_AT_LEAST(VERSION) __INTEL_LLVM_COMPILER >= VERSION
+#  define RXX_COMPILER_ICX_AT_LEAST(VERSION) (__INTEL_LLVM_COMPILER >= VERSION)
 #  if defined(SYCL_LANGUAGE_VERSION)
 #    define RXX_COMPILER_ICX_DPCPP 1
 #    define RXX_COMPILER_ICX_DPCPP_AT_LEAST(VERSION) \
-        SYCL_LANGUAGE_VERSION >= VERSION
+        (SYCL_LANGUAGE_VERSION >= VERSION)
 #    define RXX_COMPILER_TAG       \
         __RXX_COMPILER_TAG_CONCAT( \
             ICX, __INTEL_LLVM_COMPILER, DPCPP, SYCL_LANGUAGE_VERSION)
@@ -35,24 +35,24 @@
 #  define RXX_COMPILER_CLANG 1
 #  define RXX_COMPILER_APPLE_CLANG 1
 #  define RXX_COMPILER_APPLE_CLANG_AT_LEAST(VERSION) \
-      __apple_build_version__ >= VERSION
+      (__apple_build_version__ >= VERSION)
 #  define RXX_COMPILER_CLANG_AT_LEAST(MAJOR, MINOR, PATCH) \
-      __RXX_APPLE_CLANG_MAJOR > MAJOR ||                   \
+      (__RXX_APPLE_CLANG_MAJOR > MAJOR ||                  \
           (__RXX_APPLE_CLANG_MAJOR == MAJOR &&             \
               (__RXX_APPLE_CLANG_MINOR > MINOR ||          \
                   (__RXX_APPLE_CLANG_MINOR == MINOR &&     \
-                      __RXX_APPLE_CLANG_PATCH >= PATCH)))
+                      __RXX_APPLE_CLANG_PATCH >= PATCH))))
 
 #  define RXX_COMPILER_TAG \
       __RXX_COMPILER_TAG_CONCAT(AppleClang, __apple_build_version__, , )
 #elif defined(__clang__)
 #  define RXX_COMPILER_CLANG 1
 #  define RXX_COMPILER_CLANG_AT_LEAST(MAJOR, MINOR, PATCH) \
-      __clang_major__ > MAJOR ||                           \
+      (__clang_major__ > MAJOR ||                          \
           (__clang_major__ == MAJOR &&                     \
               (__clang_minor__ > MINOR ||                  \
                   (__clang_minor__ == MINOR &&             \
-                      __clang_patchlevel__ >= PATCH)))
+                      __clang_patchlevel__ >= PATCH))))
 
 #  define RXX_COMPILER_TAG       \
       __RXX_COMPILER_TAG_CONCAT( \
@@ -60,8 +60,8 @@
 #elif defined(__INTEL_COMPILER)
 #  define RXX_COMPILER_ICC 1
 #  define RXX_COMPILER_ICC_AT_LEAST(YEAR, UPDATE) \
-      __INTEL_COMPILER > YEAR ||                  \
-          (__INTEL_COMPILER == YEAR && __INTEL_COMPILER_UPDATE >= UPDATE)
+      (__INTEL_COMPILER > YEAR ||                 \
+          (__INTEL_COMPILER == YEAR && __INTEL_COMPILER_UPDATE >= UPDATE))
 #  define RXX_COMPILER_TAG       \
       __RXX_COMPILER_TAG_CONCAT( \
           ICC, __INTEL_COMPILER, __INTEL_COMPILER_UPDATE, )
@@ -69,17 +69,17 @@
 #elif defined(__GNUC__)
 #  define RXX_COMPILER_GCC 1
 #  define RXX_COMPILER_GCC_AT_LEAST(MAJOR, MINOR, PATCH) \
-      __GNUC__ > MAJOR ||                                \
+      (__GNUC__ > MAJOR ||                               \
           (__GNUC__ == MAJOR &&                          \
               (__GNUC_MINOR__ > MINOR ||                 \
-                  (__GNUC_MINOR__ == MINOR && __GNUC_PATCHLEVEL__ >= PATCH)))
+                  (__GNUC_MINOR__ == MINOR && __GNUC_PATCHLEVEL__ >= PATCH))))
 #  define RXX_COMPILER_TAG       \
       __RXX_COMPILER_TAG_CONCAT( \
           GCC, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
 #elif defined(_MSC_VER)
 #  define RXX_COMPILER_MSVC 1
 #  define RXX_SUPPORTS_DECLSPEC 1
-#  define RXX_COMPILER_MSVC_AT_LEAST(VERSION) _MSC_VER >= VERSION
+#  define RXX_COMPILER_MSVC_AT_LEAST(VERSION) (_MSC_VER >= VERSION)
 #  define RXX_COMPILER_TAG RXX_CONCAT(MSVC, _MSC_VER)
 #  if _MSVC_TRADITIONAL
 /* Using non-conformant MSVC preprocessor */

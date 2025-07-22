@@ -18,7 +18,7 @@
  * digit the argument should be prefixed with '0'
  */
 #  define RXX_LIBCXX_AT_LEAST(MAJOR, MINOR, PATCH) \
-      _LIBCPP_VERSION >= RXX_CONCAT(RXX_CONCAT(MAJOR, MINOR), PATCH)
+      (_LIBCPP_VERSION >= RXX_CONCAT(RXX_CONCAT(MAJOR, MINOR), PATCH))
 #else
 #  define RXX_LIBCXX_AT_LEAST(MAJOR, MINOR, PATCH) 0
 #endif
@@ -30,7 +30,7 @@
 /**
  * Only major version is exposed
  */
-#  define RXX_LIBSTDCXX_AT_LEAST(MAJOR) __RXX_GLIBCXX_GCC_MAJOR >= MAJOR
+#  define RXX_LIBSTDCXX_AT_LEAST(MAJOR) (__RXX_GLIBCXX_GCC_MAJOR >= MAJOR)
 #  define RXX_LIBSTDCXX 1
 #else
 #  define RXX_LIBSTDCXX_AT_LEAST(MAJOR) 0
@@ -48,8 +48,8 @@
 #  define RXX_MSVC_STL 1
 
 #  define RXX_MSVC_STL_AT_LEAST(VERSION, UPDATE) \
-      _MSVC_STL_VERSION > VERSION ||             \
-          (_MSVC_STL_VERSION == VERSION && _MSVC_STL_UPDATE >= UPDATE)
+      (_MSVC_STL_VERSION > VERSION ||            \
+          (_MSVC_STL_VERSION == VERSION && _MSVC_STL_UPDATE >= UPDATE))
 #else
-#  define RXX_MSVC_STL_AT_LEAST(VERSION, UPDATE)
+#  define RXX_MSVC_STL_AT_LEAST(VERSION, UPDATE) 0
 #endif
