@@ -42,7 +42,7 @@ struct take_t : ranges::details::adaptor_non_closure<take_t> {
     using ranges::details::adaptor_non_closure<take_t>::operator();
     template <typename T>
     static constexpr bool _S_has_simple_extra_args =
-        RXX ranges::details::integer_like<T>;
+        __RXX ranges::details::integer_like<T>;
     static constexpr int _S_arity = 2;
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename N>
