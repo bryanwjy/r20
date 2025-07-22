@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "rxx/configuration/glibcxx.h"
 #include "rxx/configuration/standard.h" // IWYU pragma: keep
 #include "rxx/preprocessor/concatenation.h"
 
@@ -21,14 +22,14 @@
 
 #endif
 
-#ifdef __GLIBCXX__
+#ifdef __RXX_GLIBCXX_GCC_MAJOR
 #  if RXX_LIBCXX
 #    error "Invalid environment"
 #  endif
 /**
  * Only major version is exposed
  */
-#  define RXX_LIBSTDCXX_AT_LEAST(MAJOR) __GLIBCXX__ >= MAJOR
+#  define RXX_LIBSTDCXX_AT_LEAST(MAJOR) __RXX_GLIBCXX_GCC_MAJOR >= MAJOR
 #  define RXX_LIBSTDCXX 1
 #endif
 
