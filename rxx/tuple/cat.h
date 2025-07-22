@@ -38,18 +38,21 @@ template <typename T0, typename T1, typename... Ts>
 struct concat_elements<T0, T1, Ts...> :
     concat_elements<concat_elements_t<T0, T1>, Ts...> {};
 
+template <tuple_like Tuple, size_t... Is>
+__RXX_HIDE_FROM_ABI auto decay_tuple(std::index_sequence<Is...>) noexcept
+    -> __RXX tuple<std::tuple_element_t<Is, std::remove_cvref_t<Tuple>>...>;
+
+template <tuple_like Tuple, size_t... Is>
+__RXX_HIDE_FROM_ABI auto decl_tuple(std::index_sequence<Is...>) noexcept
+    -> __RXX tuple<decl_element_t<Is, Tuple>...>;
+
 template <tuple_like Tuple>
 using decay_tuple_t RXX_NODEBUG =
-    typename decltype([]<size_t... Is>(std::index_sequence<Is...>) {
-        return std::type_identity< __RXX tuple<
-            std::tuple_element_t<Is, std::remove_cvref_t<Tuple>>...>>{};
-    }(sequence_for<std::remove_cvref_t<Tuple>>))::type;
+    decltype(decay_tuple<Tuple>(sequence_for<std::remove_cvref_t<Tuple>>));
 
 template <tuple_like Tuple>
 using decl_tuple_t RXX_NODEBUG =
-    typename decltype([]<size_t... Is>(std::index_sequence<Is...>) {
-        return std::type_identity<__RXX tuple<decl_element_t<Is, Tuple>...>>{};
-    }(sequence_for<std::remove_cvref_t<Tuple>>))::type;
+    decltype(decl_tuple<Tuple>(sequence_for<std::remove_cvref_t<Tuple>>));
 
 template <tuple_like... Ts>
 using concat_result_t RXX_NODEBUG = concat_elements_t<decay_tuple_t<Ts>...>;

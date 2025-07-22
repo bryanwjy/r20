@@ -78,10 +78,8 @@ class cartesian_product_view :
 
     template <bool>
     class iterator;
-    using difference_type = decltype([]() {
-        return std::common_type_t<ptrdiff_t, range_difference_t<First>,
-            range_difference_t<Vs>...>{};
-    }());
+    using difference_type = std::common_type_t<ptrdiff_t,
+        range_difference_t<First>, range_difference_t<Vs>...>;
 
 public:
     __RXX_HIDE_FROM_ABI constexpr cartesian_product_view() noexcept(

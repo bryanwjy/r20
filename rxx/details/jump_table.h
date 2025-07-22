@@ -28,20 +28,14 @@ public:
 
 template <typename... Ts>
 requires (... || std::is_void_v<Ts>)
-__RXX_HIDE_FROM_ABI void multi_return_impl() noexcept;
+__RXX_HIDE_FROM_ABI void make_multi_return() noexcept;
 
 template <typename... Ts>
-__RXX_HIDE_FROM_ABI auto multi_return_impl() noexcept
+__RXX_HIDE_FROM_ABI auto make_multi_return() noexcept
     -> std::common_reference_t<Ts...>;
 
 template <typename... Ts>
-using multi_return_t RXX_NODEBUG = typename decltype([]() {
-    if constexpr ((... || std::is_void_v<Ts>)) {
-        return std::type_identity<void>{};
-    } else {
-        return std::common_reference<Ts...>{};
-    }
-}())::type;
+using multi_return_t RXX_NODEBUG = decltype(make_multi_return<Ts...>());
 
 template <typename T, T... Ns>
 class jump_table {

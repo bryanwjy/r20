@@ -120,18 +120,21 @@ class enumerate_view<V>::iterator {
 
     friend enumerate_view;
 
+    static consteval auto make_iterator_concept() noexcept {
+        if constexpr (random_access_range<Base>) {
+            return std::random_access_iterator_tag{};
+        } else if constexpr (bidirectional_range<Base>) {
+            return std::bidirectional_iterator_tag{};
+        } else if constexpr (forward_range<Base>) {
+            return std::forward_iterator_tag{};
+        } else {
+            return std::input_iterator_tag{};
+        }
+    }
+
 public:
     using iterator_category = std::input_iterator_tag;
-    using iterator_concept = decltype([]() {
-        if constexpr (random_access_range<Base>)
-            return std::random_access_iterator_tag{};
-        else if constexpr (bidirectional_range<Base>)
-            return std::bidirectional_iterator_tag{};
-        else if constexpr (forward_range<Base>)
-            return std::forward_iterator_tag{};
-        else
-            return std::input_iterator_tag{};
-    }());
+    using iterator_concept = decltype(make_iterator_concept());
     using difference_type = range_difference_t<Base>;
     using value_type = tuple<difference_type, range_value_t<Base>>;
     using reference_type = tuple<difference_type, range_reference_t<Base>>;
@@ -297,6 +300,12 @@ class enumerate_view<V>::sentinel {
             is_nothrow_move_constructible_v<sentinel_t<Base>>)
         : end_{std::move(end)} {}
 
+    template <bool OtherConst>
+    __RXX_HIDE_FROM_ABI static decltype(auto) get_iter_current(
+        iterator<OtherConst> const& iter) noexcept {
+        return (iter.current_);
+    }
+
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
         std::is_nothrow_default_constructible_v<sentinel_t<Base>>) = default;
@@ -313,7 +322,7 @@ public:
         iterator_t<details::const_if<OtherConst, V>>>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
         iterator<OtherConst> const& iter, sentinel const& self) {
-        return iter.current_ == self.end_;
+        return get_iter_current(iter) == self.end_;
     }
 
     template <bool OtherConst>
@@ -323,7 +332,7 @@ public:
         _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
             const_if<OtherConst, V>>
     operator-(iterator<OtherConst> const& iter, sentinel const& self) {
-        return iter.current_ - self.end_;
+        return get_iter_current(iter) - self.end_;
     }
 
     template <bool OtherConst>

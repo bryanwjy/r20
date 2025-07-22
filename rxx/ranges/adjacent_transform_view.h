@@ -165,8 +165,7 @@ class adjacent_transform_view<V, F, N>::iterator {
         : parent_{RXX_BUILTIN_addressof(parent)}
         , inner_{std::move(inner)} {}
 
-public:
-    using iterator_category = decltype([]() {
+    static consteval auto make_iterator_category() noexcept {
         using result_type =
             details::repeat_invoke_result_t<details::const_if<Const, F>&,
                 range_reference_t<Base>, N>;
@@ -187,8 +186,10 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
 
+public:
+    using iterator_category = decltype(make_iterator_category());
     using iterator_concept = typename inner_iterator<Const>::iterator_concept;
     using value_type = std::remove_cvref_t<details::repeat_invoke_result_t<
         details::const_if<Const, F>&, range_reference_t<Base>, N>>;

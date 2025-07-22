@@ -201,14 +201,8 @@ requires std::is_reference_v<range_reference_t<details::const_if<Const, V>>> &&
     forward_range<details::const_if<Const, V>> &&
     forward_range<range_reference_t<details::const_if<Const, V>>>
 struct join_with_view_iterator_category<Const, V, P> {
-    using Base RXX_NODEBUG = details::const_if<Const, V>;
-    using InnerBase RXX_NODEBUG = range_reference_t<Base>;
-    using PatternBase RXX_NODEBUG = details::const_if<Const, P>;
-    using OuterIter RXX_NODEBUG = iterator_t<Base>;
-    using InnerIter RXX_NODEBUG = iterator_t<InnerBase>;
-    using PatternIter RXX_NODEBUG = iterator_t<PatternBase>;
-
-    using iterator_category = decltype([]() {
+private:
+    static consteval auto make_iterator_category() noexcept {
         using OuterC RXX_NODEBUG =
             typename std::iterator_traits<OuterIter>::iterator_category;
         using InnerC RXX_NODEBUG =
@@ -234,7 +228,16 @@ struct join_with_view_iterator_category<Const, V, P> {
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using Base RXX_NODEBUG = details::const_if<Const, V>;
+    using InnerBase RXX_NODEBUG = range_reference_t<Base>;
+    using PatternBase RXX_NODEBUG = details::const_if<Const, P>;
+    using OuterIter RXX_NODEBUG = iterator_t<Base>;
+    using InnerIter RXX_NODEBUG = iterator_t<InnerBase>;
+    using PatternIter RXX_NODEBUG = iterator_t<PatternBase>;
+    using iterator_category = decltype(make_iterator_category());
 };
 
 } // namespace details

@@ -205,16 +205,19 @@ class adjacent_view<V, N>::iterator {
         }(seq);
     }
 
+    static consteval auto make_iterator_concept() noexcept {
+        if constexpr (random_access_range<Base>) {
+            return std::random_access_iterator_tag{};
+        } else if constexpr (bidirectional_range<Base>) {
+            return std::bidirectional_iterator_tag{};
+        } else {
+            return std::forward_iterator_tag{};
+        }
+    }
+
 public:
     using iterator_category = std::input_iterator_tag;
-    using iterator_concept = decltype([]() {
-        if constexpr (random_access_range<Base>)
-            return std::random_access_iterator_tag{};
-        else if constexpr (bidirectional_range<Base>)
-            return std::bidirectional_iterator_tag{};
-        else
-            return std::forward_iterator_tag{};
-    }());
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type = details::repeat_type_t<N, range_value_t<Base>>;
     using difference_type = range_difference_t<Base>;
 

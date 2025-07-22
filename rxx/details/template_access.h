@@ -8,19 +8,24 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace details {
 
+template <typename...>
+struct type_list {};
+
 template <size_t I, typename List>
 struct template_element {};
 
 template <size_t I, typename List>
-using template_element_t = typename template_element<I, List>::type;
+using template_element_t RXX_NODEBUG = typename template_element<I, List>::type;
 
 template <template <typename...> class List, typename Head, typename... Tail>
 struct template_element<0, List<Head, Tail...>> {
     using type RXX_NODEBUG = Head;
 };
 
-template <typename...>
-struct type_list {};
+template <size_t I, template <typename...> class List, typename Head,
+    typename... Tail>
+struct template_element<I, List<Head, Tail...>> :
+    template_element<I - 1, type_list<Tail...>> {};
 
 template <typename List>
 inline constexpr size_t template_size_v = 0;
@@ -64,11 +69,6 @@ struct template_count {};
 template <typename T, template <typename...> class List, typename... Args>
 struct template_count<T, List<Args...>> :
     std::integral_constant<size_t, template_count_v<T, List<Args...>>> {};
-
-template <size_t I, template <typename...> class List, typename Head,
-    typename... Tail>
-struct template_element<I, List<Head, Tail...>> :
-    template_element<I - 1, type_list<Tail...>> {};
 
 } // namespace details
 
