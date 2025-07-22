@@ -11,13 +11,9 @@ namespace details {
 namespace tuple {
 
 inline constexpr struct three_way_synthesizer_t {
+private:
     template <typename L, typename R>
-    requires requires(L const& left, R const& right) {
-        left < right ? true : false;
-        right < left ? false : true;
-    }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(L const& left, R const& right) RXX_CONST_CALL noexcept([]() {
+    static consteval auto nothrow_call() noexcept {
         if constexpr (std::three_way_comparable_with<L, R>) {
             return noexcept(
                 std::declval<L const&>() <=> std::declval<R const&>());
@@ -26,7 +22,17 @@ inline constexpr struct three_way_synthesizer_t {
                 std::declval<R const&>())&& noexcept(std::declval<R const&>() <
                 std::declval<L const&>());
         }
-    }()) {
+    }
+
+public:
+    template <typename L, typename R>
+    requires requires(L const& left, R const& right) {
+        left < right ? true : false;
+        right < left ? false : true;
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    operator()(L const& left, R const& right) RXX_CONST_CALL
+        noexcept(nothrow_call<L, R>()) {
         if constexpr (std::three_way_comparable_with<L, R>) {
             return left <=> right;
         } else {

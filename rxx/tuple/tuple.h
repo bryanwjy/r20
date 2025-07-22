@@ -153,11 +153,12 @@ private:
     }
 };
 
+template <typename D, size_t... Is>
+__RXX_HIDE_FROM_ABI auto make_storage_for(std::index_sequence<Is...>) noexcept
+    -> storage<D, Is...>;
+
 template <typename D>
-using storage_for =
-    typename decltype([]<size_t... Is>(std::index_sequence<Is...>) {
-        return std::type_identity<storage<D, Is...>>{};
-    }(sequence_for<D>))::type;
+using storage_for = decltype(make_storage_for<D>(sequence_for<D>));
 
 template <typename From, typename To>
 inline constexpr bool is_element_convertible_v = false;
@@ -180,69 +181,9 @@ inline constexpr bool is_element_convertible_v<From, To> =
 
 } // namespace details::tuple
 
-template <>
-class tuple<> {
-public:
-    __RXX_HIDE_FROM_ABI constexpr ~tuple() noexcept = default;
-    __RXX_HIDE_FROM_ABI constexpr tuple() noexcept = default;
-    __RXX_HIDE_FROM_ABI constexpr tuple(tuple const&) noexcept = default;
-    __RXX_HIDE_FROM_ABI constexpr tuple(tuple&&) noexcept = default;
-    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(
-        tuple const&) noexcept = default;
-    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(tuple&&) noexcept = default;
-
-    template <tuple_like Tuple>
-    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
-    __RXX_HIDE_FROM_ABI constexpr tuple(Tuple const&) noexcept {}
-
-    template <tuple_like Tuple>
-    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
-    __RXX_HIDE_FROM_ABI constexpr tuple(Tuple&&) noexcept {}
-
-    template <tuple_like Tuple>
-    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
-    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(Tuple const&) noexcept {
-        return *this;
-    }
-
-    template <tuple_like Tuple>
-    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
-    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(Tuple&&) noexcept {
-        return *this;
-    }
-
-    __RXX_HIDE_FROM_ABI friend constexpr void swap(tuple&, tuple&) noexcept {}
-
-    __RXX_HIDE_FROM_ABI constexpr void swap(tuple&) noexcept {}
-};
-
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(tuple<> const&, tuple<> const&) noexcept {
-    return true;
-}
-
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr auto operator<=>(tuple<> const&, tuple<> const&) noexcept {
-    return 0 <=> 0;
-}
-
-template <tuple_like Tuple>
-requires (std::tuple_size_v<Tuple> == 0)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr bool operator==(
-    tuple<> const&, Tuple const&) noexcept {
-    return true;
-}
-
-template <tuple_like Tuple>
-requires (std::tuple_size_v<Tuple> == 0)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator<=>(
-    tuple<> const&, Tuple const&) noexcept {
-    return 0 <=> 0;
-}
-
 template <typename... Ts>
 class tuple : private details::tuple::storage_for<tuple<Ts...>> {
-    using base_type = details::tuple::storage_for<tuple<Ts...>>;
+    using base_type = details::tuple::storage_for<tuple>;
 
     template <typename Tuple, size_t... Is>
     __RXX_HIDE_FROM_ABI constexpr tuple(
@@ -629,6 +570,66 @@ constexpr Target const&& get(
     static_assert(details::template_count_v<Target, tuple<Ts...>> == 1,
         "Cannot access non-unique type");
     return get<details::template_index_v<Target, tuple<Ts...>>>(std::move(arg));
+}
+
+template <>
+class tuple<> {
+public:
+    __RXX_HIDE_FROM_ABI constexpr ~tuple() noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr tuple() noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr tuple(tuple const&) noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr tuple(tuple&&) noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(
+        tuple const&) noexcept = default;
+    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(tuple&&) noexcept = default;
+
+    template <tuple_like Tuple>
+    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
+    __RXX_HIDE_FROM_ABI constexpr tuple(Tuple const&) noexcept {}
+
+    template <tuple_like Tuple>
+    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
+    __RXX_HIDE_FROM_ABI constexpr tuple(Tuple&&) noexcept {}
+
+    template <tuple_like Tuple>
+    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
+    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(Tuple const&) noexcept {
+        return *this;
+    }
+
+    template <tuple_like Tuple>
+    requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == 0)
+    __RXX_HIDE_FROM_ABI constexpr tuple& operator=(Tuple&&) noexcept {
+        return *this;
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr void swap(tuple&, tuple&) noexcept {}
+
+    __RXX_HIDE_FROM_ABI constexpr void swap(tuple&) noexcept {}
+};
+
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr bool operator==(tuple<> const&, tuple<> const&) noexcept {
+    return true;
+}
+
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr auto operator<=>(tuple<> const&, tuple<> const&) noexcept {
+    return 0 <=> 0;
+}
+
+template <tuple_like Tuple>
+requires (std::tuple_size_v<Tuple> == 0)
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr bool operator==(
+    tuple<> const&, Tuple const&) noexcept {
+    return true;
+}
+
+template <tuple_like Tuple>
+requires (std::tuple_size_v<Tuple> == 0)
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator<=>(
+    tuple<> const&, Tuple const&) noexcept {
+    return 0 <=> 0;
 }
 
 RXX_DEFAULT_NAMESPACE_END

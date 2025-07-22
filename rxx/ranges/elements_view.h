@@ -139,7 +139,8 @@ struct elements_view_iterator_category {};
 
 template <forward_range V, size_t I>
 struct elements_view_iterator_category<V, I> {
-    using iterator_category = decltype([]() {
+private:
+    static consteval auto make_iterator_category() noexcept {
         using Result = decltype(get_element<I>(*std::declval<iterator_t<V>>()));
         using Category =
             typename std::iterator_traits<iterator_t<V>>::iterator_category;
@@ -152,7 +153,10 @@ struct elements_view_iterator_category<V, I> {
         } else {
             return Category{};
         }
-    }());
+    }
+
+public:
+    using iterator_category = decltype(make_iterator_category());
 };
 
 } // namespace details
@@ -167,18 +171,22 @@ class elements_view<V, I>::iterator :
     details::elements_view_iterator_category<V, I> {
     friend elements_view;
     using Base RXX_NODEBUG = details::const_if<Const, V>;
+
+    static consteval bool nothrow_get() noexcept {
+        if constexpr (std::is_reference_v<range_reference_t<Base>>) {
+            return noexcept(ranges::get_element<I>(
+                *std::declval<iterator_t<Base> const&>()));
+        } else {
+            using Element = std::remove_cv_t<
+                std::tuple_element_t<I, range_reference_t<Base>>>;
+            return noexcept(static_cast<Element>(ranges::get_element<I>(
+                *std::declval<iterator_t<Base> const&>())));
+        }
+    }
+
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     static constexpr decltype(auto) get(iterator_t<Base> const& iter) noexcept(
-        []() {
-            if constexpr (std::is_reference_v<range_reference_t<Base>>) {
-                return noexcept(ranges::get_element<I>(*iter));
-            } else {
-                using Element = std::remove_cv_t<
-                    std::tuple_element_t<I, range_reference_t<Base>>>;
-                return noexcept(
-                    static_cast<Element>(ranges::get_element<I>(*iter)));
-            }
-        }()) {
+        nothrow_get()) {
         if constexpr (std::is_reference_v<range_reference_t<Base>>) {
             return ranges::get_element<I>(*iter);
         } else {
@@ -189,8 +197,7 @@ class elements_view<V, I>::iterator :
         }
     }
 
-public:
-    using iterator_concept = decltype([]() {
+    static consteval auto make_iterator_concept() noexcept {
         if constexpr (random_access_range<Base>) {
             return std::random_access_iterator_tag{};
         } else if constexpr (bidirectional_range<Base>) {
@@ -200,7 +207,10 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type =
         std::remove_cvref_t<std::tuple_element_t<I, range_value_t<Base>>>;
     using difference_type = range_difference_t<Base>;

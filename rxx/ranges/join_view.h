@@ -152,7 +152,8 @@ struct join_view_iterator_category<Const, V> {
     using inner_type RXX_NODEBUG =
         details::iterator_category_of<Const, range_reference_t<V>>;
 
-    using iterator_category = decltype([]() {
+private:
+    static consteval auto make_iterator_category() {
         if constexpr (std::derived_from<outer_type,
                           std::bidirectional_iterator_tag> &&
             std::derived_from<inner_type, std::bidirectional_iterator_tag> &&
@@ -165,7 +166,10 @@ struct join_view_iterator_category<Const, V> {
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using iterator_category = decltype(make_iterator_category());
 };
 
 template <typename T>
@@ -254,8 +258,7 @@ class join_view<V>::iterator final :
         , inner_(std::move(inner))
         , parent_(parent) {}
 
-public:
-    using iterator_concept = decltype([]() {
+    static consteval auto make_iterator_concept() noexcept {
         if constexpr (std::is_reference_v<range_reference_t<Base>> &&
             bidirectional_range<Base> &&
             bidirectional_range<range_reference_t<Base>> &&
@@ -267,7 +270,10 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type = range_value_t<range_reference_t<Base>>;
     using difference_type = std::common_type_t<range_difference_t<Base>,
         range_difference_t<range_reference_t<Base>>>;

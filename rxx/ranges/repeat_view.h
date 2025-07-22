@@ -26,7 +26,8 @@ namespace details {
 
 template <typename Int>
 struct wider_signed_int {
-    using type RXX_NODEBUG = typename decltype([]() {
+private:
+    static consteval auto make_type() noexcept {
         if constexpr (sizeof(Int) < sizeof(short))
             return std::type_identity<short>{};
         else if constexpr (sizeof(Int) < sizeof(int))
@@ -52,7 +53,10 @@ struct wider_signed_int {
             return std::type_identity<long long>{};
         }
 #endif
-    }())::type;
+    }
+
+public:
+    using type RXX_NODEBUG = typename decltype(make_type())::type;
 };
 
 template <typename Start>

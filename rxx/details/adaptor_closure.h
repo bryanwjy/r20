@@ -51,7 +51,7 @@ template <typename F>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
 constexpr auto make_pipeable(F&& func) noexcept(
     std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
-#  if RXX_LIBCXX_AT_LEAST(20, 01, 00)
+#  if RXX_LIBCXX_AT_LEAST(20, 00, 00)
     return std::ranges::__pipeable<std::decay_t<F>>{std::forward<F>(func)};
 #  elif RXX_LIBCXX_AT_LEAST(19, 01, 00)
     return std::ranges::__range_adaptor_closure_t<std::decay_t<F>>{
@@ -76,9 +76,14 @@ constexpr auto make_pipeable(F&& func, Args&&... args) noexcept(
 template <typename Cpo>
 using adaptor_non_closure = std::views::__adaptor::_RangeAdaptor<Cpo>;
 
+#  if RXX_LIBSTDCXX_AT_LEAST(14)
 template <typename Derived>
 using adaptor_closure RXX_NODEBUG =
-    std::views::__adaptor::_RangeAdaptorClosure<Derived>
+    std::views::__adaptor::_RangeAdaptorClosure<Derived>;
+#  else
+template <typename Derived>
+using adaptor_closure RXX_NODEBUG = std::views::__adaptor::_RangeAdaptorClosure;
+#  endif
 
 #else
 #  error "Unsupported standard library"

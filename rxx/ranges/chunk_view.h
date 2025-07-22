@@ -286,9 +286,7 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             , size_(parent->size_)
             , missing_(missing) {}
 
-    public:
-        using iterator_category = std::input_iterator_tag;
-        using iterator_concept = decltype([]() {
+        static consteval auto make_iterator_concept() noexcept {
             if constexpr (random_access_range<Base>) {
                 return std::random_access_iterator_tag{};
             } else if constexpr (bidirectional_range<Base>) {
@@ -296,7 +294,11 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             } else {
                 return std::forward_iterator_tag{};
             }
-        }());
+        }
+
+    public:
+        using iterator_category = std::input_iterator_tag;
+        using iterator_concept = decltype(make_iterator_concept());
         using value_type = decltype(__RXX views::take(
             subrange(std::declval<iterator_t<Base>>(),
                 std::declval<sentinel_t<Base>>()),

@@ -186,10 +186,7 @@
 #  endif /* RXX_HAS_CPP_ATTRIBUTE(clang::malloc) */
 #endif
 
-#if RXX_HAS_CPP_ATTRIBUTE(visibility)
-#  define __RXX_ATTRIBUTE_VISIBILITY visibility
-#  define __RXX_ATTRIBUTE_TYPE_CPP_VISIBILITY(VISIBILITY)
-#elif RXX_HAS_CPP_ATTRIBUTE(gnu::visibility)
+#if RXX_HAS_CPP_ATTRIBUTE(gnu::visibility)
 #  define __RXX_ATTRIBUTE_VISIBILITY gnu::visibility
 #  define __RXX_ATTRIBUTE_TYPE_CPP_VISIBILITY(VISIBILITY)
 #elif RXX_HAS_GNU_ATTRIBUTE(__visibility__)

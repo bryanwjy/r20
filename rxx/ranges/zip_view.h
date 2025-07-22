@@ -179,17 +179,20 @@ class zip_view<Rs...>::iterator :
         return (iter.current_);
     }
 
-public:
-    using iterator_concept = decltype([]() {
-        if constexpr (details::all_random_access<Const, Rs...>)
+    static consteval auto make_iterator_concept() noexcept {
+        if constexpr (details::all_random_access<Const, Rs...>) {
             return std::random_access_iterator_tag{};
-        else if constexpr (details::all_bidirectional<Const, Rs...>)
+        } else if constexpr (details::all_bidirectional<Const, Rs...>) {
             return std::bidirectional_iterator_tag{};
-        else if constexpr (details::all_forward<Const, Rs...>)
+        } else if constexpr (details::all_forward<Const, Rs...>) {
             return std::forward_iterator_tag{};
-        else
+        } else {
             return std::input_iterator_tag{};
-    }());
+        }
+    }
+
+public:
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type = tuple<range_value_t<details::const_if<Const, Rs>>...>;
     using difference_type =
         std::common_type_t<range_difference_t<details::const_if<Const, Rs>>...>;

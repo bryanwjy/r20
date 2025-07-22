@@ -156,7 +156,8 @@ struct minimal_input_iterator {
 
 template <template <typename...> class C, input_range R, typename... Args>
 struct template_deducer {
-    using type = typename decltype([]() {
+private:
+    static consteval auto make_type() noexcept {
         using Iter = minimal_input_iterator<R>;
 
         // Case 1 -- can construct directly from the given range.
@@ -194,7 +195,10 @@ struct template_deducer {
                 std::declval<Iter>(), std::declval<Args>()...));
             return std::type_identity<ResultType>{};
         }
-    }())::type;
+    }
+
+public:
+    using type = typename decltype(make_type())::type;
 };
 } // namespace details
 

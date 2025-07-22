@@ -135,14 +135,18 @@ struct stride_view_iterator_category {};
 template <bool Const, forward_range V>
 requires view<V>
 struct stride_view_iterator_category<Const, V> {
-    using iterator_category = decltype([]() {
+private:
+    static consteval auto make_iterator_category() noexcept {
         if constexpr (std::derived_from<iterator_category_of<Const, V>,
                           std::random_access_iterator_tag>) {
             return std::random_access_iterator_tag{};
         } else {
             return iterator_category_of<Const, V>{};
         }
-    }());
+    }
+
+public:
+    using iterator_category = decltype(make_iterator_category());
 };
 } // namespace details
 
@@ -155,10 +159,7 @@ class stride_view<V>::iterator :
     using Base RXX_NODEBUG = details::const_if<Const, V>;
     friend stride_view;
 
-public:
-    using difference_type = range_difference_t<Base>;
-    using value_type = range_value_t<Base>;
-    using iterator_concept = decltype([]() {
+    static consteval auto make_iterator_category() noexcept {
         if constexpr (random_access_range<Base>) {
             return std::random_access_iterator_tag{};
         } else if constexpr (bidirectional_range<Base>) {
@@ -168,7 +169,12 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using difference_type = range_difference_t<Base>;
+    using value_type = range_value_t<Base>;
+    using iterator_concept = decltype(make_iterator_category());
 
     __RXX_HIDE_FROM_ABI iterator() noexcept(
         std::is_nothrow_default_constructible_v<iterator_t<Base>> &&

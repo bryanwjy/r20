@@ -6,7 +6,6 @@
 #include "rxx/details/copy_cvref.h"
 #include "rxx/ranges/get_element.h"
 
-#include <tuple>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -154,18 +153,6 @@ RXX_DEFAULT_NAMESPACE_END
 
 #if !RXX_CXX23
 
-template <typename... TTypes, typename... UTypes,
-    template <typename> class TQual, template <typename> class UQual>
-requires (sizeof...(TTypes) == sizeof...(UTypes)) && requires {
-    typename std::tuple<
-        __RXX common_reference_t<TQual<TTypes>..., UQual<UTypes>>...>;
-}
-struct std::basic_common_reference<std::tuple<TTypes...>, std::tuple<UTypes...>,
-    TQual, UQual> {
-    using type =
-        std::tuple< __RXX common_reference_t<TQual<TTypes>, UQual<UTypes>>...>;
-};
-
 template <typename T1, typename T2, typename U1, typename U2,
     template <typename> class TQual, template <typename> class UQual>
 requires requires {
@@ -183,22 +170,18 @@ template <__RXX tuple_like T, __RXX tuple_like U,
 requires std::same_as<std::decay_t<T>, T> && std::same_as<std::decay_t<U>, U> &&
     (std::tuple_size_v<T> == std::tuple_size_v<U>)
 struct std::basic_common_reference<T, U, TQual, UQual> {
-    using type = typename decltype( //
-        []<size_t... Is>(std::index_sequence<Is...>) {
-            using Result = std::tuple< //
-                __RXX common_reference_t<TQual<std::tuple_element_t<Is, T>>,
-                    UQual<std::tuple_element_t<Is, U>> //
-                    >...                               //
-                >;
-            return std::type_identity<Result>{};
-        }(std::make_index_sequence<std::tuple_size_v<T>>{}))::type;
-};
+private:
+    template <size_t... Is>
+    __RXX_HIDE_FROM_ABI static auto make_type(
+        std::index_sequence<Is...>) noexcept -> std::tuple< //
+        __RXX common_reference_t<TQual<std::tuple_element_t<Is, T>>,
+            UQual<std::tuple_element_t<Is, U>> //
+            >...                               //
+        >;
 
-template <typename... TTypes, typename... UTypes>
-requires (sizeof...(TTypes) == sizeof...(UTypes)) &&
-    requires { typename std::tuple<std::common_type_t<TTypes, UTypes>...>; }
-struct std::common_type<std::tuple<TTypes...>, std::tuple<UTypes...>> {
-    using type = typename std::tuple<std::common_type_t<TTypes, UTypes>...>;
+public:
+    using type = decltype( //
+        make_type(std::make_index_sequence<std::tuple_size_v<T>>{}));
 };
 
 template <typename T1, typename T2, typename U1, typename U2>
@@ -214,13 +197,17 @@ template <__RXX tuple_like T, __RXX tuple_like U>
 requires std::same_as<std::decay_t<T>, T> && std::same_as<std::decay_t<U>, U> &&
     (std::tuple_size_v<T> == std::tuple_size_v<U>)
 struct std::common_type<T, U> {
-    using type = typename decltype( //
-        []<size_t... Is>(std::index_sequence<Is...>) {
-            using Result =
-                std::tuple<std::common_type_t<std::tuple_element_t<Is, T>,
-                    std::tuple_element_t<Is, U>>...>;
-            return std::type_identity<Result>{};
-        }(std::make_index_sequence<std::tuple_size_v<T>>{}))::type;
+
+private:
+    template <size_t... Is>
+    __RXX_HIDE_FROM_ABI static auto make_type(
+        std::index_sequence<Is...>) noexcept
+        -> std::tuple<std::common_type_t<std::tuple_element_t<Is, T>,
+            std::tuple_element_t<Is, U>>...>;
+
+public:
+    using type = decltype( //
+        make_type(std::make_index_sequence<std::tuple_size_v<T>>{}));
 };
 
 #endif

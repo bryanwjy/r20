@@ -49,8 +49,7 @@ class basic_const_iterator : public details::basic_const_iterator_category<It> {
     template <std::input_iterator>
     friend class basic_const_iterator;
 
-public:
-    using iterator_concept = decltype([]() {
+    static consteval auto make_iterator_concept() noexcept {
         if constexpr (std::contiguous_iterator<It>) {
             return std::contiguous_iterator_tag{};
         } else if constexpr (std::random_access_iterator<It>) {
@@ -62,8 +61,10 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
 
+public:
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type = std::iter_value_t<It>;
     using difference_type = std::iter_difference_t<It>;
 

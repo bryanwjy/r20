@@ -78,10 +78,8 @@ class cartesian_product_view :
 
     template <bool>
     class iterator;
-    using difference_type = decltype([]() {
-        return std::common_type_t<ptrdiff_t, range_difference_t<First>,
-            range_difference_t<Vs>...>{};
-    }());
+    using difference_type = std::common_type_t<ptrdiff_t,
+        range_difference_t<First>, range_difference_t<Vs>...>;
 
 public:
     __RXX_HIDE_FROM_ABI constexpr cartesian_product_view() noexcept(
@@ -195,10 +193,7 @@ template <bool Const>
 class cartesian_product_view<First, Vs...>::iterator {
     friend cartesian_product_view;
     using Parent = details::const_if<Const, cartesian_product_view>;
-
-public:
-    using iterator_category = std::input_iterator_tag;
-    using iterator_concept = decltype([]() {
+    static consteval auto make_iterator_concept() noexcept {
         if constexpr (details::cartesian_product_is_random_access<Const, First,
                           Vs...>) {
             return std::random_access_iterator_tag{};
@@ -210,7 +205,11 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using iterator_category = std::input_iterator_tag;
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type = tuple<range_value_t<details::const_if<Const, First>>,
         range_value_t<details::const_if<Const, Vs>>...>;
     using reference = tuple<range_reference_t<details::const_if<Const, First>>,
