@@ -275,13 +275,19 @@ __RXX_HIDE_FROM_ABI inline constexpr auto jump_table_for<T<Args...>> =
         return jump_table<size_t, Is...>{};
     }(std::index_sequence_for<Args...>{});
 
-template <typename T, typename U>
-__RXX_HIDE_FROM_ABI constexpr T make_from_multi_union(size_t index,
-    U&& arg) noexcept([]<size_t... Is>(std::index_sequence<Is...>) {
+template <typename T, typename U, size_t... Is>
+consteval bool nothrow_make_from_multi_union(
+    std::index_sequence<Is...>) noexcept {
     return (... &&
         std::is_nothrow_constructible_v<T, std::in_place_index_t<Is>,
             decltype(std::declval<U>().template get<Is>())>);
-}(std::make_index_sequence<template_size_v<T>>{})) {
+}
+
+template <typename T, typename U>
+__RXX_HIDE_FROM_ABI constexpr T
+make_from_multi_union(size_t index, U&& arg) noexcept(
+    nothrow_make_from_multi_union<T, U>(
+        std::make_index_sequence<template_size_v<T>>{})) {
     static_assert(template_size_v<T> == template_size_v<U>);
     return jump_table_for<U>(
         [&]<size_t I>(size_constant<I>) {
@@ -440,14 +446,19 @@ class variant_base {
         }
     };
 
-    template <typename U>
-    __RXX_HIDE_FROM_ABI static constexpr container make_container(size_t index,
-        U&& arg) noexcept([]<size_t... Is>(std::index_sequence<Is...>) {
+    template <typename U, size_t... Is>
+    static consteval bool nothrow_make_container(
+        std::index_sequence<Is...>) noexcept {
         return (... &&
             std::is_nothrow_constructible_v<container,
                 std::in_place_index_t<Is>,
                 decltype(std::declval<U>().template get<Is>())>);
-    }(std::make_index_sequence<template_size_v<U>>{}))
+    }
+
+    template <typename U>
+    __RXX_HIDE_FROM_ABI static constexpr container
+    make_container(size_t index, U&& arg) noexcept(nothrow_make_container<U>(
+        std::make_index_sequence<template_size_v<U>>{}))
     requires place_index_in_tail
     {
         static_assert(template_size_v<union_type> == template_size_v<U>);

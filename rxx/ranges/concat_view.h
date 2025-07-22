@@ -184,7 +184,8 @@ struct concat_view_iterator_category {};
 template <bool Const, typename... Vs>
 requires all_forward<Const, Vs...>
 struct concat_view_iterator_category<Const, Vs...> {
-    using iterator_category = decltype([]() {
+private:
+    static consteval auto make_iterator_category() noexcept {
         if constexpr (!std::is_reference_v<concat_reference_t<
                           details::const_if<Const, Vs>...>>) {
             return std::input_iterator_tag{};
@@ -216,7 +217,10 @@ struct concat_view_iterator_category<Const, Vs...> {
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using iterator_category = decltype(make_iterator_category());
 };
 
 template <bool Const, typename V, typename... Vs>
@@ -240,7 +244,7 @@ requires (... && view<Vs>) && (sizeof...(Vs) > 0) && details::concatable<Vs...>
 template <bool Const>
 class concat_view<Vs...>::iterator :
     public details::concat_view_iterator_category<Const, Vs...> {
-public:
+private:
     using base_iter =
         details::variant_base<iterator_t<details::const_if<Const, Vs>>...>;
     friend concat_view;
@@ -254,8 +258,7 @@ public:
         : parent_{RXX_BUILTIN_addressof(parent)}
         , it_{std::forward<Args>(args)...} {}
 
-public:
-    using iterator_concept = decltype([]() {
+    static consteval auto make_iterator_concept() noexcept {
         if constexpr (details::concat_is_random_access<Const, Vs...>) {
             return std::random_access_iterator_tag{};
         } else if constexpr (details::concat_is_bidirectional<Const, Vs...>) {
@@ -265,7 +268,10 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type = details::concat_value_t<details::const_if<Const, Vs>...>;
     using difference_type =
         std::common_type_t<range_difference_t<details::const_if<Const, Vs>>...>;

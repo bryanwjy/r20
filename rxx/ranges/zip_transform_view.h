@@ -103,7 +103,8 @@ private:
     template <bool Const>
     requires forward_range<Base<Const>>
     struct iter_cat<Const> {
-        using iterator_category = decltype([]() {
+    private:
+        static consteval auto make_iterator_category() noexcept {
             using Result = std::invoke_result_t<details::const_if<Const, F>&,
                 range_reference_t<details::const_if<Const, Views>>...>;
 
@@ -130,7 +131,10 @@ private:
             } else {
                 return std::input_iterator_tag{};
             }
-        }());
+        }
+
+    public:
+        using iterator_category = decltype(make_iterator_category());
     };
 
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) details::movable_box<F> func_;

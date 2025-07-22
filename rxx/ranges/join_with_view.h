@@ -44,6 +44,45 @@ class join_with_view : public view_interface<join_with_view<V, P>> {
     template <bool Const>
     class sentinel;
 
+    static consteval bool nothrow_begin() noexcept {
+        if constexpr (forward_range<V>) {
+            constexpr bool is_const = details::simple_view<V> &&
+                std::is_reference_v<InnerRange> && details::simple_view<P>;
+            return std::is_nothrow_constructible_v<iterator<is_const>,
+                join_with_view&, iterator_t<V>>;
+        } else {
+            return std::is_nothrow_constructible_v<InnerRange, iterator_t<V>> &&
+                std::is_nothrow_constructible_v<iterator<false>,
+                    join_with_view&>;
+        }
+    }
+
+    static consteval bool nothrow_end() noexcept {
+        constexpr bool is_const =
+            details::simple_view<V> && details::simple_view<P>;
+        if constexpr (forward_range<V> && common_range<V> &&
+            std::is_reference_v<InnerRange> && forward_range<InnerRange> &&
+            common_range<InnerRange>) {
+            return std::is_nothrow_constructible_v<iterator<is_const>,
+                join_with_view&, sentinel_t<V>>;
+        } else {
+            return std::is_nothrow_constructible_v<sentinel<is_const>,
+                join_with_view&>;
+        }
+    }
+
+    static consteval bool nothrow_const_end() noexcept {
+        using ConstInnerRange = range_reference_t<V const>;
+        if constexpr (forward_range<ConstInnerRange> &&
+            common_range<ConstInnerRange> && common_range<V const>) {
+            return std::is_nothrow_constructible_v<iterator<true>,
+                join_with_view const&, sentinel_t<V const>>;
+        } else {
+            return std::is_nothrow_constructible_v<sentinel<true>,
+                join_with_view const&>;
+        }
+    }
+
 public:
     __RXX_HIDE_FROM_ABI constexpr join_with_view() noexcept(
         std::is_nothrow_default_constructible_v<V> &&
@@ -79,18 +118,7 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto begin() noexcept([]() {
-        if constexpr (forward_range<V>) {
-            constexpr bool is_const = details::simple_view<V> &&
-                std::is_reference_v<InnerRange> && details::simple_view<P>;
-            return std::is_nothrow_constructible_v<iterator<is_const>,
-                join_with_view&, iterator_t<V>>;
-        } else {
-            return std::is_nothrow_constructible_v<InnerRange, iterator_t<V>> &&
-                std::is_nothrow_constructible_v<iterator<false>,
-                    join_with_view&>;
-        }
-    }()) {
+    constexpr auto begin() noexcept(nothrow_begin()) {
         if constexpr (forward_range<V>) {
             constexpr bool is_const = details::simple_view<V> &&
                 std::is_reference_v<InnerRange> && details::simple_view<P>;
@@ -114,19 +142,7 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto end() noexcept([]() {
-        constexpr bool is_const =
-            details::simple_view<V> && details::simple_view<P>;
-        if constexpr (forward_range<V> && common_range<V> &&
-            std::is_reference_v<InnerRange> && forward_range<InnerRange> &&
-            common_range<InnerRange>) {
-            return std::is_nothrow_constructible_v<iterator<is_const>,
-                join_with_view&, sentinel_t<V>>;
-        } else {
-            return std::is_nothrow_constructible_v<sentinel<is_const>,
-                join_with_view&>;
-        }
-    }()) {
+    constexpr auto end() noexcept(nothrow_end()) {
         constexpr bool is_const =
             details::simple_view<V> && details::simple_view<P>;
         if constexpr (forward_range<V> && common_range<V> &&
@@ -139,17 +155,7 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto end() const noexcept([]() {
-        using ConstInnerRange = range_reference_t<V const>;
-        if constexpr (forward_range<ConstInnerRange> &&
-            common_range<ConstInnerRange> && common_range<V const>) {
-            return std::is_nothrow_constructible_v<iterator<true>,
-                join_with_view const&, sentinel_t<V const>>;
-        } else {
-            return std::is_nothrow_constructible_v<sentinel<true>,
-                join_with_view const&>;
-        }
-    }())
+    constexpr auto end() const noexcept(nothrow_const_end())
     requires forward_range<V const> && forward_range<P const> &&
         std::is_reference_v<range_reference_t<V const>> &&
         input_range<range_reference_t<V const>> &&
@@ -353,8 +359,7 @@ class join_with_view<V, P>::iterator :
         }
     }
 
-public:
-    using iterator_concept = decltype([]() {
+    static consteval auto make_iterator_concept() noexcept {
         if constexpr (std::is_reference_v<InnerBase> &&
             bidirectional_range<Base> &&
             details::bidirectional_common<PatternBase> &&
@@ -366,7 +371,10 @@ public:
         } else {
             return std::input_iterator_tag{};
         }
-    }());
+    }
+
+public:
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type =
         std::common_type_t<iter_value_t<InnerIter>, iter_value_t<PatternIter>>;
     using difference_type = std::common_type_t<iter_difference_t<OuterIter>,

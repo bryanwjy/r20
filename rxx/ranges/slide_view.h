@@ -184,16 +184,19 @@ class slide_view<V>::iterator {
         , last_ele_{std::move(last_ele)}
         , num_{num} {}
 
+    static consteval auto make_iterator_concept() noexcept {
+        if constexpr (random_access_range<V>) {
+            return std::random_access_iterator_tag{};
+        } else if constexpr (bidirectional_range<V>) {
+            return std::bidirectional_iterator_tag{};
+        } else {
+            return std::forward_iterator_tag{};
+        }
+    }
+
 public:
     using iterator_category = std::input_iterator_tag;
-    using iterator_concept = decltype([]() {
-        if constexpr (random_access_range<V>)
-            return std::random_access_iterator_tag{};
-        else if constexpr (bidirectional_range<V>)
-            return std::bidirectional_iterator_tag{};
-        else
-            return std::forward_iterator_tag{};
-    }());
+    using iterator_concept = decltype(make_iterator_concept());
     using value_type =
         decltype(views::counted(std::declval<iterator_t<Base> const&>(),
             std::declval<range_difference_t<Base> const&>()));
