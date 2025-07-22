@@ -29,15 +29,6 @@
 #    include <__algorithm/in_found_result.h>
 #  endif
 
-#elif RXX_LIBSTDCXX
-
-#  if __has_include(<bits/ranges_algobase.h>) & __has_include(<bits/ranges_algo.h>)
-#    include <bits/ranges_algo.h>
-#    include <bits/ranges_algobase.h>
-#  else
-#    include <algorithm>
-#  endif
-
 #else
 #  include <algorithm>
 #endif
