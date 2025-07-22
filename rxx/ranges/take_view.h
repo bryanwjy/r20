@@ -18,19 +18,28 @@ using std::ranges::take_view;
 namespace views {
 namespace details {
 
+void take(...) noexcept = delete;
+
+template <typename V, typename N>
+concept specialized_take =
+    __RXX ranges::details::is_repeat_view<std::remove_cvref_t<V>> &&
+    requires { take(std::declval<V>(), std::declval<N>()); };
+template <typename V, typename N>
+concept default_take = !specialized_take<V, N> &&
+    requires { std::views::take(std::declval<V>(), std::declval<N>()); };
+
 struct take_t : ranges::details::adaptor_non_closure<take_t> {
-    template <typename... Args>
-    requires requires { std::views::take(std::declval<Args>()...); }
+    template <typename V, typename N>
+    requires default_take<V, N>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL
         constexpr decltype(auto)
-        operator()(Args&&... args) RXX_CONST_CALL
-        noexcept(noexcept(std::views::take(std::declval<Args>()...))) {
-        return std::views::take(std::forward<Args>(args)...);
+        operator()(V&& view, N&& num) RXX_CONST_CALL noexcept(
+            noexcept(std::views::take(std::declval<V>(), std::declval<N>()))) {
+        return std::views::take(std::forward<V>(view), std::forward<N>(num));
     }
 
     template <typename V, typename N>
-    requires __RXX ranges::details::is_repeat_view<std::remove_cvref_t<V>> &&
-        requires { take(std::declval<V>(), std::declval<N>()); }
+    requires specialized_take<V, N>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL
         constexpr decltype(auto)
         operator()(V&& view, N&& num) RXX_CONST_CALL
