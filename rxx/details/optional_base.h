@@ -182,7 +182,7 @@ class optional_base {
         __RXX_HIDE_FROM_ABI constexpr void
         construct_union(std::in_place_t tag, Args&&... args) noexcept(
             std::is_nothrow_constructible_v<T, Args...>)
-        requires allow_external_overlap
+        requires (allow_external_overlap)
         {
             __RXX ranges::details::construct_at(
                 RXX_BUILTIN_addressof(union_.data), tag,
@@ -194,7 +194,7 @@ class optional_base {
         __RXX_HIDE_FROM_ABI constexpr void
         construct_union(generating_t tag, Args&&... args) noexcept(
             std::is_nothrow_constructible_v<T, Args...>)
-        requires allow_external_overlap
+        requires (allow_external_overlap)
         {
             __RXX ranges::details::construct_at(
                 RXX_BUILTIN_addressof(union_.data), tag,
@@ -204,7 +204,7 @@ class optional_base {
 
         __RXX_HIDE_FROM_ABI inline constexpr void construct_union(
             decltype(nullptr)) noexcept
-        requires allow_external_overlap
+        requires (allow_external_overlap)
         {
             __RXX ranges::details::construct_at(
                 RXX_BUILTIN_addressof(union_.data), nullptr);
@@ -609,14 +609,14 @@ private:
         bool has_value,
         U&& u) noexcept(std::is_nothrow_constructible_v<container, generating_t,
         bool, U>)
-    requires allow_external_overlap
+    requires (allow_external_overlap)
         : container_{std::in_place, tag, has_value, std::forward<U>(u)} {}
 
     template <typename U>
     __RXX_HIDE_FROM_ABI constexpr optional_base(generating_t tag,
         bool has_value,
         U&& u) noexcept(noexcept(make_container(has_value, std::declval<U>())))
-    requires place_flag_in_tail
+    requires (place_flag_in_tail)
         : container_{tag,
               [&]() { return make_container(has_value, std::forward<U>(u)); }} {
     }
