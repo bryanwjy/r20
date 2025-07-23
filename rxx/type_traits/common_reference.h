@@ -139,7 +139,7 @@ struct __RXX_PUBLIC_TEMPLATE common_reference<T, U> :
     details::common_reference::impl<T, U> {};
 
 template <typename T, typename U, typename... Vs>
-requires requires { typename common_reference_t<T, U>; }
+requires requires { typename details::common_reference::impl<T, U>::type; }
 struct __RXX_PUBLIC_TEMPLATE common_reference<T, U, Vs...> :
     common_reference<common_reference_t<T, U>, Vs...> {};
 
