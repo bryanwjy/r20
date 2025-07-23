@@ -321,7 +321,7 @@ public:
     requires std::sentinel_for<zentinel<Const>, ziperator<OtherConst>>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
         iterator<OtherConst> const& left, sentinel const& right) {
-        return left.inner_ == right.inner_;
+        return iter_inner(left) == right.inner_;
     }
 
     template <bool OtherConst>
@@ -330,7 +330,7 @@ public:
         _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
             const_if<OtherConst, InnerView>>
     operator-(iterator<OtherConst> const& iter, sentinel const& end) {
-        return iter.inner_ - end.inner_;
+        return iter_inner(iter) - end.inner_;
     }
 
     template <bool OtherConst>
@@ -339,10 +339,17 @@ public:
         _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
             const_if<OtherConst, InnerView>>
     operator-(sentinel const& end, iterator<OtherConst> const& iter) {
-        return end.inner_ - iter.inner_;
+        return end.inner_ - iter_inner(iter);
     }
 
 private:
+    template <bool OtherConst>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static constexpr decltype(auto)
+        iter_inner(iterator<OtherConst> const& iter) noexcept {
+        return iter.inner_;
+    }
+
     zentinel<Const> inner_;
 };
 
