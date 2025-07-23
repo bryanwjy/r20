@@ -165,25 +165,6 @@ struct std::basic_common_reference<std::pair<T1, T2>, std::pair<U1, U2>, TQual,
         __RXX common_reference_t<TQual<T2>, UQual<U2>>>;
 };
 
-template <__RXX tuple_like T, __RXX tuple_like U,
-    template <typename> class TQual, template <typename> class UQual>
-requires std::same_as<std::decay_t<T>, T> && std::same_as<std::decay_t<U>, U> &&
-    (std::tuple_size_v<T> == std::tuple_size_v<U>)
-struct std::basic_common_reference<T, U, TQual, UQual> {
-private:
-    template <size_t... Is>
-    __RXX_HIDE_FROM_ABI static auto make_type(
-        std::index_sequence<Is...>) noexcept -> std::tuple< //
-        __RXX common_reference_t<TQual<std::tuple_element_t<Is, T>>,
-            UQual<std::tuple_element_t<Is, U>> //
-            >...                               //
-        >;
-
-public:
-    using type = decltype( //
-        make_type(std::make_index_sequence<std::tuple_size_v<T>>{}));
-};
-
 template <typename T1, typename T2, typename U1, typename U2>
 requires requires {
     typename std::pair<std::common_type_t<T1, U1>, std::common_type_t<T2, U2>>;
@@ -191,23 +172,6 @@ requires requires {
 struct std::common_type<std::pair<T1, T2>, std::pair<U1, U2>> {
     using type =
         std::pair<std::common_type_t<T1, U1>, std::common_type_t<T2, U2>>;
-};
-
-template <__RXX tuple_like T, __RXX tuple_like U>
-requires std::same_as<std::decay_t<T>, T> && std::same_as<std::decay_t<U>, U> &&
-    (std::tuple_size_v<T> == std::tuple_size_v<U>)
-struct std::common_type<T, U> {
-
-private:
-    template <size_t... Is>
-    __RXX_HIDE_FROM_ABI static auto make_type(
-        std::index_sequence<Is...>) noexcept
-        -> std::tuple<std::common_type_t<std::tuple_element_t<Is, T>,
-            std::tuple_element_t<Is, U>>...>;
-
-public:
-    using type = decltype( //
-        make_type(std::make_index_sequence<std::tuple_size_v<T>>{}));
 };
 
 #endif
