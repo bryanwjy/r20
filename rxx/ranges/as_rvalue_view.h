@@ -18,7 +18,6 @@
 
 #include <compare>
 #include <span>
-#include <tuple>
 #include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

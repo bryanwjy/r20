@@ -207,6 +207,11 @@ class cartesian_product_view<First, Vs...>::iterator {
         }
     }
 
+    __RXX_HIDE_FROM_ABI static constexpr decltype(auto) get_parent_bases(
+        iterator const& iter) noexcept {
+        return iter.parent_->bases_;
+    }
+
 public:
     using iterator_category = std::input_iterator_tag;
     using iterator_concept = decltype(make_iterator_concept());
@@ -324,8 +329,8 @@ public:
         Vs...>
     {
         auto output = [&]<size_t... Is>(std::index_sequence<Is...>) {
-            return tuple{ranges::end(get_element<0>(iter.parent_->bases_)),
-                ranges::begin(get_element<1 + Is>(iter.parent_->bases_))...};
+            return tuple{ranges::end(get_element<0>(get_parent_bases(iter))),
+                ranges::begin(get_element<1 + Is>(get_parent_bases(iter)))...};
         }(details::make_index_sequence_v<sizeof...(Vs)>);
 
         return iter.distance_from(output);
@@ -355,7 +360,7 @@ public:
         return [&]<size_t... Is>(std::index_sequence<Is...>) {
             return (... ||
                 (get_element<Is>(iter.current_) ==
-                    ranges::end(get_element<Is>(iter.parent_->bases_))));
+                    ranges::end(get_element<Is>(get_parent_bases(iter)))));
         }(details::make_index_sequence_v<1 + sizeof...(Vs)>);
     }
 

@@ -301,7 +301,7 @@ class enumerate_view<V>::sentinel {
         : end_{std::move(end)} {}
 
     template <bool OtherConst>
-    __RXX_HIDE_FROM_ABI static decltype(auto) get_iter_current(
+    __RXX_HIDE_FROM_ABI static constexpr decltype(auto) get_iter_current(
         iterator<OtherConst> const& iter) noexcept {
         return (iter.current_);
     }
