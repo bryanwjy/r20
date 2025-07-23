@@ -165,6 +165,12 @@ class cache_latest_view<V>::sentinel {
 
     friend cache_latest_view;
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static constexpr decltype(auto) get_iter_current(
+        iterator const& iter) noexcept {
+        return (iter.current_);
+    }
+
 public:
     __RXX_HIDE_FROM_ABI sentinel() noexcept(
         std::is_nothrow_default_constructible_v<sentinel_t<V>>) = default;
@@ -177,7 +183,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator==(
         iterator const& left, sentinel const& right) {
-        return left.current_ == right.end_;
+        return get_iter_current(left) == right.end_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -185,7 +191,7 @@ public:
         iterator const& left, sentinel const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        return left.current_ - right.end_;
+        return get_iter_current(left) - right.end_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -193,7 +199,7 @@ public:
         sentinel const& left, iterator const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        return left.end_ - right.current_;
+        return left.end_ - get_iter_current(right);
     }
 
 private:

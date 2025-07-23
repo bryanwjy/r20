@@ -395,7 +395,7 @@ public:
         std::declval<iterator_t<Base>>()))
     requires forward_range<Base>
     {
-        return left.iter_.cur() == right.iter_.cur();
+        return left.outer_current() == right.iter_.cur();
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

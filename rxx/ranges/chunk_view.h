@@ -188,15 +188,21 @@ public:
 
 private:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    decltype(auto) get_base() const noexcept { return (parent_->base_); }
+    constexpr decltype(auto) get_base() const noexcept {
+        return (parent_->base_);
+    }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    decltype(auto) get_remainder() const noexcept {
+    constexpr decltype(auto) get_remainder() const noexcept {
         return (parent_->remainder_);
     }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    decltype(auto) get_current() const noexcept { return (parent_->current_); }
+    constexpr decltype(auto) get_current() const noexcept {
+        return (parent_->current_);
+    }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    decltype(auto) get_size() const noexcept { return (parent_->current_); }
+    constexpr decltype(auto) get_size() const noexcept {
+        return (parent_->current_);
+    }
     chunk_view* parent_;
 };
 
@@ -281,13 +287,18 @@ public:
 
 private:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    decltype(auto) get_base() const noexcept { return (parent_->base_); }
+    constexpr decltype(auto) get_base() const noexcept {
+        return (parent_->base_);
+    }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    decltype(auto) get_remainder() const noexcept {
+    constexpr decltype(auto) get_remainder() const noexcept {
         return (parent_->remainder_);
     }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    decltype(auto) get_current() const noexcept { return (parent_->current_); }
+    constexpr decltype(auto) get_current() const noexcept {
+        return (parent_->current_);
+    }
+
     chunk_view* parent_;
 };
 
