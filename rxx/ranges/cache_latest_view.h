@@ -134,13 +134,14 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr range_rvalue_reference_t<V>
     iter_move(iterator const& other) noexcept(
-        noexcept(ranges::iter_move(other.current_))) {
+        noexcept(ranges::iter_move(std::declval<iterator_t<V> const&>()))) {
         return ranges::iter_move(other.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(ranges::iter_swap(left.current_, right.current_)))
+        noexcept(ranges::iter_swap(std::declval<iterator_t<V> const&>(),
+            std::declval<iterator_t<V> const&>())))
     requires std::indirectly_swappable<iterator_t<V>>
     {
         ranges::iter_swap(left.current_, right.current_);

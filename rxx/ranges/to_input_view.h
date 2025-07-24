@@ -152,23 +152,25 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    friend constexpr bool operator==(iterator const& left,
-        sentinel_t<Base> const& right) noexcept(noexcept(left.current_ ==
-        right)) {
+    friend constexpr bool
+    operator==(iterator const& left, sentinel_t<Base> const& right) noexcept(
+        noexcept(std::declval<iterator_t<Base> const&>() == right)) {
         return left.current_ == right;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    friend constexpr difference_type operator-(sentinel_t<Base> const& left,
-        iterator const& right) noexcept(noexcept(left - right.current_))
+    friend constexpr difference_type
+    operator-(sentinel_t<Base> const& left, iterator const& right) noexcept(
+        noexcept(left - std::declval<iterator_t<Base> const&>()))
     requires std::sized_sentinel_for<sentinel_t<Base>, iterator_t<Base>>
     {
         return left - right.current_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    friend constexpr difference_type operator-(iterator const& left,
-        sentinel_t<Base> const& right) noexcept(noexcept(left.current_ - right))
+    friend constexpr difference_type
+    operator-(iterator const& left, sentinel_t<Base> const& right) noexcept(
+        noexcept(std::declval<iterator_t<Base> const&>() - right))
     requires std::sized_sentinel_for<sentinel_t<Base>, iterator_t<Base>>
     {
         return left.current_ - right;
@@ -177,13 +179,14 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr range_rvalue_reference_t<Base>
     iter_move(iterator const& iter) noexcept(
-        noexcept(ranges::iter_move(iter.current_))) {
+        noexcept(ranges::iter_move(std::declval<iterator_t<Base> const&>()))) {
         return ranges::iter_move(iter.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(ranges::iter_swap(left.current_, right.current_)))
+        noexcept(ranges::iter_swap(std::declval<iterator_t<Base> const&>(),
+            std::declval<iterator_t<Base> const&>())))
     requires std::indirectly_swappable<iterator_t<Base>>
     {
         ranges::iter_swap(left.current_, right.current_);

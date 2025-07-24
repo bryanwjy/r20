@@ -270,7 +270,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(iterator const& self) noexcept(
-        noexcept(ranges::iter_move(self.current_)) &&
+        noexcept(ranges::iter_move(std::declval<iterator_t<Base> const&>())) &&
         std::is_nothrow_move_constructible_v<range_rvalue_reference_t<Base>>) {
         return tuple<difference_type, range_rvalue_reference_t<Base>>{
             self.pos_, ranges::iter_move(self.current_)};
