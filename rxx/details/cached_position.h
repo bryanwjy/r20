@@ -49,6 +49,13 @@ public:
     }
 };
 
+#if RXX_COMPILER_GCC
+RXX_DISABLE_WARNING_PUSH()
+// For some strange reason, GCC complains about the visibility attribute in the
+// specialization below
+RXX_DISABLE_WARNING("-Wattributes")
+#endif
+
 template <random_access_range R>
 requires (sizeof(range_difference_t<R>) <= sizeof(iterator_t<R>))
 class cached_position<R> {
@@ -79,7 +86,8 @@ public:
         return *this;
     }
 
-    __RXX_HIDE_FROM_ABI constexpr iterator_t<R> get(R& src) const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr iterator_t<R> get(R& src) const
         noexcept(noexcept(std::declval<iterator_t<R>>() +
             std::declval<range_difference_t<R> const&>())) {
         assert(*this);
@@ -96,6 +104,9 @@ public:
 private:
     range_difference_t<R> offset_ = -1;
 };
+#if RXX_COMPILER_GCC
+RXX_DISABLE_WARNING_POP()
+#endif
 } // namespace ranges::details
 
 RXX_DEFAULT_NAMESPACE_END
