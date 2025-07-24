@@ -130,15 +130,16 @@ public:
 
     template <tuple_like ArgsT, tuple_like ArgsB = tuple<>>
     requires requires {
-        { make_from_tuple<T>(std::declval<ArgsT>()) } -> std::same_as<T>;
+        { __RXX make_from_tuple<T>(std::declval<ArgsT>())
+        } -> std::same_as<T>;
         {
-            make_from_tuple<Bound>(std::declval<ArgsB>())
+        __RXX make_from_tuple<Bound>(std::declval<ArgsB>())
         } -> std::same_as<Bound>;
     }
     __RXX_HIDE_FROM_ABI constexpr explicit repeat_view(
         std::piecewise_construct_t, ArgsT args, ArgsB bound_args = {})
-        : value_(make_from_tuple<T>(std::move(args)))
-        , bound_(make_from_tuple<Bound>(std::move(bound_args))) {}
+        : value_(__RXX make_from_tuple<T>(std::move(args)))
+        , bound_(__RXX make_from_tuple<Bound>(std::move(bound_args))) {}
 
     template <typename... Args, typename... BoundArgs>
     requires std::constructible_from<T, Args...> &&

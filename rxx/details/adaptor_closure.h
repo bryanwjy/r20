@@ -85,6 +85,28 @@ template <typename Derived>
 using adaptor_closure RXX_NODEBUG = std::views::__adaptor::_RangeAdaptorClosure;
 #  endif
 
+template <typename F>
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
+constexpr auto make_pipeable(F&& func) noexcept(
+    std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
+    static_assert(std::is_object_v<F>);
+    using Base = std::decay_t<F>;
+    class pipeable : public Base, public adaptor_closure<pipeable> {
+        using Base::operator();
+        pipeable(F&& func) : Base{std::forward<F>(func)} {}
+    };
+    return pipeable(std::forward<F>(func));
+}
+
+template <typename F, typename... Args>
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
+constexpr auto make_pipeable(F&& func, Args&&... args) noexcept(
+    (std::is_nothrow_constructible_v<std::decay_t<F>, F> && ... &&
+        std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
+    return make_pipeable(
+        bind_back(std::forward<F>(func), std::forward<Args>(args)...));
+}
+
 #else
 #  error "Unsupported standard library"
 #endif
