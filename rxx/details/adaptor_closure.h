@@ -86,16 +86,22 @@ using adaptor_closure RXX_NODEBUG = std::views::__adaptor::_RangeAdaptorClosure;
 #  endif
 
 template <typename F>
+requires std::is_object_v<F>
+class pipeable : public F, public adaptor_closure<pipeable<F>> {
+public:
+    using F::operator();
+    template <typename U>
+    __RXX_HIDE_FROM_ABI constexpr pipeable(U&& func)
+        : F{std::forward<U>(func)} {}
+};
+
+template <typename F>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
 constexpr auto make_pipeable(F&& func) noexcept(
     std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
     static_assert(std::is_object_v<F>);
     using Base = std::decay_t<F>;
-    class pipeable : public Base, public adaptor_closure<pipeable> {
-        using Base::operator();
-        pipeable(F&& func) : Base{std::forward<F>(func)} {}
-    };
-    return pipeable(std::forward<F>(func));
+    return pipeable<Base>(std::forward<F>(func));
 }
 
 template <typename F, typename... Args>

@@ -31,7 +31,7 @@
  * Only major version is exposed
  */
 #  define RXX_LIBSTDCXX_AT_LEAST(MAJOR) (__RXX_GLIBCXX_GCC_MAJOR >= MAJOR)
-#  define RXX_LIBSTDCXX_AFTER(YYYY, MM, DD) (__GLIBCXX__ >= YYYY##MM##DD)
+#  define RXX_LIBSTDCXX_AFTER(YYYY, MM, DD) (__GLIBCXX__ > YYYY##MM##DD)
 #  define RXX_LIBSTDCXX 1
 #else
 #  define RXX_LIBSTDCXX_AFTER(YYYY, MM, DD) 0
