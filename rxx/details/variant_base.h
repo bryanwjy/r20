@@ -9,11 +9,11 @@
 #include "rxx/details/jump_table.h"
 #include "rxx/details/overlappable_if.h"
 #include "rxx/details/template_access.h"
+#include "rxx/utility.h"
 
 #include <concepts>
 #include <functional>
 #include <type_traits>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

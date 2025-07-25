@@ -16,10 +16,10 @@
 #include "rxx/ranges/reverse_view.h"
 #include "rxx/ranges/subrange.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/utility.h"
 
 #include <cassert>
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

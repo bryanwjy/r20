@@ -19,10 +19,10 @@
 #include "rxx/ranges/single_view.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/type_traits/common_reference.h"
+#include "rxx/utility.h"
 
 #include <cassert>
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

@@ -4,10 +4,10 @@
 #include "rxx/config.h"
 
 #include "rxx/concepts/totally_ordered_with.h"
+#include "rxx/utility.h"
 
 #include <cstdint>
 #include <type_traits>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {

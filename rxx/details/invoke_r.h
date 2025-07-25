@@ -4,8 +4,9 @@
 
 #include "rxx/config.h"
 
+#include "rxx/utility.h"
+
 #include <functional>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

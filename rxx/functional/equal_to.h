@@ -4,10 +4,10 @@
 #include "rxx/config.h"
 
 #include "rxx/concepts/equality_comparable_with.h"
+#include "rxx/utility.h"
 
 #include <concepts>
 #include <type_traits>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

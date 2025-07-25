@@ -3,9 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "rxx/details/forward_like.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/tuple/utils.h"
+#include "rxx/utility/forward_like.h"
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

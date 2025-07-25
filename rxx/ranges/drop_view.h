@@ -6,10 +6,10 @@
 #include "rxx/details/view_traits.h"
 #include "rxx/functional.h"
 #include "rxx/iterator.h"
+#include "rxx/utility.h"
 
 #include <ranges>
 #include <type_traits>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
