@@ -289,9 +289,10 @@ template <typename It1, typename It2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr typename move_iterator<It1>::difference_type operator-(
     move_iterator<It1> const& left,
-    move_iterator<It2> const&
-        right) noexcept(noexcept(std::declval<It1 const&>() -
-    std::declval<It2 const&>())) {
+    move_iterator<It2> const& right) noexcept(requires(It1 const& left,
+    It2 const& right) {
+    { left - right } noexcept;
+}) {
     return left.base() - right.base();
 }
 
