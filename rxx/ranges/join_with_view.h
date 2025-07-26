@@ -19,10 +19,10 @@
 #include "rxx/ranges/single_view.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/type_traits/common_reference.h"
+#include "rxx/utility.h"
 
 #include <cassert>
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -560,6 +560,13 @@ class join_with_view<V, P>::sentinel {
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(Parent& parent)
         : end_(__RXX ranges::end(parent.base_)) {}
 
+    template <bool OtherConst>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static constexpr decltype(auto)
+        iter_outer(iterator<OtherConst> const& iter) noexcept {
+        return iter.get_outer();
+    }
+
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
         std::is_nothrow_default_constructible_v<sentinel_t<Base>>) = default;
@@ -573,7 +580,7 @@ public:
         iterator_t<details::const_if<OtherConst, V>>>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
         iterator<OtherConst> const& left, sentinel const& right) {
-        return left.get_outer() == right.end_;
+        return iter_outer(left) == right.end_;
     }
 
 private:

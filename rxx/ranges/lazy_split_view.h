@@ -21,10 +21,10 @@
 #include "rxx/ranges/single_view.h"
 #include "rxx/ranges/subrange.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/utility.h"
 
 #include <cassert>
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -395,7 +395,7 @@ public:
         std::declval<iterator_t<Base>>()))
     requires forward_range<Base>
     {
-        return left.iter_.cur() == right.iter_.cur();
+        return left.outer_current() == right.outer_current();
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

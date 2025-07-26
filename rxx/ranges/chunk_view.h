@@ -19,10 +19,10 @@
 #include "rxx/ranges/subrange.h"
 #include "rxx/ranges/take_view.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/utility.h"
 
 #include <cassert>
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -115,16 +115,18 @@ public:
             : parent_{RXX_BUILTIN_addressof(parent)} {}
 
     public:
-        __RXX_HIDE_FROM_ABI constexpr inner_iterator begin() const noexcept {
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        constexpr inner_iterator begin() const noexcept {
             return inner_iterator(*parent_);
         }
 
-        __RXX_HIDE_FROM_ABI constexpr std::default_sentinel_t
-        end() const noexcept {
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        constexpr std::default_sentinel_t end() const noexcept {
             return std::default_sentinel;
         }
 
-        __RXX_HIDE_FROM_ABI constexpr auto size() const
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        constexpr auto size() const
         requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
         {
             return details::to_unsigned_like(ranges::min(parent_->remainder_,
@@ -138,7 +140,8 @@ public:
     __RXX_HIDE_FROM_ABI outer_iterator(outer_iterator&&) = default;
     __RXX_HIDE_FROM_ABI outer_iterator& operator=(outer_iterator&&) = default;
 
-    __RXX_HIDE_FROM_ABI constexpr value_type operator*() const {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr value_type operator*() const {
         assert(*this != std::default_sentinel);
         return value_type(*parent_);
     }
@@ -153,29 +156,30 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
-    __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         outer_iterator const& left, std::default_sentinel_t) {
-        return *left.parent_->current_ == ranges::end(left.parent_->base_) &&
-            left.parent_->remainder_ != 0;
+        return *left.get_current() == ranges::end(left.get_base()) &&
+            left.get_remainder() != 0;
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr difference_type operator-(
         std::default_sentinel_t, outer_iterator const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        auto const dist =
-            ranges::end(right.parent_->base_) - *right.parent_->current_;
+        auto const dist = ranges::end(right.get_base()) - *right.get_current();
 
-        if (dist < right.parent_->remainder_) {
+        if (dist < right.get_remainder()) {
             return dist == 0 ? 0 : 1;
         }
 
         return 1 +
-            details::ceil_div(
-                dist - right.parent_->remainder_, right.parent_->size_);
+            details::ceil_div(dist - right.get_remainder(), right.get_size());
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr difference_type operator-(
         outer_iterator const& left, std::default_sentinel_t right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
@@ -183,6 +187,22 @@ public:
     }
 
 private:
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) get_base() const noexcept {
+        return (parent_->base_);
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) get_remainder() const noexcept {
+        return (parent_->remainder_);
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) get_current() const noexcept {
+        return (parent_->current_);
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) get_size() const noexcept {
+        return (parent_->current_);
+    }
     chunk_view* parent_;
 };
 
@@ -204,11 +224,11 @@ public:
     __RXX_HIDE_FROM_ABI inner_iterator(inner_iterator&&) = default;
     __RXX_HIDE_FROM_ABI inner_iterator& operator=(inner_iterator&&) = default;
 
-    __RXX_HIDE_FROM_ABI constexpr iterator_t<V> const& base() const& {
-        return *parent_->current_;
-    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr iterator_t<V> const& base() const& { return *parent_->current_; }
 
-    __RXX_HIDE_FROM_ABI constexpr range_reference_t<V> operator*() const {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr range_reference_t<V> operator*() const {
         assert(*this != std::default_sentinel);
         return **parent_->current_;
     }
@@ -227,43 +247,59 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr void operator++(int) { ++*this; }
 
-    __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         inner_iterator const& self, std::default_sentinel_t) noexcept {
-        return self.parent_->remainder_ == 0;
+        return self.get_remainder() == 0;
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr difference_type operator-(
         std::default_sentinel_t, inner_iterator const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        return ranges::min(right.parent_->remainder_,
-            ranges::end(right.parent_->base_) - *right.parent_->current_);
+        return ranges::min(right.get_remainder(),
+            ranges::end(right.get_base()) - *right.get_current());
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr difference_type operator-(
         inner_iterator const& left, std::default_sentinel_t right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
         return -(right - left);
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr range_rvalue_reference_t<V>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_rvalue_reference_t<V>
     iter_move(inner_iterator const& self) noexcept(
-        noexcept(ranges::iter_move(*self.parent_->current_))) {
-        return ranges::iter_move(*self.parent_->current_);
+        noexcept(ranges::iter_move(std::declval<iterator_t<V> const&>()))) {
+        return ranges::iter_move(*self.get_current());
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(inner_iterator const& left, inner_iterator const& right) noexcept(
-        noexcept(ranges::iter_swap(
-            *left.parent_->current_, *right.parent_->current_)))
+        noexcept(ranges::iter_swap(std::declval<iterator_t<V> const&>(),
+            std::declval<iterator_t<V> const&>())))
     requires std::indirectly_swappable<iterator_t<V>>
     {
-        return ranges::iter_swap(
-            *left.parent_->current_, *right.parent_->current_);
+        return ranges::iter_swap(*left.get_current(), *right.get_current());
     }
 
 private:
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) get_base() const noexcept {
+        return (parent_->base_);
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) get_remainder() const noexcept {
+        return (parent_->remainder_);
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) get_current() const noexcept {
+        return (parent_->current_);
+    }
+
     chunk_view* parent_;
 };
 
@@ -377,52 +413,59 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             return *this += -offset;
         }
 
-        __RXX_HIDE_FROM_ABI constexpr value_type operator[](
-            difference_type offset) const
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        constexpr value_type operator[](difference_type offset) const
         requires random_access_range<Base>
         {
             return *(*this + offset);
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr bool operator==(
             iterator const& left, iterator const& right) {
             return left.current_ == right.current_;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr bool operator==(
             iterator const& left, std::default_sentinel_t) {
             return left.current_ == left.end_;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr bool operator<(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr bool operator<(
             iterator const& left, iterator const& right)
         requires random_access_range<Base>
         {
             return left.current_ > right.current_;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr bool operator>(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr bool operator>(
             iterator const& left, iterator const& right)
         requires random_access_range<Base>
         {
             return right < left;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr bool operator<=(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr bool operator<=(
             iterator const& left, iterator const& right)
         requires random_access_range<Base>
         {
             return !(right < left);
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr bool operator>=(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr bool operator>=(
             iterator const& left, iterator const& right)
         requires random_access_range<Base>
         {
             return !(left < right);
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr auto operator<=>(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr auto operator<=>(
             iterator const& left, iterator const& right)
         requires random_access_range<Base> &&
             std::three_way_comparable<iterator_t<Base>>
@@ -430,7 +473,8 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             return left.current_ <=> right.current_;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr iterator operator+(
             iterator const& iter, difference_type offset)
         requires random_access_range<Base>
         {
@@ -439,7 +483,8 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             return copy;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr iterator operator+(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr iterator operator+(
             difference_type offset, iterator const& iter)
         requires random_access_range<Base>
         {
@@ -448,7 +493,8 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             return copy;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr iterator operator-(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr iterator operator-(
             iterator const& iter, difference_type offset)
         requires random_access_range<Base>
         {
@@ -457,7 +503,8 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
             return copy;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr difference_type operator-(
             iterator const& left, iterator const& right)
         requires std::sized_sentinel_for<iterator_t<Base>, iterator_t<Base>>
         {
@@ -466,14 +513,16 @@ class chunk_view<V> : public view_interface<chunk_view<V>> {
                 left.size_;
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr difference_type operator-(
             std::default_sentinel_t, iterator const& iter)
         requires std::sized_sentinel_for<sentinel_t<Base>, iterator_t<Base>>
         {
             return details::ceil_div(iter.end_ - iter.current_, iter.size_);
         }
 
-        __RXX_HIDE_FROM_ABI friend constexpr difference_type operator-(
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+        friend constexpr difference_type operator-(
             iterator const& iter, std::default_sentinel_t end)
         requires std::sized_sentinel_for<sentinel_t<Base>, iterator_t<Base>>
         {
@@ -497,27 +546,33 @@ public:
         assert(size > 0);
     }
 
-    __RXX_HIDE_FROM_ABI constexpr V base() const&
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr V base() const&
     requires std::copy_constructible<V>
     {
         return base_;
     }
 
-    __RXX_HIDE_FROM_ABI constexpr V base() && { return std::move(base_); }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr V base() && {
+        return std::move(base_);
+    }
 
-    __RXX_HIDE_FROM_ABI constexpr auto begin()
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto begin()
     requires (!details::simple_view<V>)
     {
         return iterator<false>(this, __RXX ranges::begin(base_));
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto begin() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto begin() const
     requires forward_range<V const>
     {
         return iterator<true>(this, __RXX ranges::begin(base_));
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto end()
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto end()
     requires (!details::simple_view<V>)
     {
         if constexpr (common_range<V> && sized_range<V>) {
@@ -531,7 +586,8 @@ public:
         }
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto end() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto end() const
     requires forward_range<V const>
     {
         if constexpr (common_range<V const> && sized_range<V const>) {
@@ -546,14 +602,16 @@ public:
         }
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto size()
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto size()
     requires sized_range<V>
     {
         return details::to_unsigned_like(
             details::ceil_div(ranges::distance(base_), size_));
     }
 
-    __RXX_HIDE_FROM_ABI constexpr auto size() const
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto size() const
     requires sized_range<V const>
     {
         return details::to_unsigned_like(

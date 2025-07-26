@@ -17,10 +17,10 @@
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/take_view.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/utility.h"
 
 #include <cassert>
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -406,6 +406,12 @@ private:
     using Parent RXX_NODEBUG = details::const_if<Const, join_view>;
     using Base RXX_NODEBUG = details::const_if<Const, V>;
 
+    template <bool OtherConst>
+    __RXX_HIDE_FROM_ABI static constexpr decltype(auto) iter_outer(
+        iterator<OtherConst> const& iter) noexcept {
+        return iter.get_outer();
+    }
+
 public:
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(Parent& parent) noexcept(
         noexcept(ranges::end(parent.base_)) &&
@@ -425,7 +431,7 @@ public:
         iterator_t<details::const_if<OtherConst, V>>>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
         iterator<OtherConst> const& left, sentinel const& right) {
-        return left.get_outer() == right.end_;
+        return iter_outer(left) == right.end_;
     }
 
 private:

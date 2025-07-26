@@ -6,10 +6,10 @@
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/utility.h"
 
 #include <concepts>
 #include <type_traits>
-#include <utility>
 
 #if RXX_ENABLE_STD_INTEROP
 #  include <ranges>

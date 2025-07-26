@@ -122,29 +122,29 @@ public:
         (...&& noexcept(ranges::size(std::declval<Vs&>()))) && //
         (... &&
             std::is_nothrow_convertible_v<range_size_t<Vs>,
-                std::common_type_t<Vs...>>))
+                std::common_type_t<range_size_t<Vs>...>>))
     requires (... && sized_range<Vs>)
     {
-        return apply(
+        return __RXX apply(
             [](auto... sizes) {
                 using Type = std::common_type_t<decltype(sizes)...>;
-                return (... + to_unsigned_like<Type>(sizes));
+                return (... + details::to_unsigned_like<Type>(sizes));
             },
             details::transform(ranges::size, views_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto size() noexcept(
-        (...&& noexcept(ranges::size(std::declval<Vs const&>()))) && //
-        (... &&
-            std::is_nothrow_convertible_v<range_size_t<Vs const>,
-                std::common_type_t<range_size_t<Vs const>...>>))
+    constexpr auto size() const
+        noexcept((...&& noexcept(ranges::size(std::declval<Vs const&>()))) && //
+            (... &&
+                std::is_nothrow_convertible_v<range_size_t<Vs const>,
+                    std::common_type_t<range_size_t<Vs const>...>>))
     requires (... && sized_range<Vs const>)
     {
-        return apply(
+        return __RXX apply(
             [](auto... sizes) {
                 using Type = std::common_type_t<decltype(sizes)...>;
-                return (... + to_unsigned_like<Type>(sizes));
+                return (... + details::to_unsigned_like<Type>(sizes));
             },
             details::transform(ranges::size, views_));
     }

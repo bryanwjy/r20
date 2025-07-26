@@ -3,7 +3,9 @@
 
 #include "rxx/config.h"
 
-#include <concepts>
+#include "rxx/concepts/totally_ordered_with.h"
+#include "rxx/utility.h"
+
 #include <cstdint>
 #include <type_traits>
 
@@ -35,7 +37,7 @@ struct less {
     using is_transparent = void;
 
     template <typename L, typename R>
-    requires std::totally_ordered_with<L, R>
+    requires totally_ordered_with<L, R>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
     operator()(L&& left, R&& right) RXX_CONST_CALL
         noexcept(noexcept(std::declval<L>() < std::declval<R>())) {

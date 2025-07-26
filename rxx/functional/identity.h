@@ -3,9 +3,9 @@
 
 #include "rxx/config.h"
 
-RXX_DEFAULT_NAMESPACE_BEGIN
-namespace ranges {
+#include "rxx/utility.h"
 
+RXX_DEFAULT_NAMESPACE_BEGIN
 struct identity {
     using is_transparent = void;
 
@@ -15,6 +15,4 @@ struct identity {
         return std::forward<T>(arg);
     }
 };
-
-} // namespace ranges
 RXX_DEFAULT_NAMESPACE_END

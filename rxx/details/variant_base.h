@@ -9,11 +9,11 @@
 #include "rxx/details/jump_table.h"
 #include "rxx/details/overlappable_if.h"
 #include "rxx/details/template_access.h"
+#include "rxx/utility.h"
 
 #include <concepts>
 #include <functional>
 #include <type_traits>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -344,7 +344,7 @@ class variant_base {
         __RXX_HIDE_FROM_ABI constexpr container(dispatch_t, size_t index,
             U&& arg) noexcept(noexcept(make_from_multi_union<union_type>(index,
             std::declval<U>())))
-        requires allow_external_overlap
+        requires (allow_external_overlap)
             : union_{generating,
                   [&]() {
                       return make_from_multi_union<union_type>(
@@ -459,7 +459,7 @@ class variant_base {
     __RXX_HIDE_FROM_ABI static constexpr container
     make_container(size_t index, U&& arg) noexcept(nothrow_make_container<U>(
         std::make_index_sequence<template_size_v<U>>{}))
-    requires place_index_in_tail
+    requires (place_index_in_tail)
     {
         static_assert(template_size_v<union_type> == template_size_v<U>);
         return jump_table_for<union_type>(
@@ -749,7 +749,7 @@ private:
     template <typename U>
     __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_t, size_t index,
         U&& arg) noexcept(noexcept(make_container(index, std::declval<U>())))
-    requires place_index_in_tail
+    requires (place_index_in_tail)
         : container_{generating,
               [&]() { return make_container(index, std::forward<U>(arg)); }} {}
 

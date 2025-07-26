@@ -4,8 +4,7 @@
 #include "rxx/details/invoke_r.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/tuple.h"
-
-#include <utility>
+#include "rxx/utility.h"
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

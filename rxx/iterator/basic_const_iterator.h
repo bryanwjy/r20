@@ -295,6 +295,49 @@ public:
         return current_ <=> other;
     }
 
+#if RXX_COMPILER_GCC
+    // Infinite meta-recursion fix for GCC
+    template <details::not_const_iterator L, std::same_as<It> It2>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool
+    operator<(L const& left, basic_const_iterator<It2> const& right) noexcept(
+        noexcept(left < right.current_))
+    requires std::random_access_iterator<It> && std::totally_ordered_with<It, L>
+    {
+        return left < right.current_;
+    }
+
+    template <details::not_const_iterator L, std::same_as<It> It2>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool
+    operator>(L const& left, basic_const_iterator<It2> const& right) noexcept(
+        noexcept(left > right.current_))
+    requires std::random_access_iterator<It> && std::totally_ordered_with<It, L>
+    {
+        return left > right.current_;
+    }
+
+    template <details::not_const_iterator L, std::same_as<It> It2>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool
+    operator<=(L const& left, basic_const_iterator<It2> const& right) noexcept(
+        noexcept(left <= right.current_))
+    requires std::random_access_iterator<It> && std::totally_ordered_with<It, L>
+    {
+        return left <= right.current_;
+    }
+
+    template <details::not_const_iterator L, std::same_as<It> It2>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool
+    operator>=(L const& left, basic_const_iterator<It2> const& right) noexcept(
+        noexcept(left >= right.current_))
+    requires std::random_access_iterator<It> && std::totally_ordered_with<It, L>
+    {
+        return left >= right.current_;
+    }
+
+#else
     template <details::not_const_iterator L>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool
@@ -334,6 +377,7 @@ public:
     {
         return left >= right.current_;
     }
+#endif
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr basic_const_iterator operator+(
@@ -374,6 +418,17 @@ public:
         return current_ - other;
     }
 
+#if RXX_COMPILER_GCC
+    // Infinite meta-recursion fix for GCC
+    template <details::not_const_iterator S, std::same_as<It> It2>
+    requires std::sized_sentinel_for<S, It>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr difference_type
+    operator-(S const& left, basic_const_iterator<It2> const& right) noexcept(
+        noexcept(left - right.current_)) {
+        return left - right.current_;
+    }
+
+#else
     template <details::not_const_iterator S>
     requires std::sized_sentinel_for<S, It>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr difference_type
@@ -381,7 +436,7 @@ public:
         noexcept(left - right.current_)) {
         return left - right.current_;
     }
-
+#endif
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr rvalue_reference
     iter_move(basic_const_iterator const& self) noexcept(noexcept(

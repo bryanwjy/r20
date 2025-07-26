@@ -5,11 +5,11 @@
 #include "rxx/details/bind_back.h"
 #include "rxx/details/integer_like.h"
 #include "rxx/details/view_traits.h"
+#include "rxx/utility.h"
 
 #include <functional>
 #include <iterator>
 #include <type_traits>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

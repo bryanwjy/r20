@@ -9,17 +9,18 @@
 #include "rxx/details/view_traits.h"
 #include "rxx/functional.h"
 #include "rxx/iterator.h"
+#include "rxx/iterator/move_iterator.h"
+#include "rxx/iterator/move_sentinel.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/utility.h"
 
 #include <compare>
 #include <span>
-#include <tuple>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -54,14 +55,14 @@ public:
     constexpr auto begin()
     requires (!details::simple_view<V>)
     {
-        return std::move_iterator(__RXX ranges::begin(base_));
+        return move_iterator(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const
     requires range<V const>
     {
-        return std::move_iterator(__RXX ranges::begin(base_));
+        return move_iterator(__RXX ranges::begin(base_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -69,9 +70,9 @@ public:
     requires (!details::simple_view<V>)
     {
         if constexpr (common_range<V>) {
-            return std::move_iterator(__RXX ranges::end(base_));
+            return move_iterator(__RXX ranges::end(base_));
         } else {
-            return std::move_sentinel(__RXX ranges::end(base_));
+            return move_sentinel(__RXX ranges::end(base_));
         }
     }
 
@@ -80,9 +81,9 @@ public:
     requires range<V const>
     {
         if constexpr (common_range<V const>) {
-            return std::move_iterator(__RXX ranges::end(base_));
+            return move_iterator(__RXX ranges::end(base_));
         } else {
-            return std::move_sentinel(__RXX ranges::end(base_));
+            return move_sentinel(__RXX ranges::end(base_));
         }
     }
 

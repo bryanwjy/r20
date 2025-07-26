@@ -14,10 +14,10 @@
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
+#include "rxx/utility.h"
 
 #include <cassert>
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -134,13 +134,14 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr range_rvalue_reference_t<V>
     iter_move(iterator const& other) noexcept(
-        noexcept(ranges::iter_move(other.current_))) {
+        noexcept(ranges::iter_move(std::declval<iterator_t<V> const&>()))) {
         return ranges::iter_move(other.current_);
     }
 
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
-        noexcept(ranges::iter_swap(left.current_, right.current_)))
+        noexcept(ranges::iter_swap(std::declval<iterator_t<V> const&>(),
+            std::declval<iterator_t<V> const&>())))
     requires std::indirectly_swappable<iterator_t<V>>
     {
         ranges::iter_swap(left.current_, right.current_);
@@ -165,6 +166,12 @@ class cache_latest_view<V>::sentinel {
 
     friend cache_latest_view;
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static constexpr decltype(auto) get_iter_current(
+        iterator const& iter) noexcept {
+        return (iter.current_);
+    }
+
 public:
     __RXX_HIDE_FROM_ABI sentinel() noexcept(
         std::is_nothrow_default_constructible_v<sentinel_t<V>>) = default;
@@ -177,7 +184,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator==(
         iterator const& left, sentinel const& right) {
-        return left.current_ == right.end_;
+        return get_iter_current(left) == right.end_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -185,7 +192,7 @@ public:
         iterator const& left, sentinel const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        return left.current_ - right.end_;
+        return get_iter_current(left) - right.end_;
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -193,7 +200,7 @@ public:
         sentinel const& left, iterator const& right)
     requires std::sized_sentinel_for<sentinel_t<V>, iterator_t<V>>
     {
-        return left.end_ - right.current_;
+        return left.end_ - get_iter_current(right);
     }
 
 private:

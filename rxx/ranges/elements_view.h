@@ -444,9 +444,10 @@ public:
     template <bool OtherConst>
     requires std::sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool
-    operator==(iterator<OtherConst> const& iter, sentinel const& sent) noexcept(
-        noexcept(get_current(iter) == sent.end_)) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+        iterator<OtherConst> const& iter,
+        sentinel const& sent) noexcept(noexcept(get_current(iter) ==
+        std::declval<sentinel_t<Base> const&>())) {
         return get_current(iter) == sent.end_;
     }
 
@@ -457,7 +458,7 @@ public:
         _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
             const_if<OtherConst, V>>
     operator-(iterator<OtherConst> const& iter, sentinel const& sent) noexcept(
-        noexcept(get_current(iter) - sent.end_)) {
+        noexcept(get_current(iter) - std::declval<sentinel_t<Base> const&>())) {
         return get_current(iter) - sent.end_;
     }
 
@@ -468,7 +469,7 @@ public:
         _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
             const_if<OtherConst, V>>
     operator-(sentinel const& sent, iterator<OtherConst> const& iter) noexcept(
-        noexcept(sent.end_ - get_current(iter))) {
+        noexcept(std::declval<sentinel_t<Base> const&>() - get_current(iter))) {
         return sent.end_ - get_current(iter);
     }
 

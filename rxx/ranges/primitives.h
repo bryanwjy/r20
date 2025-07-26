@@ -66,6 +66,10 @@ struct advance_t final {
         if constexpr (std::random_access_iterator<It>) {
             iter += offset;
         } else if constexpr (std::bidirectional_iterator<It>) {
+            RXX_DISABLE_WARNING_PUSH()
+#if RXX_COMPILER_GCC
+            RXX_DISABLE_WARNING("-Waggressive-loop-optimizations")
+#endif
             if (offset > 0) {
                 do {
                     ++iter;
@@ -75,6 +79,7 @@ struct advance_t final {
                     --iter;
                 } while (++offset);
             }
+            RXX_DISABLE_WARNING_POP()
         } else {
             assert(offset >= 0);
             while (offset-- > 0) {

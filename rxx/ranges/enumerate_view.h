@@ -13,9 +13,9 @@
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/tuple.h"
+#include "rxx/utility.h"
 
 #include <compare>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -270,7 +270,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(iterator const& self) noexcept(
-        noexcept(ranges::iter_move(self.current_)) &&
+        noexcept(ranges::iter_move(std::declval<iterator_t<Base> const&>())) &&
         std::is_nothrow_move_constructible_v<range_rvalue_reference_t<Base>>) {
         return tuple<difference_type, range_rvalue_reference_t<Base>>{
             self.pos_, ranges::iter_move(self.current_)};
@@ -301,7 +301,7 @@ class enumerate_view<V>::sentinel {
         : end_{std::move(end)} {}
 
     template <bool OtherConst>
-    __RXX_HIDE_FROM_ABI static decltype(auto) get_iter_current(
+    __RXX_HIDE_FROM_ABI static constexpr decltype(auto) get_iter_current(
         iterator<OtherConst> const& iter) noexcept {
         return (iter.current_);
     }
