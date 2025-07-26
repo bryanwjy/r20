@@ -14,7 +14,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges::details {
 template <typename T0, class T1>
 __RXX_HIDE_FROM_ABI inline constexpr bool fits_in_tail_padding_v = []() {
-    struct test_struct {
+    struct __RXX_ABI_PRIVATE test_struct {
         RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) T0 first;
         RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) T1 second;
     };
