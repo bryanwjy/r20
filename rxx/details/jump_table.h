@@ -52,7 +52,6 @@ class jump_table {
                     return 1;
                 }
             }(value, {});
-            { (T[]){Ns...} };
         }, "Invalid jump table index type");
 
     __RXX_HIDE_FROM_ABI static constexpr size_t size = sizeof...(Ns);
@@ -63,7 +62,7 @@ class jump_table {
     }
 
     template <size_t I>
-    struct ith_type : std::integral_constant<T, index_to_value(I)> {};
+    using ith_type RXX_NODEBUG = std::integral_constant<T, index_to_value(I)>;
 
     template <typename F, typename... Args>
     requires std::invocable<F, T, Args...>
