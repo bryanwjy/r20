@@ -6,14 +6,12 @@
 #include "rxx/algorithm/return_types.h"
 #include "rxx/details/construct_at.h"
 #include "rxx/details/destroy_at.h"
-#include "rxx/functional/equal_to.h"
 #include "rxx/iterator/iter_traits.h"
 #include "rxx/ranges/borrow_traits.h"
-#include "rxx/ranges/concepts.h"
 #include "rxx/ranges/primitives.h"
 
 #include <concepts>
-#include <new>
+#include <new> // IWYU pragma: keep
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
