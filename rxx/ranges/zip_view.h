@@ -8,7 +8,6 @@
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/tuple_functions.h"
-#include "rxx/functional.h"
 #include "rxx/iterator.h"
 #include "rxx/iterator/iter_move.h"
 #include "rxx/iterator/iter_swap.h"
@@ -36,7 +35,9 @@ concept zip_common = (sizeof...(Rs) == 1 && (... && common_range<Rs>)) ||
 template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr bool any_equals(Tuple1 const& t1, Tuple2 const& t2) {
-    auto const result = ranges::details::transform(ranges::equal_to{}, t1, t2);
+    auto const result = ranges::details::transform(
+        [](auto const& left, auto const& right) { return left == right; }, t1,
+        t2);
     return apply([](auto... value) { return (value || ...); }, result);
 }
 

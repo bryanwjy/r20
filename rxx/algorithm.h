@@ -45,4 +45,6 @@
 #include "rxx/algorithm/transform.h"
 #include "rxx/algorithm/unique.h"
 #include "rxx/algorithm/unique_copy.h"
+
+#include <algorithm>
 // IWYU pragma: end_exports
