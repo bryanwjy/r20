@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "rxx/config.h"
+
 #if RXX_COMPILER_MSVC
 
 #  include <new>

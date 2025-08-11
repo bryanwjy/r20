@@ -8,22 +8,20 @@
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/tuple_functions.h"
+#include "rxx/functional.h"
+#include "rxx/iterator.h"
 #include "rxx/iterator/iter_move.h"
 #include "rxx/iterator/iter_swap.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/empty_view.h"
-#include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/tuple.h"
 #include "rxx/utility.h"
 
-#include <compare>
-#include <functional>
-#include <iterator>
-#include <ranges>
+#include <compare> // IWYU pragma: keep
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -38,7 +36,7 @@ concept zip_common = (sizeof...(Rs) == 1 && (... && common_range<Rs>)) ||
 template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr bool any_equals(Tuple1 const& t1, Tuple2 const& t2) {
-    auto const result = ranges::details::transform(std::equal_to<>{}, t1, t2);
+    auto const result = ranges::details::transform(ranges::equal_to{}, t1, t2);
     return apply([](auto... value) { return (value || ...); }, result);
 }
 
@@ -102,7 +100,7 @@ public:
             return sentinel<true>(
                 details::transform(__RXX ranges::end, views_));
         } else if constexpr ((... && random_access_range<Rs const>)) {
-            return begin() + std::iter_difference_t<iterator<true>>(size());
+            return begin() + iter_difference_t<iterator<true>>(size());
         } else {
             return iterator<true>(details::transform(ranges::end, views_));
         }
@@ -248,7 +246,7 @@ public:
     {
         details::for_each(
             [&]<typename Iter>(
-                Iter& iter) { iter += std::iter_difference_t<Iter>(offset); },
+                Iter& iter) { iter += iter_difference_t<Iter>(offset); },
             current_);
         return *this;
     }
@@ -258,7 +256,7 @@ public:
     {
         details::for_each(
             [&]<typename Iter>(
-                Iter& iter) { iter -= std::iter_difference_t<Iter>(offset); },
+                Iter& iter) { iter -= iter_difference_t<Iter>(offset); },
             current_);
         return *this;
     }
@@ -269,7 +267,7 @@ public:
     {
         return details::transform(
             [&]<typename Iter>(Iter& iter) -> decltype(auto) {
-                return iter[std::iter_difference_t<Iter>(idx)];
+                return iter[iter_difference_t<Iter>(idx)];
             },
             current_);
     }

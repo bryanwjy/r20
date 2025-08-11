@@ -1,11 +1,11 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/iterator/iter_move.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/type_traits/common_reference.h"
 
 #include <concepts>
-#include <ranges>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -24,7 +24,7 @@ using concat_rvalue_reference_t =
 template <typename Ref, typename RRef, typename It>
 concept concat_indirectly_readable_impl = requires(It const it) {
     { *it } -> std::convertible_to<Ref>;
-    { std::ranges::iter_move(it) } -> std::convertible_to<RRef>;
+    { __RXX ranges::iter_move(it) } -> std::convertible_to<RRef>;
 };
 
 template <typename... Ts>

@@ -2,15 +2,16 @@
 
 #pragma once
 
-#include "rxx/configuration/compiler.h"
-#include "rxx/configuration/keywords.h"
-#include "rxx/configuration/standard.h"
+#include "rxx/configuration/builtin_check.h"
 
 #if RXX_HAS_BUILTIN(__builtin_memcmp)
 
 #  define __RXX_MEMCMP __builtin_memcmp
 
 #else
+
+#  include "rxx/configuration/compiler.h"
+#  include "rxx/configuration/standard.h"
 
 #  if RXX_CXX
 extern "C" int memcmp(void const*, void const*, decltype(sizeof(0)));

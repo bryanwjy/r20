@@ -8,7 +8,6 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/referenceable.h"
-#include "rxx/details/simple_view.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/adjacent_view.h"
 #include "rxx/ranges/all.h"

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "rxx/configuration/compiler.h"
+#include "rxx/configuration/compiler.h" // IWYU pragma: keep
 
 #ifndef _LIBCPP_HAS_NO_EXCEPTIONS
 #  if defined(__cpp_exceptions)

@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "rxx/preprocessor/concatenation.h"
-#include "rxx/preprocessor/paste.h"
-
 #ifdef _GLIBCXX_RELEASE
+
+#  include "rxx/preprocessor/concatenation.h"
+#  include "rxx/preprocessor/paste.h"
 
 #  define __RXX_GLIBCXX_GCC_MAJOR _GLIBCXX_RELEASE
 

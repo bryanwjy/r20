@@ -19,7 +19,6 @@
 #include "rxx/utility.h"
 
 #include <cassert>
-#include <compare>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

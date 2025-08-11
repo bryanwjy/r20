@@ -12,7 +12,6 @@
 #include "rxx/utility.h"
 
 #include <concepts>
-#include <functional>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

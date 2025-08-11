@@ -3,7 +3,7 @@
 
 #include "rxx/config.h"
 
-#include <ranges>
+#include <ranges> // IWYU pragma: keep
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

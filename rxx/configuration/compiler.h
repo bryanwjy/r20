@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "rxx/preprocessor/concatenation.h"
+#include "rxx/preprocessor/concatenation.h" // IWYU pragma: keep
 
 #define __RXX_COMPILER_TAG_CONCAT_1(NAME, MAJOR, MINOR, PATCH) \
     NAME##_##MAJOR##MINOR##PATCH

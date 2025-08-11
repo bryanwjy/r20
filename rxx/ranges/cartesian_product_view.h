@@ -3,7 +3,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
@@ -20,7 +19,7 @@
 #include "rxx/utility.h"
 
 #include <cassert>
-#include <compare>
+#include <compare> // IWYU pragma: keep
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "rxx/configuration/builtins.h"
-#include "rxx/configuration/compiler.h"
-#include "rxx/configuration/declspec.h"
-#include "rxx/configuration/keywords.h"
+#include "rxx/configuration/compiler.h" // IWYU pragma: keep
+#include "rxx/configuration/declspec.h" // IWYU pragma: keep
+#include "rxx/configuration/keywords.h" // IWYU pragma: keep
+#include "rxx/configuration/standard.h"
 
 #if defined(__cplusplus) && defined(__has_cpp_attribute)
 #  define RXX_HAS_CPP_ATTRIBUTE(NAME) __has_cpp_attribute(NAME)
@@ -306,6 +306,10 @@
 #if RXX_HAS_CPP_ATTRIBUTE(clang::nodebug)
 #  define RXX_NODEBUG [[clang::nodebug]]
 #  define __RXX_ATTRIBUTE_NODEBUG clang::nodebug
+#  define __RXX_ATTRIBUTE_TYPE_CPP_NODEBUG
+#elif RXX_HAS_CPP_ATTRIBUTE(gnu::nodebug)
+#  define RXX_NODEBUG [[gnu::nodebug]]
+#  define __RXX_ATTRIBUTE_NODEBUG gnu::nodebug
 #  define __RXX_ATTRIBUTE_TYPE_CPP_NODEBUG
 #else
 #  define RXX_NODEBUG

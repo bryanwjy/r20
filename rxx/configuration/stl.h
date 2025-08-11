@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "rxx/configuration/glibcxx.h"
+#include "rxx/configuration/glibcxx.h"  // IWYU pragma: keep
 #include "rxx/configuration/standard.h" // IWYU pragma: keep
 #include "rxx/preprocessor/concatenation.h"
 

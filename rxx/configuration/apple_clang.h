@@ -15,6 +15,10 @@
 
 /* Define new version when needed, newest at the top */
 
+#  define __RXX_APPLE_TO_CLANG_MAJOR_17000013 19
+#  define __RXX_APPLE_TO_CLANG_MINOR_17000013 1
+#  define __RXX_APPLE_TO_CLANG_PATCH_17000013 4
+
 #  define __RXX_APPLE_TO_CLANG_MAJOR_16000023 17
 #  define __RXX_APPLE_TO_CLANG_MINOR_16000023 0
 #  define __RXX_APPLE_TO_CLANG_PATCH_16000023 6

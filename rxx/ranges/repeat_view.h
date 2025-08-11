@@ -1,10 +1,8 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
-#include "rxx/details/const_if.h"
 #include "rxx/details/integer_like.h"
 #include "rxx/details/movable_box.h"
-#include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/view_traits.h"
 #include "rxx/iterator.h"
@@ -16,7 +14,7 @@
 #include "rxx/utility.h"
 
 #include <cassert>
-#include <compare>
+#include <compare> // IWYU pragma: keep
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

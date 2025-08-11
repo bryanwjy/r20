@@ -8,7 +8,7 @@
 #include "rxx/ranges/primitives.h"
 
 #include <cassert>
-#include <ranges>
+#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

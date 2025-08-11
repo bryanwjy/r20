@@ -7,9 +7,6 @@
 #include "rxx/functional/less.h"
 #include "rxx/utility.h"
 
-#include <concepts>
-#include <type_traits>
-
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 

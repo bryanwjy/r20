@@ -1,12 +1,10 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
-#include "rxx/details/adaptor_closure.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/iterator_category_of.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/referenceable.h"
-#include "rxx/details/simple_view.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -17,7 +15,7 @@
 #include "rxx/tuple/apply.h"
 #include "rxx/utility.h"
 
-#include <compare>
+#include <compare> // IWYU pragma: keep
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
