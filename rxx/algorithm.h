@@ -10,6 +10,7 @@
 #include "rxx/algorithm/copy.h"
 #include "rxx/algorithm/count.h"
 #include "rxx/algorithm/ends_with.h"
+#include "rxx/algorithm/equal.h"
 #include "rxx/algorithm/fill.h"
 #include "rxx/algorithm/find.h"
 #include "rxx/algorithm/find_end.h"
