@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "rxx/configuration/compiler.h"
+#include "rxx/configuration/compiler.h" // IWYU pragma: keep
 #include "rxx/configuration/pragma.h"
-#include "rxx/configuration/standard.h"
+#include "rxx/configuration/standard.h" // IWYU pragma: keep
 
 #if RXX_SUPPORTS_GNU_ASM
 #  define RXX_COMPILER_BARRIER() __asm__ __volatile__("" ::: "memory")
@@ -18,6 +18,9 @@ void _ReadWriteBarrier();
 #  pragma intrinsic(_ReadWriteBarrier)
 #  define RXX_COMPILER_BARRIER() _ReadWriteBarrier()
 #else
+
+#  include "rxx/configuration/pragma.h"
+
 RXX_PRAGMA_WARN("Unrecognize compiler")
 #  define RXX_COMPILER_BARRIER()
 #endif

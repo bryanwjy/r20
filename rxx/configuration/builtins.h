@@ -4,8 +4,8 @@
 
 #include "rxx/configuration/builtin_check.h"
 #include "rxx/configuration/compiler.h"
-#include "rxx/configuration/msvc_builtins.h"
-#include "rxx/configuration/standard.h"
+#include "rxx/configuration/msvc_builtins.h" // IWYU pragma: keep
+#include "rxx/configuration/standard.h"      // IWYU pragma: keep
 
 #if RXX_HAS_BUILTIN(__builtin_launder)
 #  define RXX_BUILTIN_launder(X) __builtin_launder(X)

@@ -3,9 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "rxx/tuple/fwd.h"
-
 #include "rxx/ranges/get_element.h"
+
+#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

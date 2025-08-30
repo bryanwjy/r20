@@ -4,10 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/const_if.h"
-#include "rxx/details/iterator_category_of.h"
 #include "rxx/details/non_propagating_cache.h"
-#include "rxx/details/simple_view.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
@@ -17,7 +14,6 @@
 #include "rxx/utility.h"
 
 #include <cassert>
-#include <compare>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

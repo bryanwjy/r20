@@ -2,11 +2,12 @@
 
 #pragma once
 
-#include "rxx/configuration/compiler.h"
-#include "rxx/preprocessor/concatenation.h"
-#include "rxx/preprocessor/is_empty.h"
+#include "rxx/configuration/compiler.h" // IWYU pragma: keep
 
 #if RXX_COMPILER_MSVC
+
+#  include "rxx/preprocessor/concatenation.h"
+#  include "rxx/preprocessor/is_empty.h"
 
 #  ifdef __has_builtin
 #    error '__has_builtin' definition collision

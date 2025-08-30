@@ -4,8 +4,8 @@
 #include "rxx/config.h"
 
 #include "rxx/details/copy_cvref.h"
-#include "rxx/ranges/get_element.h"
 
+#include <concepts>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -152,6 +152,14 @@ concept common_reference_with =
 RXX_DEFAULT_NAMESPACE_END
 
 #if !RXX_CXX23
+
+#  if RXX_LIBSTDCXX & __has_include(<bits/stl_pair.h>)
+#    include <bits/stl_pair.h>
+#  elif RXX_LIBCXX & __has_include(<__fwd/pair.h>)
+#    include <__fwd/pair.h>
+#  else
+#    include <utility>
+#  endif
 
 template <typename T1, typename T2, typename U1, typename U2,
     template <typename> class TQual, template <typename> class UQual>

@@ -15,7 +15,7 @@
 #include "rxx/tuple.h"
 #include "rxx/utility.h"
 
-#include <compare>
+#include <compare> // IWYU pragma: keep
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

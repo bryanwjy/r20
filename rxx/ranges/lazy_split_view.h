@@ -10,8 +10,6 @@
 #include "rxx/details/iterator_category_of.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
-#include "rxx/details/to_unsigned_like.h"
-#include "rxx/details/variant_base.h"
 #include "rxx/functional.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
@@ -24,7 +22,6 @@
 #include "rxx/utility.h"
 
 #include <cassert>
-#include <compare>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

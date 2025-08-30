@@ -3,10 +3,7 @@
 
 #include "rxx/config.h"
 
-#include "rxx/type_traits/common_reference.h"
-
 #include <concepts>
-#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -22,7 +19,7 @@ concept boolean_testable_impl = std::convertible_to<T, bool> && requires {
 };
 
 template <typename T>
-concept boolean_testable = std::convertible_to<T, bool> && requires {
+concept boolean_testable = boolean_testable_impl<T> && requires {
     { !std::declval<T>() } -> boolean_testable_impl;
 };
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "rxx/configuration/compiler.h"
+#include "rxx/configuration/compiler.h" // IWYU pragma: keep
 
 #if RXX_COMPILER_MSVC
 #  ifdef __cplusplus

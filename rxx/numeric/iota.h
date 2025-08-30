@@ -10,8 +10,6 @@
 #include "rxx/ranges/concepts.h"
 #include "rxx/utility.h"
 
-#include <concepts>
-
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 

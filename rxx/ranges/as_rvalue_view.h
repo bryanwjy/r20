@@ -4,23 +4,16 @@
 #include "rxx/config.h"
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
-#include "rxx/details/view_traits.h"
-#include "rxx/functional.h"
 #include "rxx/iterator.h"
 #include "rxx/iterator/move_iterator.h"
 #include "rxx/iterator/move_sentinel.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
-#include "rxx/ranges/get_element.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/utility.h"
-
-#include <compare>
-#include <span>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

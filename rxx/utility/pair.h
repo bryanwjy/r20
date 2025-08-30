@@ -3,11 +3,11 @@
 
 #include "rxx/config.h"
 
-#include "rxx/compare/three_way_synthesizer.h"
-
-#include <utility>
-
 #if RXX_LIBSTDCXX && !RXX_LIBSTDCXX_AFTER(2024, 04, 16)
+
+#  include "rxx/compare/three_way_synthesizer.h"
+
+#  include <utility>
 
 RXX_STD_NAMESPACE_BEGIN
 

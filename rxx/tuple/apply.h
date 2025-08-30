@@ -3,8 +3,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/tuple/fwd.h"
-
 #include "rxx/tuple/utils.h"
 #include "rxx/utility/forward_like.h"
 

@@ -7,8 +7,6 @@
 #include "rxx/functional/equal_to.h"
 #include "rxx/utility.h"
 
-#include <type_traits>
-
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
 struct not_equal_to : private equal_to {

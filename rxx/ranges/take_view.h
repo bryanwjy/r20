@@ -3,12 +3,10 @@
 
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
-#include "rxx/details/integer_like.h"
+#include "rxx/details/integer_like.h" // IWYU pragma: keep
 #include "rxx/details/view_traits.h"
 #include "rxx/utility.h"
 
-#include <functional>
-#include <iterator>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

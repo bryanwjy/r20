@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "rxx/configuration/builtin_check.h"
 #include "rxx/configuration/compiler.h"
 #include "rxx/configuration/keywords.h"
 #include "rxx/configuration/standard.h"

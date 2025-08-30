@@ -6,7 +6,6 @@
 #include "rxx/utility.h"
 
 #include <array>
-#include <concepts>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

@@ -2,9 +2,6 @@
 
 #pragma once
 
-#include "rxx/configuration/compiler.h"
-#include "rxx/configuration/standard.h"
-
 #ifdef __is_identifier
 #  define RXX_IS_RESERVED_IDENTIFIER(X) !__is_identifier(X)
 #else
