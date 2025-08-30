@@ -3,6 +3,7 @@
 #pragma once
 
 #include "rxx/configuration/compiler.h"
+#include "rxx/preprocessor/is_empty.h"
 
 #if RXX_COMPILER_MSVC
 #  define RXX_HAS_KEYWORD(NAME)                            \
