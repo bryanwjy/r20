@@ -7,7 +7,7 @@
 #include "rxx/concepts/equality_comparable_with.h"
 #include "rxx/type_traits/common_reference.h"
 
-#include <concepts>
+#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 

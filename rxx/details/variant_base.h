@@ -13,6 +13,7 @@
 
 #include <concepts>
 #include <type_traits>
+#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -296,6 +297,62 @@ make_from_multi_union(size_t index, U&& arg) noexcept(
         index);
 }
 
+template <typename T>
+using array_t = T[1];
+template <typename T, typename>
+struct variant_overload {};
+template <size_t I, typename T>
+struct variant_typeid {};
+template <typename T, size_t I, typename T_i>
+requires requires(T val) { array_t<T_i>{std::move(val)}; }
+struct variant_overload<T, variant_typeid<I, T_i>> {
+    static std::integral_constant<size_t, I> test(T_i) noexcept;
+};
+template <typename T, typename... Vs>
+struct variant_overload_for_t;
+template <typename T, size_t... Is, typename... Vs>
+struct variant_overload_for_t<T, variant_typeid<Is, Vs>...> :
+    variant_overload<T, variant_typeid<Is, Vs>>... {
+    using variant_overload<T, variant_typeid<Is, Vs>>::test...;
+};
+template <typename T, typename... Ts, size_t... Is>
+auto make_variant_overload_for(std::index_sequence<Is...>) noexcept
+    -> variant_overload_for_t<T, variant_typeid<Is, Ts>...>;
+template <typename T, typename... Ts>
+using make_variant_overload_for_t =
+    decltype(make_variant_overload_for<T, Ts...>(
+        std::index_sequence_for<Ts...>{}));
+
+template <typename T, typename... Ts>
+inline constexpr size_t conversion_index =
+    decltype(make_variant_overload_for_t<T, Ts...>::test(
+        std::declval<T>()))::value;
+
+template <typename T, typename... Ts>
+using conversion_type = template_element_t<conversion_index<T, Ts...>,
+    __RXX details::type_list<Ts...>>;
+
+template <typename T>
+inline constexpr bool is_tag_v = false;
+template <typename T>
+inline constexpr bool is_tag_v<std::in_place_type_t<T>> = true;
+template <size_t I>
+inline constexpr bool is_tag_v<std::in_place_index_t<I>> = true;
+
+template <typename... Ts>
+class variant_base;
+
+template <typename U, typename... Ts>
+concept overloadable_conversion_to = sizeof...(Ts) > 0 &&
+    !std::same_as<variant_base<Ts...>, std::remove_cvref_t<U>> &&
+    !is_tag_v<std::remove_cvref_t<U>> && requires(U&& val) {
+        typename make_variant_overload_for_t<U, Ts...>;
+        make_variant_overload_for_t<U, Ts...>::test(std::forward<U>(val));
+        typename std::in_place_index_t<conversion_index<U, Ts...>>;
+        typename conversion_type<U, Ts...>;
+        requires std::constructible_from<conversion_type<U, Ts...>, U>;
+    };
+
 template <typename... Ts>
 class variant_base {
     using union_type = multi_union<Ts..., valueless_t>;
@@ -493,6 +550,12 @@ public:
         !(... && std::is_trivially_copy_constructible_v<Ts>))
         : variant_base(dispatch, other.index(), other.union_ref()) {}
 
+    template <overloadable_conversion_to<Ts...> U>
+    __RXX_HIDE_FROM_ABI constexpr variant_base(U&& arg) noexcept(
+        std::is_nothrow_constructible_v<conversion_type<U, Ts...>, U>)
+        : variant_base(std::in_place_index<conversion_index<U, Ts...>>,
+              std::forward<U>(arg)) {}
+
     __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) = delete;
     __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) noexcept
     requires ((... && std::is_move_constructible_v<Ts>) &&
@@ -512,6 +575,26 @@ public:
     requires ((... && std::is_copy_assignable_v<Ts>) &&
                  (... && std::is_trivially_copy_assignable_v<Ts>))
     = default;
+
+    template <overloadable_conversion_to<Ts...> U>
+    __RXX_HIDE_FROM_ABI constexpr variant_base& operator=(U&& arg) noexcept(
+        std::is_nothrow_constructible_v<conversion_type<U, Ts...>, U> &&
+        std::is_nothrow_move_constructible_v<conversion_type<U, Ts...>> &&
+        std::is_nothrow_assignable_v<conversion_type<U, Ts...>&, U>) {
+        constexpr auto idx = conversion_index<U, Ts...>;
+        if (idx == index()) {
+            value_ref<idx>() = std::forward<U>(arg);
+        } else if constexpr (std::is_nothrow_constructible_v<
+                                 conversion_type<U, Ts...>, U> ||
+            !std::is_nothrow_move_constructible_v<conversion_type<U, Ts...>>) {
+            reinitialize_value<idx>(std::forward<U>(arg));
+        } else {
+            reinitialize_value<idx>(
+                conversion_type<U, Ts...>(std::forward<U>(arg)));
+        }
+
+        return *this;
+    }
 
     __RXX_HIDE_FROM_ABI constexpr variant_base&
     operator=(variant_base const& other) noexcept(
