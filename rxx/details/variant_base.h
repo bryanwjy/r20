@@ -300,7 +300,9 @@ make_from_multi_union(size_t index, U&& arg) noexcept(
 template <typename T>
 using array_t = T[1];
 template <typename T, typename>
-struct variant_overload {};
+struct variant_overload {
+    static void test() noexcept;
+};
 template <size_t I, typename T>
 struct variant_typeid {};
 template <typename T, size_t I, typename T_i>

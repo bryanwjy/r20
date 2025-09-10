@@ -79,6 +79,7 @@ class promise_base {
 public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     std::suspend_always initial_suspend() const noexcept { return {}; }
+
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     std::suspend_always yield_value(Y val) noexcept {
         bottom_value() = RXX_BUILTIN_addressof(val);
@@ -94,18 +95,18 @@ public:
         return element_awaiter(value_type(val), bottom_value());
     }
 
-    template <typename R2, typename V2, typename A2, typename U2>
+    template <typename R2, typename V2, typename A2, typename Unused>
     requires std::same_as<yielded_for<R2, V2>, Y>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
-        ranges::elements_of<__RXX generator<R2, V2, A2>&&, U2>
+        ranges::elements_of<__RXX generator<R2, V2, A2>&&, Unused>
             elements) noexcept {
         return nested_awaiter{std::move(elements.range)};
     }
 
-    template <typename R2, typename V2, typename A2, typename U2>
+    template <typename R2, typename V2, typename A2, typename Unused>
     requires std::same_as<yielded_for<R2, V2>, Y>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
-        ranges::elements_of<__RXX generator<R2, V2, A2>&, U2>
+        ranges::elements_of<__RXX generator<R2, V2, A2>&, Unused>
             elements) noexcept {
         return nested_awaiter{std::move(elements.range)};
     }
@@ -297,7 +298,7 @@ struct promise_base<Y>::nested_awaiter {
 
     __RXX_HIDE_FROM_ABI nested_awaiter(Generator generator) noexcept
         : generator(std::move(generator)) {
-        this->generator.mark_start();
+        this->generator.activate();
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -550,10 +551,7 @@ class generator : public ranges::view_interface<generator<Ref, V, Allocator>> {
     using reference RXX_NODEBUG = details::generator::reference_for<Ref, V>;
     using RRef RXX_NODEBUG = std::conditional_t<std::is_reference_v<reference>,
         std::remove_reference_t<reference>&&, reference>;
-    using alloc_traits RXX_NODEBUG = std::allocator_traits<Allocator>;
-    using allocator_type RXX_NODEBUG = Allocator;
 
-    static_assert(std::is_pointer_v<typename alloc_traits::pointer>);
     static_assert(!std::is_const_v<value> && !std::is_volatile_v<value> &&
         std::is_object_v<value>);
     static_assert(std::is_reference_v<reference> ||
@@ -568,8 +566,9 @@ class generator : public ranges::view_interface<generator<Ref, V, Allocator>> {
 public:
     using yielded RXX_NODEBUG = details::generator::yielded_for<Ref, V>;
     class promise_type :
-        details::generator::promise_base<yielded>,
-        details::generator::promise_allocator<Allocator> {
+        public details::generator::promise_base<yielded>,
+        public details::generator::promise_allocator<Allocator> {
+    public:
         generator get_return_object() noexcept {
             return {std::coroutine_handle<promise_type>::from_promise(*this)};
         }
@@ -607,6 +606,7 @@ public:
     }
 
 private:
+    friend details::generator::promise_base<yielded>;
     using base_handle =
         std::coroutine_handle<details::generator::promise_base<yielded>>;
 
