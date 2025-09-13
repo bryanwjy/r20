@@ -2,8 +2,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/configuration/builtins.h"
-
 #include <memory_resource>
 
 #if __cpp_lib_coroutine >= 201902L
@@ -300,7 +298,6 @@ struct promise_base<Y>::element_awaiter {
 template <typename Y>
 template <typename Generator>
 struct promise_base<Y>::nested_awaiter {
-    Generator generator;
     static_assert(is_specialization<Generator>);
     static_assert(std::same_as<typename Generator::yielded, Y>);
 
@@ -331,6 +328,8 @@ struct promise_base<Y>::nested_awaiter {
             std::rethrow_exception(exception);
         }
     }
+
+    Generator generator;
 };
 
 template <typename A>
@@ -362,7 +361,7 @@ struct rebind<A, U> {
     using type = typename A::template rebind<U>::other;
 };
 template <typename A, typename U>
-using rebind_t = typename rebind<A, U>::type;
+using rebind_t RXX_NODEBUG = typename rebind<A, U>::type;
 
 template <typename A>
 class promise_allocator {
@@ -507,6 +506,7 @@ class promise_allocator<void> {
     }
 
     template <typename A>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     static void* allocate(A const& alloc_src, size_t size) {
         using allocator_type = rebind_t<A, allocation_block>;
         using alloc_traits = std::allocator_traits<allocator_type>;
@@ -528,7 +528,7 @@ class promise_allocator<void> {
     }
 
 public:
-    void* operator new(size_t size) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) void* operator new(size_t size) {
         auto const total_size = allocation_size_bytes<void>(size);
         auto ptr = ::operator new(total_size);
         auto const address = reinterpret_cast<uintptr_t>(ptr);
@@ -539,18 +539,20 @@ public:
     }
 
     template <typename A, typename... Args>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     void* operator new(
         size_t size, std::allocator_arg_t, A const& alloc, Args const&...) {
         return allocate(alloc, size);
     }
 
     template <typename Self, typename A, typename... Args>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     void* operator new(size_t size, Self const&, std::allocator_arg_t,
         A const& alloc, Args const&...) {
         return allocate(alloc, size);
     }
 
-    void operator delete(void* ptr, size_t size) noexcept {
+    __RXX_HIDE_FROM_ABI void operator delete(void* ptr, size_t size) noexcept {
         auto const address = reinterpret_cast<uintptr_t>(ptr);
         auto deallocator_func = *deallocator_address(address, size);
         deallocator_func(ptr, size);
@@ -584,6 +586,7 @@ public:
         public details::generator::promise_base<yielded>,
         public details::generator::promise_allocator<Allocator> {
     public:
+        RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
         generator get_return_object() noexcept {
             return {std::coroutine_handle<promise_type>::from_promise(*this)};
         }
@@ -592,43 +595,45 @@ public:
     // static_assert(std::is_pointer_interconvertible_base_of_v<
     //     details::generator::promise_base<yielded>, promise_type>);
 
-    generator(generator const&) = delete;
+    __RXX_HIDE_FROM_ABI generator(generator const&) = delete;
 
-    generator(generator&& other) noexcept
+    __RXX_HIDE_FROM_ABI generator(generator&& other) noexcept
         : coroutine_(exchange(other.coroutine_, nullptr))
         , active_(exchange(other.active_, false)) {}
-    ~generator() {
+    __RXX_HIDE_FROM_ABI ~generator() {
         if (auto& instance = this->coroutine_) {
             instance.destroy();
         }
     }
 
-    generator& operator=(generator other) noexcept {
+    __RXX_HIDE_FROM_ABI generator& operator=(generator other) noexcept {
         swap(other.coroutine_, this->coroutine_);
         this->active_ = exchange(other.active_, this->active_);
         return *this;
     }
 
-    iterator begin() {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) iterator begin() {
         this->activate();
         auto handle = base_handle::from_promise(coroutine_.promise());
         handle.promise().nested_.top() = handle;
         return {handle};
     }
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     std::default_sentinel_t end() const noexcept {
         return std::default_sentinel;
     }
 
 private:
     friend details::generator::promise_base<yielded>;
-    using base_handle =
+    using base_handle RXX_NODEBUG =
         std::coroutine_handle<details::generator::promise_base<yielded>>;
 
-    generator(std::coroutine_handle<promise_type> coroutine) noexcept
+    __RXX_HIDE_FROM_ABI generator(
+        std::coroutine_handle<promise_type> coroutine) noexcept
         : coroutine_{std::move(coroutine)} {}
 
-    void activate() noexcept {
+    __RXX_HIDE_FROM_ABI void activate() noexcept {
         assert(!this->active_);
         this->active_ = true;
     }
@@ -641,16 +646,19 @@ template <typename Ref, typename V, typename Allocator>
 class generator<Ref, V, Allocator>::iterator {
     friend generator;
 
-    iterator(base_handle instance) : coroutine_{instance} { this->next(); }
+    __RXX_HIDE_FROM_ABI iterator(base_handle instance) : coroutine_{instance} {
+        this->next();
+    }
 
-    void next() {
+    __RXX_HIDE_FROM_ABI void next() {
         auto& top = this->coroutine_.promise().nested_.top();
         top.resume();
     }
 
 public:
-    using value_type = value;
-    using difference_type = ptrdiff_t;
+    using value_type RXX_NODEBUG = value;
+    using difference_type RXX_NODEBUG = ptrdiff_t;
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend bool operator==(
         iterator const& it, std::default_sentinel_t) noexcept {
         return it.coroutine_.done();
@@ -658,21 +666,22 @@ public:
 
     friend generator;
 
-    iterator(iterator&& other) noexcept
+    __RXX_HIDE_FROM_ABI iterator(iterator&& other) noexcept
         : coroutine_(exchange(other.coroutine_, {})) {}
 
-    iterator& operator=(iterator&& other) noexcept {
+    __RXX_HIDE_FROM_ABI iterator& operator=(iterator&& other) noexcept {
         this->coroutine_ = exchange(other.coroutine_, {});
         return *this;
     }
 
-    iterator& operator++() {
+    __RXX_HIDE_FROM_ABI iterator& operator++() {
         next();
         return *this;
     }
 
-    void operator++(int) { this->operator++(); }
+    __RXX_HIDE_FROM_ABI void operator++(int) { this->operator++(); }
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     reference operator*() const
         noexcept(std::is_nothrow_move_constructible_v<reference>) {
         auto& promise = this->coroutine_.promise();
