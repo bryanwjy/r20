@@ -1,10 +1,11 @@
 // Copyright 2025 Bryan Wong
+#pragma once
 
 #include "rxx/config.h"
 
-#include <memory_resource>
+#if __has_include(<coroutine>)
 
-#if __cpp_lib_coroutine >= 201902L
+#  define RXX_SUPPORTS_GENERATOR 1
 
 #  include "rxx/details/variant_base.h"
 #  include "rxx/ranges/elements_of.h"
@@ -12,9 +13,10 @@
 #  include "rxx/ranges/view_interface.h"
 #  include "rxx/utility/exchange.h"
 
+#  include <coroutine>
+#  include <cstdint>
 #  include <type_traits>
 
-// IWYU pragma: begin_exports
 #  if RXX_LIBSTDCXX && __has_include(<bits/allocator.h>) \
       && __has_include(<bits/uses_allocator.h>) \
       && __has_include(<bits/alloc_traits.h>)
@@ -39,8 +41,6 @@ template <typename T>
 class polymorphic_allocator;
 }
 RXX_STD_NAMESPACE_END
-#  include <coroutine>
-// IWYU pragma: end_exports
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -699,5 +699,6 @@ using generator =
 }
 
 RXX_DEFAULT_NAMESPACE_END
-
+#else
+#  define RXX_SUPPORTS_GENERATOR 0
 #endif
