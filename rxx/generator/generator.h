@@ -4,6 +4,8 @@
 
 #include "rxx/configuration/builtins.h"
 
+#include <memory_resource>
+
 #if __cpp_lib_coroutine >= 201902L
 
 #  include "rxx/details/variant_base.h"
@@ -33,6 +35,12 @@
 #  else
 #    include <memory>
 #  endif
+RXX_STD_NAMESPACE_BEGIN
+namespace pmr {
+template <typename T>
+class polymorphic_allocator;
+}
+RXX_STD_NAMESPACE_END
 #  include <coroutine>
 // IWYU pragma: end_exports
 
@@ -343,6 +351,11 @@ struct allocation_block {
 
 template <typename A, typename U>
 struct rebind {};
+template <template <typename...> typename Alloc, typename U, typename T,
+    typename... Args>
+struct rebind<Alloc<T, Args...>, U> {
+    using type = Alloc<U, Args...>;
+};
 template <typename A, typename U>
 requires requires { typename A::template rebind<U>::other; }
 struct rebind<A, U> {
@@ -358,12 +371,12 @@ class promise_allocator {
     static_assert(std::is_pointer_v<typename alloc_traits::pointer>);
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    static A* allocator_address(void* const ptr, size_t const size) noexcept {
-        static_assert(!stateless_allocator<A>);
-        auto const address =
-            (reinterpret_cast<uintptr_t>(ptr) + size + alignof(A) - 1) &
-            ~(alignof(A) - 1);
-        return reinterpret_cast<A*>(address);
+    static allocator_type* allocator_address(
+        uintptr_t const ptr, size_t const size) noexcept {
+        static_assert(!stateless_allocator<allocator_type>);
+        auto const address = (ptr + size + alignof(allocator_type) - 1) &
+            ~(alignof(allocator_type) - 1);
+        return reinterpret_cast<allocator_type*>(address);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -378,11 +391,13 @@ class promise_allocator {
         if constexpr (stateless_allocator<allocator_type>) {
             return alloc.allocate(allocation_block::count(size_bytes));
         } else {
-            auto const block_count = allocation_block::count(size_bytes);
+            auto const block_count =
+                allocation_block::count(allocation_size_bytes(size_bytes));
             auto* const ptr = alloc.allocate(block_count);
             auto const address = reinterpret_cast<uintptr_t>(ptr);
             auto* alloc_ptr = allocator_address(address, size_bytes);
-            return ::new (alloc_ptr) allocator_type(std::move(alloc));
+            ::new (alloc_ptr) allocator_type(std::move(alloc));
+            return ptr;
         }
     }
 
@@ -667,6 +682,12 @@ public:
 private:
     base_handle coroutine_;
 };
+
+namespace pmr {
+template <typename Ref, typename V = void>
+using generator =
+    __RXX generator<Ref, V, std::pmr::polymorphic_allocator<std::byte>>;
+}
 
 RXX_DEFAULT_NAMESPACE_END
 
