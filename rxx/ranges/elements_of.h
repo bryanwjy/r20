@@ -17,7 +17,6 @@
 #else
 #  include <memory>
 #endif
-// IWYU pragma: end_exports
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
