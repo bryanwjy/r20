@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/configuration/builtins.h"
 #include "rxx/details/concat.h"
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
@@ -467,12 +468,29 @@ public:
         iterator const& left, iterator const& right)
     requires details::concat_is_random_access<Const, Vs...>
     {
+        // Split into 3 branches to reduce memory usage when compiling with GCC
+        auto const cmp = (right.it_.index() < left.it_.index()) -
+            (left.it_.index() < right.it_.index());
+        if (cmp < 0) {
+            return -(right - left);
+        }
+
+        if (cmp == 0) {
+            return details::jump_table_for<base_iter>(
+                [&]<size_t I>(details::size_constant<I>) -> difference_type {
+                    return left.it_.template value_ref<I>() -
+                        right.it_.template value_ref<I>();
+                },
+                left.it_.index());
+        }
+
         return details::jump_table_for<base_iter>(
             [&]<size_t Ix>(details::size_constant<Ix>) -> difference_type {
-                return details::jump_table_for<base_iter>(
-                    [&]<size_t Iy>(
-                        details::size_constant<Iy>) -> difference_type {
-                        if constexpr (Ix > Iy) {
+                if constexpr (Ix != 0) {
+                    return details::jump_table_for<base_iter>(
+                        [&]<size_t Iy>
+                        requires (Ix > Iy)
+                        (details::size_constant<Iy>) -> difference_type {
                             auto const diff_y = ranges::distance(
                                 right.it_.template value_ref<Iy>(),
                                 right.template get_end<Iy>());
@@ -489,14 +507,11 @@ public:
                             }(std::make_index_sequence<Ix - Iy - 1>{});
 
                             return diff_y + result + diff_x;
-                        } else if constexpr (Ix < Iy) {
-                            return -(right - left);
-                        } else {
-                            return left.it_.template value_ref<Ix>() -
-                                right.it_.template value_ref<Iy>();
-                        }
-                    },
-                    right.it_.index());
+                        },
+                        right.it_.index());
+                } else {
+                    RXX_BUILTIN_unreachable();
+                }
             },
             left.it_.index());
     }
@@ -561,8 +576,8 @@ public:
     __RXX_HIDE_FROM_ABI friend constexpr void iter_swap(iterator const& left,
         iterator const& right) noexcept(noexcept(ranges::swap(*left, *right)) &&
         details::all_nothrow_iter_swappable<Const, Vs...>())
-    requires std::swappable_with<std::iter_reference_t<iterator>,
-                 std::iter_reference_t<iterator>> &&
+    requires std::swappable_with<iter_reference_t<iterator>,
+                 iter_reference_t<iterator>> &&
         (... &&
             std::indirectly_swappable<iterator_t<details::const_if<Const, Vs>>>)
     {

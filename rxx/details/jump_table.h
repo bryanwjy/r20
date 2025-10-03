@@ -27,17 +27,45 @@ public:
         return {};
     }
 };
+struct any_result {
+    template <typename T>
+    [[noreturn]] operator T&&() const noexcept {
+        RXX_BUILTIN_unreachable();
+    }
+    template <typename T>
+    [[noreturn]] operator T&() const noexcept {
+        RXX_BUILTIN_unreachable();
+    }
+};
 
-template <typename... Ts>
-requires (... && std::is_void_v<Ts>)
+template <typename T>
+concept voidable = std::is_void_v<T> || std::same_as<T, any_result>;
+
+template <voidable... Ts>
+requires (!(... && std::same_as<Ts, any_result>))
 __RXX_HIDE_FROM_ABI void make_multi_return() noexcept;
 
 template <typename... Ts>
+requires (!(... && voidable<Ts>) && !(... && std::same_as<Ts, any_result>))
 __RXX_HIDE_FROM_ABI auto make_multi_return() noexcept
     -> common_reference_t<Ts...>;
 
 template <typename... Ts>
 using multi_return_t RXX_NODEBUG = decltype(make_multi_return<Ts...>());
+
+template <typename F, typename... Ts>
+struct jump_result {
+    using type RXX_NODEBUG = any_result;
+};
+
+template <typename F, typename... Ts>
+requires std::invocable<F, Ts...>
+struct jump_result<F, Ts...> {
+    using type RXX_NODEBUG = std::invoke_result_t<F, Ts...>;
+};
+
+template <typename F, typename... Ts>
+using jump_result_t = typename jump_result<F, Ts...>::type;
 
 template <typename T, T... Ns>
 class jump_table {
@@ -64,27 +92,23 @@ class jump_table {
     template <size_t I>
     using ith_type RXX_NODEBUG = std::integral_constant<T, index_to_value(I)>;
 
-    template <typename F, typename... Args>
-    requires std::invocable<F, T, Args...>
-    __RXX_HIDE_FROM_ABI static auto make_result_type() noexcept
-        -> multi_return_t<std::invoke_result_t<F, T, Args...>,
-            std::invoke_result_t<F, std::integral_constant<T, Ns>, Args...>...>;
-    template <typename F, typename... Args>
-    __RXX_HIDE_FROM_ABI static auto make_result_type() noexcept
-        -> multi_return_t<
-            std::invoke_result_t<F, std::integral_constant<T, Ns>, Args...>...>;
-
 public:
     template <typename F, typename... Args>
-    using result_type RXX_NODEBUG = decltype(make_result_type<F, Args...>());
+    using result_type RXX_NODEBUG = multi_return_t<jump_result_t<F, T, Args...>,
+        jump_result_t<F, std::integral_constant<T, Ns>, Args...>...>;
 
 private:
     template <typename F, typename... Args>
     __RXX_HIDE_FROM_ABI static constexpr result_type<F, Args...> default_(
         F&& callable, T value, Args&&... args) {
         if constexpr (std::invocable<F, T, Args...>) {
-            return std::invoke(
-                std::forward<F>(callable), value, std::forward<Args>(args)...);
+            if (std::is_void_v<result_type<F, Args...>>) {
+                std::invoke(std::forward<F>(callable), value,
+                    std::forward<Args>(args)...);
+            } else {
+                return std::invoke(std::forward<F>(callable), value,
+                    std::forward<Args>(args)...);
+            }
         } else if constexpr (!std::is_void_v<result_type<F, Args...>>) {
             RXX_BUILTIN_unreachable();
         }
@@ -95,9 +119,14 @@ private:
     __RXX_HIDE_FROM_ABI static constexpr auto case_(
         F&& callable, T value, Args&&... args) -> decltype(auto) {
         if constexpr (I < size) {
-            constexpr ith_type<I> case_arg{};
-            return std::invoke(std::forward<F>(callable), case_arg,
-                std::forward<Args>(args)...);
+            if constexpr (std::invocable<F, ith_type<I>, Args...>) {
+                constexpr ith_type<I> case_arg{};
+                return std::invoke(std::forward<F>(callable), case_arg,
+                    std::forward<Args>(args)...);
+            } else {
+                return default_(std::forward<F>(callable), value,
+                    std::forward<Args>(args)...);
+            }
         } else {
             return default_(
                 std::forward<F>(callable), value, std::forward<Args>(args)...);
