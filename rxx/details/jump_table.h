@@ -146,9 +146,8 @@ private:
     }
 
     template <size_t I, typename F, typename... Args>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN)
-    static constexpr auto impl(F&& callable, T value, Args&&... args)
-        -> decltype(auto) {
+    __RXX_HIDE_FROM_ABI static constexpr auto impl(
+        F&& callable, T value, Args&&... args) -> decltype(auto) {
 #define __RXX_JT_CASE(X)        \
     case index_to_value(I + X): \
         return case_<I + X>(    \
