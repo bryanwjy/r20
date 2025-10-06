@@ -3,7 +3,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/configuration/builtins.h"
 #include "rxx/details/concat.h"
 #include "rxx/details/packed_range_traits.h"
 #include "rxx/details/simple_view.h"
