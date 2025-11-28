@@ -10,8 +10,6 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-namespace ranges::details {
-
 template <typename R, typename F, typename... Args>
 requires std::is_invocable_r_v<R, F, Args...>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE) inline constexpr R invoke_r(F&& f,
@@ -22,7 +20,5 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE) inline constexpr R invoke_r(F&& f,
         return std::invoke(std::forward<F>(f), std::forward<Args>(args)...);
     }
 }
-
-} // namespace ranges::details
 
 RXX_DEFAULT_NAMESPACE_END

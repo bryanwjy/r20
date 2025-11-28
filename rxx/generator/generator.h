@@ -15,6 +15,7 @@
 
 #  include <coroutine>
 #  include <cstdint>
+#  include <exception>
 #  include <type_traits>
 
 #  if RXX_LIBSTDCXX && __has_include(<bits/allocator.h>) \

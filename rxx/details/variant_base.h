@@ -6,6 +6,7 @@
 
 #include "rxx/details/construct_at.h"
 #include "rxx/details/destroy_at.h"
+#include "rxx/details/invoke_r.h"
 #include "rxx/details/jump_table.h"
 #include "rxx/details/overlappable_if.h"
 #include "rxx/details/template_access.h"
@@ -110,7 +111,7 @@ union multi_union<Head, Tail...> {
     requires std::is_nothrow_invocable_r_v<first_type, F, Args...>
     __RXX_HIDE_FROM_ABI explicit constexpr multi_union(generating_index_t<0>,
         F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
-        : first{invoke_r<first_type>(
+        : first{__RXX invoke_r<first_type>(
               std::forward<F>(f), std::forward<Args>(args)...)} {}
 
     template <typename F, typename... Args>
@@ -118,7 +119,7 @@ union multi_union<Head, Tail...> {
     __RXX_HIDE_FROM_ABI explicit constexpr multi_union(
         generating_type_t<first_type>, F&& f,
         Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
-        : first{invoke_r<first_type>(
+        : first{__RXX invoke_r<first_type>(
               std::forward<F>(f), std::forward<Args>(args)...)} {}
 
     template <typename U, typename... Args>
@@ -175,7 +176,7 @@ union multi_union<Head, Tail...> {
         is_last_union && std::is_nothrow_invocable_r_v<second_type, F, Args...>)
     __RXX_HIDE_FROM_ABI explicit constexpr multi_union(generating_index_t<1>,
         F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
-        : second{invoke_r<second_type>(
+        : second{__RXX invoke_r<second_type>(
               std::forward<F>(f), std::forward<Args>(args)...)} {}
 
     template <typename F, typename... Args>
@@ -184,7 +185,7 @@ union multi_union<Head, Tail...> {
     __RXX_HIDE_FROM_ABI explicit constexpr multi_union(
         generating_type_t<second_type>, F&& f,
         Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
-        : second{invoke_r<second_type>(
+        : second{__RXX invoke_r<second_type>(
               std::forward<F>(f), std::forward<Args>(args)...)} {}
 
     __RXX_HIDE_FROM_ABI constexpr ~multi_union() noexcept
@@ -199,11 +200,12 @@ union multi_union<Head, Tail...> {
     constexpr decltype(auto) get(this Self&& self) noexcept {
         static_assert(I <= sizeof...(Tail));
         if constexpr (I == 0) {
-            return forward_like<Self>(self.first);
+            return __RXX forward_like<Self>(self.first);
         } else if constexpr (is_last_union) {
-            return forward_like<Self>(self.second);
+            return __RXX forward_like<Self>(self.second);
         } else {
-            return forward_like<Self>(self.second).template get<I - 1>();
+            return __RXX forward_like<Self>(self.second)
+                .template get<I - 1>();
         }
     }
 #else

@@ -30,7 +30,7 @@ template <typename F, tuple_like Tuple>
 __RXX_HIDE_FROM_ABI constexpr void for_each(F&& callable, Tuple&& arg) {
     [&]<size_t... Is>(std::index_sequence<Is...>) {
         (...,
-            invoke_r<void>(
+            __RXX invoke_r<void>(
                 callable, get_element<Is>(std::forward<Tuple>(arg))));
     }(make_index_sequence_v<std::tuple_size_v<std::remove_cvref_t<Tuple>>>);
 }
@@ -58,7 +58,7 @@ __RXX_HIDE_FROM_ABI constexpr void for_each(
     F&& callable, Tuple1&& tuple1, Tuple2&& tuple2) {
     [&]<size_t... Is>(std::index_sequence<Is...>) {
         (...,
-            invoke_r<void>(callable,
+            __RXX invoke_r<void>(callable,
                 get_element<Is>(std::forward<Tuple1>(tuple1)),
                 get_element<Is>(std::forward<Tuple2>(tuple2))));
     }(make_index_sequence_v<std::tuple_size_v<std::remove_cvref_t<Tuple1>>>);

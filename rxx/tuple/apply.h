@@ -35,7 +35,7 @@ __RXX_HIDE_FROM_ABI constexpr decltype(auto) apply(F&& func,
     T&& tuple) noexcept(details::tuple::is_nothrow_applicable_v<F, T>) {
     return [&]<size_t... Is>(std::index_sequence<Is...>) -> decltype(auto) {
         return std::invoke(std::forward<F>(func),
-            forward_like<T>(ranges::get_element<Is>(tuple))...);
+            __RXX forward_like<T>(ranges::get_element<Is>(tuple))...);
     }(details::tuple::sequence_for<std::remove_cvref_t<T>>);
 }
 

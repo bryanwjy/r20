@@ -121,8 +121,6 @@ public:
         noexcept(noexcept(__RXX_AUTOCAST(begin(arg)))) {
         return __RXX_AUTOCAST(begin(arg));
     }
-
-    void operator()(auto&&) const = delete;
 };
 
 } // namespace details
@@ -174,8 +172,6 @@ struct end_t {
         noexcept(noexcept(__RXX_AUTOCAST(end(arg)))) {
         return __RXX_AUTOCAST(end(arg));
     }
-
-    __RXX_HIDE_FROM_ABI void operator()(auto&&) const = delete;
 };
 } // namespace details
 

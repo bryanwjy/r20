@@ -183,11 +183,13 @@ inline constexpr bool is_element_convertible_v<From, To> =
 template <typename... Ts>
 class tuple : private details::tuple::storage_for<tuple<Ts...>> {
     using base_type = details::tuple::storage_for<tuple>;
+    friend base_type;
 
     template <typename Tuple, size_t... Is>
     __RXX_HIDE_FROM_ABI constexpr tuple(
         Tuple&& other, std::index_sequence<Is...>)
-        : base_type{forward_like<Tuple>(ranges::get_element<Is>(other))...} {}
+        : base_type{
+              __RXX forward_like<Tuple>(ranges::get_element<Is>(other))...} {}
 
     template <typename Tuple>
     __RXX_HIDE_FROM_ABI static constexpr bool use_other_overload = []() {
@@ -385,7 +387,7 @@ public:
 
         return [&]<size_t... Is>(std::index_sequence<Is...>) -> tuple& {
             return base_type::assign(
-                forward_like<Tuple>(ranges::get_element<Is>(other))...);
+                __RXX forward_like<Tuple>(ranges::get_element<Is>(other))...);
         }(details::tuple::sequence_for<tuple>);
     }
 
@@ -406,7 +408,7 @@ public:
 
         return [&]<size_t... Is>(std::index_sequence<Is...>) -> tuple const& {
             return base_type::assign(
-                forward_like<Tuple>(ranges::get_element<Is>(other))...);
+                __RXX forward_like<Tuple>(ranges::get_element<Is>(other))...);
         }(details::tuple::sequence_for<tuple>);
     }
 
