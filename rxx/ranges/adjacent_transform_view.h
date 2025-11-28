@@ -455,7 +455,7 @@ struct adjacent_transform_t :
     operator()(F&& func) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this),
+            __RXX ranges::details::set_arity<2>(adjacent_transform_t{}),
             std::forward<F>(func));
     }
 #else

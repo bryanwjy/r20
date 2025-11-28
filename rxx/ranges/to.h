@@ -173,11 +173,11 @@ private:
 #if RXX_CXX23
         else if constexpr ( //
             requires {
-                C(from_range, std::declval<R>(), std::declval<Args>()...);
+                C(std::from_range, std::declval<R>(), std::declval<Args>()...);
             }) {
             using ResultType = //
-                decltype(C(
-                    from_range, std::declval<R>(), std::declval<Args>()...));
+                decltype(C(std::from_range, std::declval<R>(),
+                    std::declval<Args>()...));
             return std::type_identity<ResultType>{};
 
         }

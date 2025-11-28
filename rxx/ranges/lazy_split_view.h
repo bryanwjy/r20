@@ -494,7 +494,7 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
     operator()(P&& pattern) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this),
+            __RXX ranges::details::set_arity<2>(lazy_split_t{}),
             std::forward<P>(pattern));
     }
 #else

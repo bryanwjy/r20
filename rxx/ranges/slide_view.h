@@ -440,7 +440,7 @@ struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
     operator()(D num) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this), num);
+            __RXX ranges::details::set_arity<2>(slide_t{}), num);
     }
 #else
 #  error "Unsupported"

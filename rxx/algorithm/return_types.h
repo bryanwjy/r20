@@ -33,8 +33,8 @@
 #  include <algorithm>
 #endif
 
-#ifndef RXX_DISABLE_RANGES_ALGO_STD_INTEROP
-#  define RXX_DISABLE_RANGES_ALGO_STD_INTEROP 0
+#ifndef RXX_ENABLE_RANGES_ALGO_STD_INTEROP
+#  define RXX_ENABLE_RANGES_ALGO_STD_INTEROP 0
 #endif
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -88,7 +88,7 @@ struct in_value_result {
         return {std::move(in), std::move(value)};
     }
 
-#if RXX_CXX23 & !RXX_DISABLE_RANGES_ALGO_STD_INTEROP
+#if RXX_CXX23 & RXX_ENABLE_RANGES_ALGO_STD_INTEROP
     template <template <typename, typename> class Other>
     requires requires(in_value_result self, void (*func)(Other<I, T>)) {
         requires !std::same_as<Other<I, T>, in_value_result>;
@@ -162,7 +162,7 @@ struct out_value_result {
         return {std::move(out), std::move(value)};
     }
 
-#if RXX_CXX23 & !RXX_DISABLE_RANGES_ALGO_STD_INTEROP
+#if RXX_CXX23 & RXX_ENABLE_RANGES_ALGO_STD_INTEROP
     template <template <typename, typename> class Other>
     requires requires(out_value_result self, void (*func)(Other<O, T>)) {
         requires !std::same_as<Other<O, T>, out_value_result>;
@@ -219,7 +219,7 @@ struct out_value_result {
 } // namespace ranges
 RXX_DEFAULT_NAMESPACE_END
 
-#if RXX_CXX23 & !RXX_DISABLE_RANGES_ALGO_STD_INTEROP
+#if RXX_CXX23 & RXX_ENABLE_RANGES_ALGO_STD_INTEROP
 RXX_STD_NAMESPACE_BEGIN
 namespace ranges {
 template <typename I>

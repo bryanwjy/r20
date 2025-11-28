@@ -646,7 +646,7 @@ struct chunk_t : ranges::details::adaptor_non_closure<chunk_t> {
     operator()(D&& size) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this),
+            __RXX ranges::details::set_arity<2>(chunk_t{}),
             std::forward<D>(size));
     }
 #else
