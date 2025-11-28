@@ -6,6 +6,7 @@
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/bind_back.h"
 #include "rxx/ranges/concepts.h"
+#include "rxx/ranges/from_range.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/ref_view.h"
 #include "rxx/ranges/transform_view.h"
@@ -71,7 +72,7 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
         if constexpr (std::constructible_from<C, R, Args...>) {
             return C(std::forward<R>(range), std::forward<Args>(args)...);
         }
-#if RXX_CXX23
+#if RXX_SUPPORTS_FROM_RANGE
         // Case 2 -- construct using the `from_range_t` tagged constructor.
         else if constexpr (std::constructible_from<C, std::from_range_t, R,
                                Args...>) {
@@ -170,7 +171,7 @@ private:
         }
         // Case 2 -- can construct from the given range using the
         // `from_range_t` tagged constructor.
-#if RXX_CXX23
+#if RXX_SUPPORTS_FROM_RANGE
         else if constexpr ( //
             requires {
                 C(std::from_range, std::declval<R>(), std::declval<Args>()...);

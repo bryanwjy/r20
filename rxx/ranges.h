@@ -26,6 +26,7 @@
 #include "rxx/ranges/empty_view.h"              // IWYU pragma: keep
 #include "rxx/ranges/enumerate_view.h"          // IWYU pragma: keep
 #include "rxx/ranges/filter_view.h"             // IWYU pragma: keep
+#include "rxx/ranges/from_range.h"              // IWYU pragma: keep
 #include "rxx/ranges/iota_view.h"               // IWYU pragma: keep
 #include "rxx/ranges/join_view.h"               // IWYU pragma: keep
 #include "rxx/ranges/join_with_view.h"          // IWYU pragma: keep
