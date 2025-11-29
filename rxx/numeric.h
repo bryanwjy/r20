@@ -2,7 +2,7 @@
 #pragma once
 
 // IWYU pragma: begin_exports
-#include "numeric/iota.h" // IWYU pragma: keep
+#include "numeric/iota.h"
 
 #include <numeric>
 // IWYU pragma: end_exports

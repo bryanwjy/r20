@@ -1,7 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
-#include "rxx/details/invoke_r.h"
+#include "rxx/functional/invoke_r.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/tuple.h"
 #include "rxx/utility.h"

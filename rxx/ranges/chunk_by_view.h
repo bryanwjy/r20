@@ -5,9 +5,9 @@
 
 #include "rxx/algorithm.h"
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"

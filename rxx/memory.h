@@ -2,5 +2,5 @@
 #pragma once
 
 // IWYU pragma: begin_exports
-#include "rxx/memory/uninitialized.h" // IWYU pragma: keep
+#include "rxx/memory/uninitialized.h"
 // IWYU pragma: end_exports

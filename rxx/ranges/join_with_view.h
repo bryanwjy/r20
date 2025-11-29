@@ -4,12 +4,12 @@
 #include "rxx/config.h"
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
 #include "rxx/details/concat.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/variant_base.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"

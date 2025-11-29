@@ -2,9 +2,9 @@
 #pragma once
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
 #include "rxx/details/integer_like.h" // IWYU pragma: keep
 #include "rxx/details/view_traits.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/utility.h"
 
 #include <type_traits>

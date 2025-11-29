@@ -17,6 +17,10 @@
 #  define RXX_BUILTIN_launder(X) __builtin_launder(X)
 #endif /* RXX_HAS_BUILTIN(__builtin_launder) */
 
+#if RXX_HAS_BUILTIN(__builtin_invoke)
+#  define RXX_BUILTIN_invoke(X) __builtin_invoke(X)
+#endif
+
 #if RXX_HAS_BUILTIN(__builtin_addressof)
 #  define RXX_BUILTIN_addressof(X) __builtin_addressof(X)
 #elif RXX_COMPILER_GCC_AT_LEAST(7, 1, 0)

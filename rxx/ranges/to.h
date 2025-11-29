@@ -4,7 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/from_range.h"
 #include "rxx/ranges/primitives.h"
@@ -224,7 +224,7 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto to(Args&&... args) {
     static_assert(std::is_class_v<C> || std::is_union_v<C>,
         "The target must be a class type or union type");
 
-    return details::make_pipeable(details::bind_back(
+    return details::make_pipeable(__RXX bind_back(
         []<input_range R, typename... Tail>(R&& range, Tail&&... tail)
             RXX_STATIC_CALL
         requires requires { //
@@ -242,7 +242,7 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto to(Args&&... args) {
 
     using details::template_deducer;
-    return details::make_pipeable(details::bind_back(
+    return details::make_pipeable(__RXX bind_back(
         []<input_range R, typename... Tail,
             typename D = typename template_deducer<C, R, Tail...>::type>(
             R && ranges,

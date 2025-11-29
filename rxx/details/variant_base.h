@@ -6,10 +6,9 @@
 
 #include "rxx/details/construct_at.h"
 #include "rxx/details/destroy_at.h"
-#include "rxx/details/invoke_r.h"
-#include "rxx/details/jump_table.h"
 #include "rxx/details/overlappable_if.h"
 #include "rxx/details/template_access.h"
+#include "rxx/functional/invoke_r.h"
 #include "rxx/utility.h"
 
 #include <concepts>

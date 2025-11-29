@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/details/template_access.h"
+#include "rxx/ranges/get_element.h"
 #include "rxx/type_traits/common_reference.h"
 
 #include <array>
@@ -13,6 +14,13 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 template <typename...>
 class tuple;
 RXX_DEFAULT_NAMESPACE_END
+
+namespace details {
+template <typename T>
+inline constexpr bool not_std_tuple = false;
+template <typename... Ts>
+inline constexpr bool not_std_tuple<std::tuple<Ts...>> = true;
+} // namespace details
 
 template <typename... TTypes, typename... UTypes>
 requires (sizeof...(TTypes) == sizeof...(UTypes)) &&
@@ -27,10 +35,45 @@ requires (sizeof...(TTypes) == sizeof...(UTypes)) && requires {
     typename __RXX tuple<
         __RXX common_reference_t<TQual<TTypes>..., UQual<UTypes>>...>;
 }
+struct std::basic_common_reference<__RXX tuple<TTypes...>,
+    __RXX tuple<UTypes...>, TQual, UQual> {
+    using type RXX_NODEBUG =
+        __RXX tuple< __RXX common_reference_t<TQual<TTypes>, UQual<UTypes>>...>;
+};
+
+template <typename... TTypes, typename... UTypes,
+    template <typename> class TQual, template <typename> class UQual>
+requires (sizeof...(TTypes) == sizeof...(UTypes)) && requires {
+    typename __RXX tuple<
+        __RXX common_reference_t<TQual<TTypes>..., UQual<UTypes>>...>;
+}
 struct std::basic_common_reference<std::tuple<TTypes...>, std::tuple<UTypes...>,
     TQual, UQual> {
     using type RXX_NODEBUG =
         __RXX tuple< __RXX common_reference_t<TQual<TTypes>, UQual<UTypes>>...>;
+};
+
+template <__RXX tuple_like T, __RXX tuple_like U,
+    template <typename> class TQual, template <typename> class UQual>
+requires (details::not_std_tuple<T> || details::not_std_tuple<U>) &&
+    (std::tuple_size_v<T> == std::tuple_size_v<U>) &&
+    ([]<size_t... Is>(std::index_sequence<Is...>) {
+        return requires {
+            typename __RXX tuple< __RXX common_reference_t<
+                TQual<std::tuple_element_t<Is, T>>...,
+                UQual<std::tuple_element_t<Is, U>>>...>;
+        };
+    }(std::make_index_sequence<std::tuple_size_v<T>>{}))
+struct std::basic_common_reference<T, U, TQual, UQual> {
+private:
+    template <size_t... Is>
+    static auto make_type(std::index_sequence<Is...>) noexcept -> __RXX tuple<
+        __RXX common_reference_t<TQual<std::tuple_element_t<Is, T>>,
+            UQual<std::tuple_element_t<Is, U>>>...>;
+
+public:
+    using type RXX_NODEBUG =
+        decltype(make_type(std::make_index_sequence<std::tuple_size_v<T>>{}));
 };
 
 template <size_t I, typename... Ts>
