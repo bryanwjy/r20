@@ -18,7 +18,7 @@
 #endif /* RXX_HAS_BUILTIN(__builtin_launder) */
 
 #if RXX_HAS_BUILTIN(__builtin_invoke)
-#  define RXX_BUILTIN_invoke(X) __builtin_invoke(X)
+#  define RXX_BUILTIN_invoke(...) __builtin_invoke(__VA_ARGS__)
 #endif
 
 #if RXX_HAS_BUILTIN(__builtin_addressof)

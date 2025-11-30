@@ -192,15 +192,17 @@ public:
 
     template <details::not_const_iterator Ot>
     requires details::constant_iterator<Ot> && std::convertible_to<It, Ot>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Ot() const& noexcept(noexcept(static_cast<Ot>(current_))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Ot() const& noexcept(
+        noexcept(static_cast<Ot>(current_))) {
         return static_cast<Ot>(current_);
     }
 
     template <details::not_const_iterator Ot>
     requires details::constant_iterator<Ot> && std::convertible_to<It, Ot>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Ot() && noexcept(noexcept(static_cast<Ot>(std::move(current_)))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Ot() && noexcept(
+        noexcept(static_cast<Ot>(std::move(current_)))) {
         return static_cast<Ot>(std::move(current_));
     }
 
@@ -295,7 +297,7 @@ public:
         return current_ <=> other;
     }
 
-#if RXX_COMPILER_GCC
+#if RXX_COMPILER_GCC | RXX_COMPILER_CLANG_AT_LEAST(21, 0, 0)
     // Infinite meta-recursion fix for GCC
     template <details::not_const_iterator L, std::same_as<It> It2>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -418,11 +420,12 @@ public:
         return current_ - other;
     }
 
-#if RXX_COMPILER_GCC
+#if RXX_COMPILER_GCC | RXX_COMPILER_CLANG_AT_LEAST(21, 0, 0)
     // Infinite meta-recursion fix for GCC
     template <details::not_const_iterator S, std::same_as<It> It2>
     requires std::sized_sentinel_for<S, It>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr difference_type
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr difference_type
     operator-(S const& left, basic_const_iterator<It2> const& right) noexcept(
         noexcept(left - right.current_)) {
         return left - right.current_;
@@ -431,7 +434,8 @@ public:
 #else
     template <details::not_const_iterator S>
     requires std::sized_sentinel_for<S, It>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr difference_type
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr difference_type
     operator-(S const& left, basic_const_iterator const& right) noexcept(
         noexcept(left - right.current_)) {
         return left - right.current_;
