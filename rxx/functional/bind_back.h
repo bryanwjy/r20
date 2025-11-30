@@ -3,7 +3,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/details/overlappable_if.h"
 #include "rxx/tuple.h"
 #include "rxx/utility.h"
 
@@ -86,7 +85,7 @@ public:
 
 private:
     __RXX_HIDE_FROM_ABI static constexpr bool place_args_in_tail =
-        fits_in_tail_padding_v<F, tuple<Ts...>>;
+        __RXX details::fits_in_tail_padding_v<F, tuple<Ts...>>;
     __RXX_HIDE_FROM_ABI static constexpr bool allow_external_overlap =
         !place_args_in_tail;
 

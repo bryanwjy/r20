@@ -8,8 +8,6 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-namespace ranges::details {
-
 template <typename T>
 __RXX_HIDE_FROM_ABI constexpr void destroy_at(T* ptr) noexcept {
     if constexpr (std::is_array_v<T>) {
@@ -20,7 +18,5 @@ __RXX_HIDE_FROM_ABI constexpr void destroy_at(T* ptr) noexcept {
         ptr->~T();
     }
 }
-
-} // namespace ranges::details
 
 RXX_DEFAULT_NAMESPACE_END

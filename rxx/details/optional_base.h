@@ -3,9 +3,8 @@
 
 #include "rxx/config.h"
 
-#include "rxx/details/construct_at.h"
-#include "rxx/details/destroy_at.h"
-#include "rxx/details/overlappable_if.h"
+#include "rxx/memory/construct_at.h"
+#include "rxx/memory/destroy_at.h"
 #include "rxx/utility.h"
 
 #include <initializer_list>
@@ -91,7 +90,7 @@ requires std::is_object_v<T>
 class optional_base {
     using union_type = opt_union<T>;
     static constexpr bool place_flag_in_tail =
-        fits_in_tail_padding_v<union_type, bool>;
+        __RXX details::fits_in_tail_padding_v<union_type, bool>;
     static constexpr bool allow_external_overlap = !place_flag_in_tail;
 
     struct container {
@@ -164,8 +163,7 @@ class optional_base {
         __RXX_HIDE_FROM_ABI constexpr void destroy_union() noexcept
         requires allow_external_overlap && std::is_trivially_destructible_v<T>
         {
-            __RXX ranges::details::destroy_at(
-                RXX_BUILTIN_addressof(union_.data));
+            __RXX destroy_at(RXX_BUILTIN_addressof(union_.data));
         }
 
         __RXX_HIDE_FROM_ABI constexpr void destroy_union() noexcept
@@ -173,8 +171,7 @@ class optional_base {
             (!std::is_trivially_destructible_v<T>)
         {
             destroy_member();
-            __RXX ranges::details::destroy_at(
-                RXX_BUILTIN_addressof(union_.data));
+            __RXX destroy_at(RXX_BUILTIN_addressof(union_.data));
         }
 
         template <typename... Args>
@@ -183,8 +180,7 @@ class optional_base {
             std::is_nothrow_constructible_v<T, Args...>)
         requires (allow_external_overlap)
         {
-            __RXX ranges::details::construct_at(
-                RXX_BUILTIN_addressof(union_.data), tag,
+            __RXX construct_at(RXX_BUILTIN_addressof(union_.data), tag,
                 std::forward<Args>(args)...);
             has_value_ = true;
         }
@@ -195,8 +191,7 @@ class optional_base {
             std::is_nothrow_constructible_v<T, Args...>)
         requires (allow_external_overlap)
         {
-            __RXX ranges::details::construct_at(
-                RXX_BUILTIN_addressof(union_.data), tag,
+            __RXX construct_at(RXX_BUILTIN_addressof(union_.data), tag,
                 std::forward<Args>(args)...);
             has_value_ = true;
         }
@@ -205,8 +200,7 @@ class optional_base {
             decltype(nullptr)) noexcept
         requires (allow_external_overlap)
         {
-            __RXX ranges::details::construct_at(
-                RXX_BUILTIN_addressof(union_.data), nullptr);
+            __RXX construct_at(RXX_BUILTIN_addressof(union_.data), nullptr);
             has_value_ = false;
         }
 
@@ -217,8 +211,7 @@ class optional_base {
     private:
         __RXX_HIDE_FROM_ABI constexpr void destroy_member() noexcept {
             if (has_value_) {
-                __RXX ranges::details::destroy_at(
-                    RXX_BUILTIN_addressof(union_.data.value));
+                __RXX destroy_at(RXX_BUILTIN_addressof(union_.data.value));
             }
         }
     };
@@ -523,8 +516,8 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void reset() noexcept {
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
-            __RXX ranges::details::destroy_at(ptr);
-            __RXX ranges::details::construct_at(ptr, nullptr);
+            __RXX destroy_at(ptr);
+            __RXX construct_at(ptr, nullptr);
         } else {
             container_.data.destroy_union();
             container_.data.construct_union(nullptr);
@@ -537,8 +530,8 @@ public:
         std::is_nothrow_constructible_v<T, Args...>) {
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
-            __RXX ranges::details::destroy_at(ptr);
-            __RXX ranges::details::construct_at(
+            __RXX destroy_at(ptr);
+            __RXX construct_at(
                 ptr, std::in_place, std::forward<Args>(args)...);
         } else {
             container_.data.destroy_union();
@@ -555,8 +548,8 @@ public:
         std::initializer_list<U>&, Args...>) {
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
-            __RXX ranges::details::destroy_at(ptr);
-            __RXX ranges::details::construct_at(
+            __RXX destroy_at(ptr);
+            __RXX construct_at(
                 ptr, std::in_place, list, std::forward<Args>(args)...);
         } else {
             container_.data.destroy_union();
@@ -575,9 +568,9 @@ public:
             T{static_cast<std::invoke_result_t<F, Args...> (*)()>(0)()})) {
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
-            __RXX ranges::details::destroy_at(ptr);
-            __RXX ranges::details::construct_at(ptr, std::in_place,
-                generating, std::forward<F>(func), std::forward<Args>(args)...);
+            __RXX destroy_at(ptr);
+            __RXX construct_at(ptr, std::in_place, generating,
+                std::forward<F>(func), std::forward<Args>(args)...);
         } else {
             container_.data.destroy_union();
             container_.data.construct_union(

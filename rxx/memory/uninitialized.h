@@ -4,9 +4,9 @@
 #include "rxx/config.h"
 
 #include "rxx/algorithm/return_types.h"
-#include "rxx/details/construct_at.h"
-#include "rxx/details/destroy_at.h"
 #include "rxx/iterator/iter_traits.h"
+#include "rxx/memory/construct_at.h"
+#include "rxx/memory/destroy_at.h"
 #include "rxx/ranges/borrow_traits.h"
 #include "rxx/ranges/primitives.h"
 

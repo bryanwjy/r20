@@ -13,6 +13,25 @@ namespace details {
 template <typename...>
 struct type_list {};
 
+#ifndef __cpp_pack_indexing
+#  define __cpp_pack_indexing 0
+#endif
+#if __cpp_pack_indexing >= 202311L & (RXX_CXX26 | RXX_COMPILER_CLANG)
+template <size_t I, typename List>
+struct template_element {};
+
+template <size_t I, typename List>
+using template_element_t RXX_NODEBUG = typename template_element<I, List>::type;
+#  if RXX_COMPILER_CLANG
+RXX_DISABLE_WARNING_PUSH()
+RXX_DISABLE_WARNING("-Wc++26-extensions")
+#  endif
+template <template <typename...> class List, size_t I, typename... Ts>
+struct template_element<I, List<Ts...>> {
+    using type RXX_NODEBUG = Ts...[I]; // NOLINT
+};
+RXX_DISABLE_WARNING_POP()
+#else
 template <size_t I, typename List>
 struct template_element {};
 
@@ -28,7 +47,7 @@ template <size_t I, template <typename...> class List, typename Head,
     typename... Tail>
 struct template_element<I, List<Head, Tail...>> :
     template_element<I - 1, type_list<Tail...>> {};
-
+#endif
 template <typename List>
 inline constexpr size_t template_size_v = 0;
 

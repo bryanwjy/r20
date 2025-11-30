@@ -10,14 +10,12 @@
 #  include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
-namespace ranges::details {
 template <typename T, typename... Args>
 __RXX_HIDE_FROM_ABI constexpr T* construct_at(
     T* location, Args&&... args) noexcept(noexcept(::new((void*)0)
         T{std::declval<Args>()...})) {
     [[msvc::constexpr]] return ::new (location) T{std::forward<Args>(args)...};
 }
-} // namespace ranges::details
 
 RXX_DEFAULT_NAMESPACE_END
 
@@ -34,9 +32,7 @@ RXX_DEFAULT_NAMESPACE_END
 #  endif
 
 RXX_DEFAULT_NAMESPACE_BEGIN
-namespace ranges::details {
 using std::construct_at;
-}
 RXX_DEFAULT_NAMESPACE_END
 
 #else

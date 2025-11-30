@@ -4,7 +4,9 @@
 // IWYU pragma: begin_exports
 #include "rxx/utility/exchange.h"
 #include "rxx/utility/forward_like.h"
+#include "rxx/utility/generating.h"
 #include "rxx/utility/jump_table.h"
+#include "rxx/utility/overlappable_if.h"
 #include "rxx/utility/pair.h"
 
 #include <utility>

@@ -6,14 +6,12 @@
 
 #include "rxx/details/construct_at.h"
 #include "rxx/details/destroy_at.h"
-#include "rxx/details/overlappable_if.h"
 #include "rxx/details/template_access.h"
 #include "rxx/functional/invoke_r.h"
 #include "rxx/utility.h"
 
 #include <concepts>
 #include <type_traits>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -365,7 +363,7 @@ class variant_base {
         sizeof...(Ts) <= static_cast<index_type>(-1), "limit exceeded");
 
     __RXX_HIDE_FROM_ABI static constexpr bool place_index_in_tail =
-        fits_in_tail_padding_v<union_type, index_type>;
+        __RXX details::fits_in_tail_padding_v<union_type, index_type>;
     __RXX_HIDE_FROM_ABI static constexpr bool allow_external_overlap =
         !place_index_in_tail;
 
@@ -448,8 +446,7 @@ class variant_base {
         requires (allow_external_overlap &&
             (... && std::is_trivially_destructible_v<Ts>))
         {
-            __RXX ranges::details::destroy_at(
-                RXX_BUILTIN_addressof(union_.data));
+            __RXX destroy_at(RXX_BUILTIN_addressof(union_.data));
         }
 
         __RXX_HIDE_FROM_ABI constexpr void destroy_union() noexcept
@@ -457,8 +454,7 @@ class variant_base {
             (... || !std::is_trivially_destructible_v<Ts>))
         {
             destroy_member();
-            __RXX ranges::details::destroy_at(
-                RXX_BUILTIN_addressof(union_.data));
+            __RXX destroy_at(RXX_BUILTIN_addressof(union_.data));
         }
 
         template <typename U, typename... Args>
@@ -498,8 +494,8 @@ class variant_base {
         __RXX_HIDE_FROM_ABI constexpr void destroy_member() noexcept {
             jump_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
-                    destroy_at(
-                        RXX_BUILTIN_addressof(union_.data.template get<I>()));
+                    __RXX destroy_at(
+                        RXX_BUILTIN_addressof(union_.data.get<I>()));
                 },
                 static_cast<size_t>(index_));
         }
@@ -870,7 +866,7 @@ private:
 
     __RXX_HIDE_FROM_ABI constexpr void destroy() noexcept {
         if constexpr (place_index_in_tail) {
-            destroy_at(RXX_BUILTIN_addressof(container_.data));
+            __RXX destroy_at(RXX_BUILTIN_addressof(container_.data));
         } else {
             container_.data.destroy_union();
         }
