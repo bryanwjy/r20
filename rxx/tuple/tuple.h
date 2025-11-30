@@ -102,6 +102,10 @@ protected:
                 this->template get_data<Is>(), other.template get_data<Is>()));
     }
 
+#if RXX_COMPILER_CLANG
+    RXX_DISABLE_WARNING_PUSH()
+    RXX_DISABLE_WARNING("-Wunused-value")
+#endif
     template <typename... Us>
     requires (sizeof...(Us) == element_count)
     __RXX_HIDE_FROM_ABI constexpr D& assign(Us&&... others) {
@@ -115,39 +119,42 @@ protected:
         (..., (this->template get_data<Is>() == std::forward<Us>(others)));
         return static_cast<D const&>(*this);
     }
+#if RXX_COMPILER_CLANG
+    RXX_DISABLE_WARNING_POP()
+#endif
 
 private:
     template <size_t I>
     requires requires { typename std::tuple_element_t<I, D>; }
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) constexpr auto get_data() && noexcept //
-    RXX_LIFETIMEBOUND -> std::tuple_element_t<I, D>&& {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto get_data() && noexcept //
+        RXX_LIFETIMEBOUND -> std::tuple_element_t<I, D>&& {
         return static_cast<std::tuple_element_t<I, D>&&>(
             static_cast<element<D, I>&>(*this).data);
     }
 
     template <size_t I>
     requires requires { typename std::tuple_element_t<I, D>; }
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) constexpr auto get_data() & noexcept //
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto get_data() & noexcept //
         RXX_LIFETIMEBOUND -> std::tuple_element_t<I, D>& {
         return static_cast<element<D, I>&>(*this).data;
     }
 
     template <size_t I>
     requires requires { typename std::tuple_element_t<I, D>; }
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) constexpr auto get_data() const&& noexcept //
-    RXX_LIFETIMEBOUND -> std::tuple_element_t<I, D> const&& {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto get_data() const&& noexcept //
+        RXX_LIFETIMEBOUND -> std::tuple_element_t<I, D> const&& {
         return static_cast<std::tuple_element_t<I, D> const&&>(
             static_cast<element<D, I> const&>(*this).data);
     }
 
     template <size_t I>
     requires requires { typename std::tuple_element_t<I, D>; }
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) constexpr auto get_data() const& noexcept //
-    RXX_LIFETIMEBOUND -> std::tuple_element_t<I, D> const& {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto get_data() const& noexcept //
+        RXX_LIFETIMEBOUND -> std::tuple_element_t<I, D> const& {
         return static_cast<element<D, I> const&>(*this).data;
     }
 };
@@ -271,9 +278,9 @@ public:
     requires (sizeof...(Us) == sizeof...(Ts) &&
                  !use_other_overload<tuple<Us...> const&>) &&
         (... && std::constructible_from<Ts, Us const&>)
-    __RXX_HIDE_FROM_ABI
-        explicit(!(... && std::is_convertible_v<Us const&, Ts>)) //
-        constexpr tuple(tuple<Us...> const& other)               //
+    __RXX_HIDE_FROM_ABI explicit(
+        !(... && std::is_convertible_v<Us const&, Ts>)) //
+        constexpr tuple(tuple<Us...> const& other)      //
         noexcept((... && std::is_nothrow_constructible_v<Ts, Us const&>))
         : tuple{other, details::tuple::sequence_for<tuple>} {}
 
@@ -290,9 +297,9 @@ public:
     requires (sizeof...(Us) == sizeof...(Ts) &&
                  !use_other_overload<tuple<Us...> const &&>) &&
         (... && std::constructible_from<Ts, Us const>)
-    __RXX_HIDE_FROM_ABI
-        explicit(!(... && std::is_convertible_v<Us const, Ts>)) //
-        constexpr tuple(tuple<Us...> const&& other)             //
+    __RXX_HIDE_FROM_ABI explicit(
+        !(... && std::is_convertible_v<Us const, Ts>)) //
+        constexpr tuple(tuple<Us...> const&& other)    //
         noexcept((... && std::is_nothrow_constructible_v<Ts, Us const>))
         : tuple{std::move(other), details::tuple::sequence_for<tuple>} {}
 
@@ -501,8 +508,9 @@ tuple(std::pair<T1, T2>) -> tuple<T1, T2>;
 
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>>& get(tuple<Ts...>& arg RXX_LIFETIMEBOUND) noexcept {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>>& get(
+    tuple<Ts...>& arg RXX_LIFETIMEBOUND) noexcept {
     static_assert(std::is_base_of_v<details::tuple::element<tuple<Ts...>, I>,
         tuple<Ts...>>);
     return ((details::tuple::element<tuple<Ts...>, I>&)arg).data;
@@ -510,8 +518,9 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
 
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>>&& get(tuple<Ts...>&& arg RXX_LIFETIMEBOUND) noexcept {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>>&& get(
+    tuple<Ts...>&& arg RXX_LIFETIMEBOUND) noexcept {
     static_assert(std::is_base_of_v<details::tuple::element<tuple<Ts...>, I>,
         tuple<Ts...>>);
     using Result = std::tuple_element_t<I, tuple<Ts...>>;
@@ -521,8 +530,9 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
 
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>> const& get(tuple<Ts...> const& arg RXX_LIFETIMEBOUND) noexcept {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>> const& get(
+    tuple<Ts...> const& arg RXX_LIFETIMEBOUND) noexcept {
     static_assert(std::is_base_of_v<details::tuple::element<tuple<Ts...>, I>,
         tuple<Ts...>>);
     return ((details::tuple::element<tuple<Ts...>, I> const&)arg).data;
@@ -530,8 +540,9 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
 
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>> const&& get(tuple<Ts...> const&& arg RXX_LIFETIMEBOUND) noexcept {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>> const&& get(
+    tuple<Ts...> const&& arg RXX_LIFETIMEBOUND) noexcept {
     static_assert(std::is_base_of_v<details::tuple::element<tuple<Ts...>, I>,
         tuple<Ts...>>);
     using Result = std::tuple_element_t<I, tuple<Ts...>>;
@@ -621,15 +632,15 @@ constexpr auto operator<=>(tuple<> const&, tuple<> const&) noexcept {
 
 template <tuple_like Tuple>
 requires (std::tuple_size_v<Tuple> == 0)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr bool operator==(
-    tuple<> const&, Tuple const&) noexcept {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr bool operator==(tuple<> const&, Tuple const&) noexcept {
     return true;
 }
 
 template <tuple_like Tuple>
 requires (std::tuple_size_v<Tuple> == 0)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator<=>(
-    tuple<> const&, Tuple const&) noexcept {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr auto operator<=>(tuple<> const&, Tuple const&) noexcept {
     return 0 <=> 0;
 }
 
