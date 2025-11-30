@@ -15,6 +15,7 @@
 
 #  include <coroutine>
 #  include <cstdint>
+#  include <exception>
 #  include <type_traits>
 
 #  if RXX_LIBSTDCXX && __has_include(<bits/allocator.h>) \
@@ -598,8 +599,8 @@ public:
     __RXX_HIDE_FROM_ABI generator(generator const&) = delete;
 
     __RXX_HIDE_FROM_ABI generator(generator&& other) noexcept
-        : coroutine_(exchange(other.coroutine_, nullptr))
-        , active_(exchange(other.active_, false)) {}
+        : coroutine_(__RXX exchange(other.coroutine_, nullptr))
+        , active_(__RXX exchange(other.active_, false)) {}
     __RXX_HIDE_FROM_ABI ~generator() {
         if (auto& instance = this->coroutine_) {
             instance.destroy();
@@ -667,7 +668,7 @@ public:
     friend generator;
 
     __RXX_HIDE_FROM_ABI iterator(iterator&& other) noexcept
-        : coroutine_(exchange(other.coroutine_, {})) {}
+        : coroutine_(__RXX exchange(other.coroutine_, {})) {}
 
     __RXX_HIDE_FROM_ABI iterator& operator=(iterator&& other) noexcept {
         this->coroutine_ = exchange(other.coroutine_, {});

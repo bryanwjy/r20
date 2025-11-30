@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "rxx/functional/bind_back.h"
+
 #include <ranges> // IWYU pragma: keep
 #include <type_traits>
 
@@ -68,7 +70,7 @@ constexpr auto make_pipeable(F&& func, Args&&... args) noexcept(
     (std::is_nothrow_constructible_v<std::decay_t<F>, F> && ... &&
         std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
     return make_pipeable(
-        bind_back(std::forward<F>(func), std::forward<Args>(args)...));
+        __RXX bind_back(std::forward<F>(func), std::forward<Args>(args)...));
 }
 
 #elif RXX_LIBSTDCXX
@@ -110,7 +112,7 @@ constexpr auto make_pipeable(F&& func, Args&&... args) noexcept(
     (std::is_nothrow_constructible_v<std::decay_t<F>, F> && ... &&
         std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
     return make_pipeable(
-        bind_back(std::forward<F>(func), std::forward<Args>(args)...));
+        __RXX bind_back(std::forward<F>(func), std::forward<Args>(args)...));
 }
 
 #else

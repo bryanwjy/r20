@@ -35,7 +35,7 @@ struct iota_t {
     __RXX_HIDE_FROM_ABI
         RXX_STATIC_CALL constexpr iota_result<borrowed_iterator_t<R>, T>
         operator()(R&& r, T value) RXX_CONST_CALL {
-        return (*this)(ranges::begin(r), ranges::end(r), std::move(value));
+        return operator()(ranges::begin(r), ranges::end(r), std::move(value));
     }
 };
 } // namespace details

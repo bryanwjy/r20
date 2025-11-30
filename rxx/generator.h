@@ -2,6 +2,6 @@
 #pragma once
 
 // IWYU pragma: begin_exports
-#include "rxx/generator/generator.h" // IWYU pragma: keep
-#include "rxx/ranges/elements_of.h"  // IWYU pragma: keep
+#include "rxx/generator/generator.h"
+#include "rxx/ranges/elements_of.h"
 // IWYU pragma: end_exports

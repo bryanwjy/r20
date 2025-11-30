@@ -151,6 +151,10 @@ concept common_reference_with =
 
 RXX_DEFAULT_NAMESPACE_END
 
+#ifndef __cpp_lib_tuple_like
+#  define __cpp_lib_tuple_like 0
+#endif
+
 #if !RXX_CXX23
 
 #  if RXX_LIBSTDCXX & __has_include(<bits/stl_pair.h>)

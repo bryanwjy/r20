@@ -72,7 +72,7 @@ template <typename T, typename U>
 __RXX_HIDE_FROM_ABI constexpr T make_from_union(
     bool has_value, U&& arg) noexcept(std::is_nothrow_constructible_v<T,
     std::in_place_t, decltype(std::declval<U>().value)>) {
-    return has_value ? T{std::in_place, forward_like<U>(arg.value)}
+    return has_value ? T{std::in_place, __RXX forward_like<U>(arg.value)}
                      : T{nullptr};
 }
 
@@ -230,8 +230,9 @@ class optional_base {
         std::in_place_t, decltype(std::declval<U>().value)>)
     requires (place_flag_in_tail)
     {
-        return has_value ? container{std::in_place, forward_like<U>(u.value)}
-                         : container{nullptr};
+        return has_value
+            ? container{std::in_place, __RXX forward_like<U>(u.value)}
+            : container{nullptr};
     }
 
     template <typename U>

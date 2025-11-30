@@ -116,17 +116,6 @@ private:
     overlappable_if<allow_external_overlap, container> container_;
 };
 
-template <typename F, typename... Args>
-requires (std::constructible_from<std::decay_t<F>, F> && ... &&
-    std::constructible_from<std::decay_t<Args>, Args>)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto bind_back(F&& func,
-    Args&&... args) noexcept((std::is_nothrow_constructible_v<std::decay_t<F>,
-                                  F> &&
-    ... && std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
-    return bind_back_t<std::decay_t<F>, std::decay_t<Args>...>{
-        std::forward<F>(func), std::forward<Args>(args)...};
-}
-
 template <typename F, size_t N>
 class set_arity_t {
 public:
@@ -180,5 +169,16 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto set_arity(
 }
 
 } // namespace ranges::details
+
+template <typename F, typename... Args>
+requires (std::constructible_from<std::decay_t<F>, F> && ... &&
+    std::constructible_from<std::decay_t<Args>, Args>)
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto bind_back(F&& func,
+    Args&&... args) noexcept((std::is_nothrow_constructible_v<std::decay_t<F>,
+                                  F> &&
+    ... && std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
+    return ranges::details::bind_back_t<std::decay_t<F>, std::decay_t<Args>...>{
+        std::forward<F>(func), std::forward<Args>(args)...};
+}
 
 RXX_DEFAULT_NAMESPACE_END

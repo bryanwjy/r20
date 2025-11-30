@@ -57,8 +57,7 @@ namespace details {
 
 struct advance_t final {
 
-    __RXX_HIDE_FROM_ABI RXX_STATIC_CALL void
-    operator&() RXX_CONST_CALL = delete;
+    __RXX_HIDE_FROM_ABI void operator&() const = delete;
 
     template <std::input_or_output_iterator It>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr void operator()(
@@ -146,8 +145,7 @@ struct advance_t final {
 
 struct distance_t final {
 
-    __RXX_HIDE_FROM_ABI RXX_STATIC_CALL void
-    operator&() RXX_CONST_CALL = delete;
+    __RXX_HIDE_FROM_ABI void operator&() const = delete;
 
     template <typename It, std::sentinel_for<It> Sent>
     requires (!std::sized_sentinel_for<Sent, It>)
@@ -190,8 +188,7 @@ inline constexpr ranges::details::distance_t distance{};
 namespace details {
 struct next_t final {
 
-    __RXX_HIDE_FROM_ABI RXX_STATIC_CALL void
-    operator&() RXX_CONST_CALL = delete;
+    __RXX_HIDE_FROM_ABI void operator&() const = delete;
 
     template <std::input_or_output_iterator It>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -226,8 +223,7 @@ struct next_t final {
 
 struct prev_t final {
 
-    __RXX_HIDE_FROM_ABI RXX_STATIC_CALL void
-    operator&() RXX_CONST_CALL = delete;
+    __RXX_HIDE_FROM_ABI void operator&() const = delete;
 
     template <std::bidirectional_iterator It>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

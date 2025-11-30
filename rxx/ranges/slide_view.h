@@ -4,11 +4,11 @@
 #include "rxx/config.h"
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
@@ -440,7 +440,7 @@ struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
     operator()(D num) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this), num);
+            __RXX ranges::details::set_arity<2>(slide_t{}), num);
     }
 #else
 #  error "Unsupported"

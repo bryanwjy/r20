@@ -2,9 +2,9 @@
 #pragma once
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
 #include "rxx/details/integer_like.h" // IWYU pragma: keep
 #include "rxx/details/view_traits.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/utility.h"
 
 #include <type_traits>
@@ -58,7 +58,8 @@ struct take_t : ranges::details::adaptor_non_closure<take_t> {
     operator()(N&& num) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<N>, N>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this), std::forward<N>(num));
+            __RXX ranges::details::set_arity<2>(take_t{}),
+            std::forward<N>(num));
     }
 #else
 #  error "Unsupported"

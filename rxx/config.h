@@ -5,26 +5,26 @@
 // IWYU pragma: always_keep
 
 // IWYU pragma: begin_exports
-#include "rxx/configuration/abi.h"              // IWYU pragma: keep
-#include "rxx/configuration/allocation.h"       // IWYU pragma: keep
-#include "rxx/configuration/architecture.h"     // IWYU pragma: keep
-#include "rxx/configuration/attributes.h"       // IWYU pragma: keep
-#include "rxx/configuration/builtins.h"         // IWYU pragma: keep
-#include "rxx/configuration/compiler.h"         // IWYU pragma: keep
-#include "rxx/configuration/compiler_barrier.h" // IWYU pragma: keep
-#include "rxx/configuration/exceptions.h"       // IWYU pragma: keep
-#include "rxx/configuration/keywords.h"         // IWYU pragma: keep
-#include "rxx/configuration/memcmp.h"           // IWYU pragma: keep
-#include "rxx/configuration/memcpy.h"           // IWYU pragma: keep
-#include "rxx/configuration/modules.h"          // IWYU pragma: keep
-#include "rxx/configuration/namespace.h"        // IWYU pragma: keep
-#include "rxx/configuration/pragma.h"           // IWYU pragma: keep
-#include "rxx/configuration/simd.h"             // IWYU pragma: keep
-#include "rxx/configuration/standard.h"         // IWYU pragma: keep
-#include "rxx/configuration/stl.h"              // IWYU pragma: keep
-#include "rxx/configuration/target.h"           // IWYU pragma: keep
-#include "rxx/configuration/types.h"            // IWYU pragma: keep
-#include "rxx/preprocessor/attribute_list.h"    // IWYU pragma: keep
+#include "rxx/configuration/abi.h"
+#include "rxx/configuration/allocation.h"
+#include "rxx/configuration/architecture.h"
+#include "rxx/configuration/attributes.h"
+#include "rxx/configuration/builtins.h"
+#include "rxx/configuration/compiler.h"
+#include "rxx/configuration/compiler_barrier.h"
+#include "rxx/configuration/exceptions.h"
+#include "rxx/configuration/keywords.h"
+#include "rxx/configuration/memcmp.h"
+#include "rxx/configuration/memcpy.h"
+#include "rxx/configuration/modules.h"
+#include "rxx/configuration/namespace.h"
+#include "rxx/configuration/pragma.h"
+#include "rxx/configuration/simd.h"
+#include "rxx/configuration/standard.h"
+#include "rxx/configuration/stl.h"
+#include "rxx/configuration/target.h"
+#include "rxx/configuration/types.h"
+#include "rxx/preprocessor/attribute_list.h"
 // IWYU pragma: end_exports
 
 #if !RXX_CXX20

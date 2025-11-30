@@ -5,9 +5,9 @@
 
 #include "rxx/algorithm.h"
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
@@ -220,7 +220,7 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
     operator()(Pred&& pred) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<Pred>, Pred>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this),
+            __RXX ranges::details::set_arity<2>(chunk_by_t{}),
             std::forward<Pred>(pred));
     }
 #else

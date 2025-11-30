@@ -4,10 +4,10 @@
 #include "rxx/config.h"
 
 #include "rxx/details/adaptor_closure.h"
-#include "rxx/details/bind_back.h"
 #include "rxx/details/const_if.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/referenceable.h"
+#include "rxx/functional/bind_back.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/adjacent_view.h"
 #include "rxx/ranges/all.h"
@@ -207,7 +207,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr decltype(auto) operator*() const {
-        return apply(
+        return __RXX apply(
             [&](auto const&... iters) -> decltype(auto) {
                 return std::invoke(*parent_->func_, *iters...);
             },
@@ -262,7 +262,7 @@ public:
     constexpr decltype(auto) operator[](difference_type offset) const
     requires random_access_range<Base>
     {
-        return apply(
+        return __RXX apply(
             [&]<typename... It>(It const&... iters) -> decltype(auto) {
                 return std::invoke(
                     *parent_->func_, iters[iter_difference_t<It>(offset)]...);
@@ -455,7 +455,7 @@ struct adjacent_transform_t :
     operator()(F&& func) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
         return __RXX ranges::details::make_pipeable(
-            __RXX ranges::details::set_arity<2>(*this),
+            __RXX ranges::details::set_arity<2>(adjacent_transform_t{}),
             std::forward<F>(func));
     }
 #else
