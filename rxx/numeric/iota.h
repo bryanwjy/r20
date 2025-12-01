@@ -28,14 +28,14 @@ struct iota_t {
             ++first;
             ++value;
         }
-        return {std::move(first), std::move(value)};
+        return {__RXX move(first), __RXX move(value)};
     }
 
     template <std::weakly_incrementable T, output_range<T const&> R>
     __RXX_HIDE_FROM_ABI
         RXX_STATIC_CALL constexpr iota_result<borrowed_iterator_t<R>, T>
         operator()(R&& r, T value) RXX_CONST_CALL {
-        return operator()(ranges::begin(r), ranges::end(r), std::move(value));
+        return operator()(ranges::begin(r), ranges::end(r), __RXX move(value));
     }
 };
 } // namespace details

@@ -6,9 +6,9 @@
 #include "rxx/tuple/fwd.h"
 
 #include "rxx/concepts/swap.h"
-#include "rxx/details/is_explicit_constructible.h" // IWYU pragma: keep
 #include "rxx/ranges/get_element.h"
 #include "rxx/tuple/utils.h"
+#include "rxx/type_traits/is_explicit_constructible.h" // IWYU pragma: keep
 #include "rxx/utility.h"
 
 #include <array>   // IWYU pragma: keep
@@ -41,7 +41,7 @@ struct element {
     requires std::constructible_from<type, U>
     __RXX_HIDE_FROM_ABI constexpr element(U&& other) noexcept(
         std::is_nothrow_constructible_v<type, U>)
-        : data(std::forward<U>(other)) {}
+        : data(__RXX forward<U>(other)) {}
     __RXX_HIDE_FROM_ABI constexpr element& operator=(element const&) noexcept(
         std::is_nothrow_copy_assignable_v<type>) = default;
     __RXX_HIDE_FROM_ABI constexpr element& operator=(element&&) noexcept(
@@ -50,7 +50,7 @@ struct element {
     requires std::assignable_from<type&, U>
     __RXX_HIDE_FROM_ABI constexpr element& operator=(U&& other) noexcept(
         std::is_nothrow_assignable_v<type&, U>) {
-        data = std::forward<U>(other);
+        data = __RXX forward<U>(other);
         return *this;
     }
 
@@ -78,7 +78,7 @@ protected:
     requires (sizeof...(Us) == element_count) &&
         (... && std::constructible_from<template_element_t<Is, D>, Us>)
     __RXX_HIDE_FROM_ABI constexpr storage(Us&&... args)
-        : element<D, Is>(std::forward<Us>(args))... {}
+        : element<D, Is>(__RXX forward<Us>(args))... {}
 
     /** Skip allocator ctors **/
 
@@ -105,14 +105,14 @@ protected:
     template <typename... Us>
     requires (sizeof...(Us) == element_count)
     __RXX_HIDE_FROM_ABI constexpr D& assign(Us&&... others) {
-        (..., (this->template get_data<Is>() = std::forward<Us>(others)));
+        (..., (this->template get_data<Is>() = __RXX forward<Us>(others)));
         return static_cast<D&>(*this);
     }
 
     template <typename... Us>
     requires (sizeof...(Us) == element_count)
     __RXX_HIDE_FROM_ABI constexpr D const& assign(Us&&... others) const {
-        (..., (this->template get_data<Is>() = std::forward<Us>(others)));
+        (..., (this->template get_data<Is>() = __RXX forward<Us>(others)));
         return static_cast<D const&>(*this);
     }
 
@@ -153,8 +153,8 @@ private:
 };
 
 template <typename D, size_t... Is>
-__RXX_HIDE_FROM_ABI auto make_storage_for(std::index_sequence<Is...>) noexcept
-    -> storage<D, Is...>;
+__RXX_HIDE_FROM_ABI auto make_storage_for(
+    __RXX index_sequence<Is...>) noexcept -> storage<D, Is...>;
 
 template <typename D>
 using storage_for = decltype(make_storage_for<D>(sequence_for<D>));
@@ -166,7 +166,7 @@ template <tuple_like From, tuple_like To>
 requires (std::tuple_size_v<std::remove_cvref_t<From>> ==
              std::tuple_size_v<std::remove_cvref_t<To>>)
 inline constexpr bool is_element_convertible_v<From, To> =
-    []<size_t... Is>(std::index_sequence<Is...>) {
+    []<size_t... Is>(__RXX index_sequence<Is...>) {
         if constexpr (std::is_reference_v<To>) {
             return (... &&
                 std::is_convertible_v<decl_element_t<Is, From>,
@@ -187,7 +187,7 @@ class tuple : private details::tuple::storage_for<tuple<Ts...>> {
 
     template <typename Tuple, size_t... Is>
     __RXX_HIDE_FROM_ABI constexpr tuple(
-        Tuple&& other, std::index_sequence<Is...>)
+        Tuple&& other, __RXX index_sequence<Is...>)
         : base_type{
               __RXX forward_like<Tuple>(ranges::get_element<Is>(other))...} {}
 
@@ -228,7 +228,7 @@ public:
         noexcept((... && std::is_nothrow_assignable_v<Ts const&, Ts const&>))
     requires (... && std::assignable_from<Ts const&, Ts const&>)
     {
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
+        [&]<size_t... Is>(__RXX index_sequence<Is...>) {
             base_type::assign(ranges::get_element<Is>(other)...);
         }(details::tuple::sequence_for<tuple>);
         return *this;
@@ -238,8 +238,8 @@ public:
         noexcept((... && std::is_nothrow_assignable_v<Ts const&, Ts>))
     requires (... && std::assignable_from<Ts const&, Ts>)
     {
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
-            base_type::assign(std::move(ranges::get_element<Is>(other))...);
+        [&]<size_t... Is>(__RXX index_sequence<Is...>) {
+            base_type::assign(__RXX move(ranges::get_element<Is>(other))...);
         }(details::tuple::sequence_for<tuple>);
         return *this;
     }
@@ -256,7 +256,7 @@ public:
     __RXX_HIDE_FROM_ABI explicit(!(... && std::is_convertible_v<Us, Ts>)) //
         constexpr tuple(Us&&... args)                                     //
         noexcept((... && std::is_nothrow_constructible_v<Ts, Us>))
-        : base_type{std::forward<Us>(args)...} {}
+        : base_type{__RXX forward<Us>(args)...} {}
 
     template <typename... Us>
     requires (sizeof...(Us) == sizeof...(Ts) &&
@@ -284,7 +284,7 @@ public:
     __RXX_HIDE_FROM_ABI explicit(!(... && std::is_convertible_v<Us, Ts>)) //
         constexpr tuple(tuple<Us...>&& other)                             //
         noexcept((... && std::is_nothrow_constructible_v<Ts, Us>))
-        : tuple{std::move(other), details::tuple::sequence_for<tuple>} {}
+        : tuple{__RXX move(other), details::tuple::sequence_for<tuple>} {}
 
     template <typename... Us>
     requires (sizeof...(Us) == sizeof...(Ts) &&
@@ -294,7 +294,7 @@ public:
         !(... && std::is_convertible_v<Us const, Ts>)) //
         constexpr tuple(tuple<Us...> const&& other)    //
         noexcept((... && std::is_nothrow_constructible_v<Ts, Us const>))
-        : tuple{std::move(other), details::tuple::sequence_for<tuple>} {}
+        : tuple{__RXX move(other), details::tuple::sequence_for<tuple>} {}
 
     template <typename... Us>
     requires (sizeof...(Us) == sizeof...(Ts)) &&
@@ -302,7 +302,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr tuple& operator=(tuple<Us...> const& other) //
         noexcept((... && std::is_nothrow_assignable_v<Ts&, Us const&>)) {
 
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
+        [&]<size_t... Is>(__RXX index_sequence<Is...>) {
             base_type::assign(ranges::get_element<Is>(other)...);
         }(details::tuple::sequence_for<tuple>);
         return *this;
@@ -316,7 +316,7 @@ public:
         constexpr tuple const& operator=(tuple<Us...> const& other) const
         noexcept((... && std::is_nothrow_assignable_v<Ts const&, Us const&>)) {
 
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
+        [&]<size_t... Is>(__RXX index_sequence<Is...>) {
             base_type::assign(ranges::get_element<Is>(other)...);
         }(details::tuple::sequence_for<tuple>);
         return *this;
@@ -329,8 +329,8 @@ public:
     __RXX_HIDE_FROM_ABI constexpr tuple& operator=(tuple<Us...>&& other) //
         noexcept((... && std::is_nothrow_assignable_v<Ts&, Us>)) {
 
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
-            base_type::assign(std::move(ranges::get_element<Is>(other))...);
+        [&]<size_t... Is>(__RXX index_sequence<Is...>) {
+            base_type::assign(__RXX move(ranges::get_element<Is>(other))...);
         }(details::tuple::sequence_for<tuple>);
         return *this;
     }
@@ -343,8 +343,8 @@ public:
         constexpr tuple const& operator=(tuple<Us...>&& other) const
         noexcept((... && std::is_nothrow_assignable_v<Ts const&, Us>)) {
 
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
-            base_type::assign(std::move(ranges::get_element<Is>(other))...);
+        [&]<size_t... Is>(__RXX index_sequence<Is...>) {
+            base_type::assign(__RXX move(ranges::get_element<Is>(other))...);
         }(details::tuple::sequence_for<tuple>);
         return *this;
     }
@@ -353,7 +353,7 @@ public:
     template <details::tuple::unrecognized Tuple>
     requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == sizeof...(Ts) &&
         !use_other_overload<Tuple &&> &&
-        []<size_t... Is>(std::index_sequence<Is...>) {
+        []<size_t... Is>(__RXX index_sequence<Is...>) {
             return (... &&
                 std::constructible_from<Ts,
                     details::tuple::decl_element_t<Is, Tuple>>);
@@ -362,30 +362,30 @@ public:
         explicit(!details::tuple::is_element_convertible_v<Tuple, tuple>) //
         constexpr tuple(Tuple&& other)                                    //
         noexcept(details::tuple::is_nothrow_accessible_v<Tuple> &&
-            []<size_t... Is>(std::index_sequence<Is...>) {
+            []<size_t... Is>(__RXX index_sequence<Is...>) {
                 return (... &&
                     std::is_nothrow_constructible_v<Ts,
                         details::tuple::decl_element_t<Is, Tuple>>);
             }(details::tuple::sequence_for<tuple>))
-        : tuple{std::forward<Tuple>(other),
+        : tuple{__RXX forward<Tuple>(other),
               details::tuple::sequence_for<tuple>} {}
 
     template <details::tuple::unrecognized Tuple>
     requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == sizeof...(Ts) &&
-        []<size_t... Is>(std::index_sequence<Is...>) {
+        []<size_t... Is>(__RXX index_sequence<Is...>) {
             return (... &&
                 std::assignable_from<Ts&,
                     details::tuple::decl_element_t<Is, Tuple>>);
         }(details::tuple::sequence_for<tuple>))
     __RXX_HIDE_FROM_ABI constexpr tuple& operator=(Tuple&& other) //
         noexcept(details::tuple::is_nothrow_accessible_v<Tuple> &&
-            []<size_t... Is>(std::index_sequence<Is...>) {
+            []<size_t... Is>(__RXX index_sequence<Is...>) {
                 return (... &&
                     std::is_nothrow_assignable_v<Ts&,
                         details::tuple::decl_element_t<Is, Tuple>>);
             }(details::tuple::sequence_for<tuple>)) {
 
-        return [&]<size_t... Is>(std::index_sequence<Is...>) -> tuple& {
+        return [&]<size_t... Is>(__RXX index_sequence<Is...>) -> tuple& {
             return base_type::assign(
                 __RXX forward_like<Tuple>(ranges::get_element<Is>(other))...);
         }(details::tuple::sequence_for<tuple>);
@@ -393,20 +393,20 @@ public:
 
     template <details::tuple::unrecognized Tuple>
     requires (std::tuple_size_v<std::remove_cvref_t<Tuple>> == sizeof...(Ts) &&
-        []<size_t... Is>(std::index_sequence<Is...>) {
+        []<size_t... Is>(__RXX index_sequence<Is...>) {
             return (... &&
                 std::assignable_from<Ts const&,
                     details::tuple::decl_element_t<Is, Tuple>>);
         }(details::tuple::sequence_for<tuple>))
     __RXX_HIDE_FROM_ABI constexpr tuple const& operator=(Tuple&& other) const //
         noexcept(details::tuple::is_nothrow_accessible_v<Tuple> &&
-            []<size_t... Is>(std::index_sequence<Is...>) {
+            []<size_t... Is>(__RXX index_sequence<Is...>) {
                 return (... &&
                     std::is_nothrow_assignable_v<Ts const&,
                         details::tuple::decl_element_t<Is, Tuple>>);
             }(details::tuple::sequence_for<tuple>)) {
 
-        return [&]<size_t... Is>(std::index_sequence<Is...>) -> tuple const& {
+        return [&]<size_t... Is>(__RXX index_sequence<Is...>) -> tuple const& {
             return base_type::assign(
                 __RXX forward_like<Tuple>(ranges::get_element<Is>(other))...);
         }(details::tuple::sequence_for<tuple>);
@@ -452,7 +452,7 @@ public:
         !(... && std::is_convertible_v<Ts&, Ts>)) constexpr
     operator Tuple() & noexcept(
         std::is_nothrow_constructible_v<Tuple, Ts&...>) {
-        return [&]<size_t... Is>(std::index_sequence<Is...>) {
+        return [&]<size_t... Is>(__RXX index_sequence<Is...>) {
             return Tuple(ranges::get_element<Is>(*this)...);
         }(details::tuple::sequence_for<tuple>);
     }
@@ -464,7 +464,7 @@ public:
         !(... && std::is_convertible_v<Ts const&, Ts>)) constexpr
     operator Tuple() const& noexcept(
         std::is_nothrow_constructible_v<Tuple, Ts const&...>) {
-        return [&]<size_t... Is>(std::index_sequence<Is...>) {
+        return [&]<size_t... Is>(__RXX index_sequence<Is...>) {
             return Tuple(ranges::get_element<Is>(*this)...);
         }(details::tuple::sequence_for<tuple>);
     }
@@ -476,8 +476,8 @@ public:
         !(... && std::is_convertible_v<Ts&&, Ts>)) constexpr
     operator Tuple() && noexcept(
         std::is_nothrow_constructible_v<Tuple, Ts...>) {
-        return [&]<size_t... Is>(std::index_sequence<Is...>) {
-            return Tuple(std::move(ranges::get_element<Is>(*this))...);
+        return [&]<size_t... Is>(__RXX index_sequence<Is...>) {
+            return Tuple(__RXX move(ranges::get_element<Is>(*this))...);
         }(details::tuple::sequence_for<tuple>);
     }
 
@@ -488,8 +488,8 @@ public:
         !(... && std::is_convertible_v<Ts const&&, Ts>)) constexpr
     operator Tuple() const&& noexcept(
         std::is_nothrow_constructible_v<Tuple, Ts const...>) {
-        return [&]<size_t... Is>(std::index_sequence<Is...>) {
-            return Tuple(std::move(ranges::get_element<Is>(*this))...);
+        return [&]<size_t... Is>(__RXX index_sequence<Is...>) {
+            return Tuple(__RXX move(ranges::get_element<Is>(*this))...);
         }(details::tuple::sequence_for<tuple>);
     }
 };
@@ -546,35 +546,35 @@ constexpr std::tuple_element_t<I, tuple<Ts...>> const&& get(
 template <typename Target, typename... Ts>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) //
 constexpr Target& get(tuple<Ts...>& arg RXX_LIFETIMEBOUND) noexcept {
-    static_assert(details::template_count_v<Target, tuple<Ts...>> == 1,
+    static_assert(template_count_v<Target, tuple<Ts...>> == 1,
         "Cannot access non-unique type");
-    return get<details::template_index_v<Target, tuple<Ts...>>>(arg);
+    return get<template_index_v<Target, tuple<Ts...>>>(arg);
 }
 
 template <typename Target, typename... Ts>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) //
 constexpr Target&& get(tuple<Ts...>&& arg RXX_LIFETIMEBOUND) noexcept {
-    static_assert(details::template_count_v<Target, tuple<Ts...>> == 1,
+    static_assert(template_count_v<Target, tuple<Ts...>> == 1,
         "Cannot access non-unique type");
-    return get<details::template_index_v<Target, tuple<Ts...>>>(std::move(arg));
+    return get<template_index_v<Target, tuple<Ts...>>>( __RXX move(arg));
 }
 
 template <typename Target, typename... Ts>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) //
 constexpr Target const& get(
     tuple<Ts...> const& arg RXX_LIFETIMEBOUND) noexcept {
-    static_assert(details::template_count_v<Target, tuple<Ts...>> == 1,
+    static_assert(template_count_v<Target, tuple<Ts...>> == 1,
         "Cannot access non-unique type");
-    return get<details::template_index_v<Target, tuple<Ts...>>>(arg);
+    return get<template_index_v<Target, tuple<Ts...>>>(arg);
 }
 
 template <typename Target, typename... Ts>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) //
 constexpr Target const&& get(
     tuple<Ts...> const&& arg RXX_LIFETIMEBOUND) noexcept {
-    static_assert(details::template_count_v<Target, tuple<Ts...>> == 1,
+    static_assert(template_count_v<Target, tuple<Ts...>> == 1,
         "Cannot access non-unique type");
-    return get<details::template_index_v<Target, tuple<Ts...>>>(std::move(arg));
+    return get<template_index_v<Target, tuple<Ts...>>>( __RXX move(arg));
 }
 
 template <>

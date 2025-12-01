@@ -8,8 +8,6 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-namespace details {
-
 template <typename...>
 struct type_list {};
 
@@ -27,6 +25,7 @@ RXX_DISABLE_WARNING_PUSH()
 RXX_DISABLE_WARNING("-Wc++26-extensions")
 #  endif
 template <template <typename...> class List, size_t I, typename... Ts>
+requires (I < sizeof...(Ts))
 struct template_element<I, List<Ts...>> {
     using type RXX_NODEBUG = Ts...[I]; // NOLINT
 };
@@ -90,7 +89,5 @@ struct template_count {};
 template <typename T, template <typename...> class List, typename... Args>
 struct template_count<T, List<Args...>> :
     std::integral_constant<size_t, template_count_v<T, List<Args...>>> {};
-
-} // namespace details
 
 RXX_DEFAULT_NAMESPACE_END

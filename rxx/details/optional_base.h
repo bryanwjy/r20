@@ -48,12 +48,13 @@ union opt_union {
     requires std::constructible_from<T, Args...>
     __RXX_HIDE_FROM_ABI explicit constexpr opt_union(std::in_place_t,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
-        : value{std::forward<Args>(args)...} {}
+        : value{__RXX forward<Args>(args)...} {}
 
     template <typename F, typename... Args>
     __RXX_HIDE_FROM_ABI inline explicit constexpr opt_union(generating_t, F&& f,
         Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>)
-        : value{std::invoke(std::forward<F>(f), std::forward<Args>(args)...)} {}
+        : value{std::invoke(
+              __RXX forward<F>(f), __RXX forward<Args>(args)...)} {}
 
     __RXX_HIDE_FROM_ABI explicit constexpr opt_union(decltype(nullptr)) noexcept
         : nothing{} {}
@@ -99,7 +100,7 @@ class optional_base {
         __RXX_HIDE_FROM_ABI explicit constexpr container(std::in_place_t tag,
             Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
             Args...>)
-            : union_{tag, tag, std::forward<Args>(args)...}
+            : union_{tag, tag, __RXX forward<Args>(args)...}
             , has_value_{true} {}
 
         template <typename... Args>
@@ -108,7 +109,7 @@ class optional_base {
             generating_t gen,
             Args&&... args) noexcept(std::is_nothrow_constructible_v<union_type,
             generating_t, Args...>)
-            : union_{tag, gen, std::forward<Args>(args)...}
+            : union_{tag, gen, __RXX forward<Args>(args)...}
             , has_value_{true} {}
 
         __RXX_HIDE_FROM_ABI explicit constexpr container(
@@ -125,7 +126,7 @@ class optional_base {
             : union_{tag,
                   [&]() {
                       return make_from_union<union_type>(
-                          has_value, std::forward<U>(u));
+                          has_value, __RXX forward<U>(u));
                   }}
             , has_value_(has_value) {}
 
@@ -181,7 +182,7 @@ class optional_base {
         requires (allow_external_overlap)
         {
             __RXX construct_at(RXX_BUILTIN_addressof(union_.data), tag,
-                std::forward<Args>(args)...);
+                __RXX forward<Args>(args)...);
             has_value_ = true;
         }
 
@@ -192,7 +193,7 @@ class optional_base {
         requires (allow_external_overlap)
         {
             __RXX construct_at(RXX_BUILTIN_addressof(union_.data), tag,
-                std::forward<Args>(args)...);
+                __RXX forward<Args>(args)...);
             has_value_ = true;
         }
 
@@ -286,7 +287,7 @@ public:
     requires (std::is_move_constructible_v<T> &&
         !std::is_trivially_move_constructible_v<T>)
         : optional_base(
-              generating, other.has_value(), std::move(other.union_ref())) {}
+              generating, other.has_value(), __RXX move(other.union_ref())) {}
 
     template <typename U>
     requires requires {
@@ -294,9 +295,8 @@ public:
         requires std::constructible_from<T, U const&>;
         requires can_convert<U>();
     }
-    __RXX_HIDE_FROM_ABI explicit(
-        !std::is_convertible_v<U const&,
-            T>) constexpr optional_base(optional_base<U> const&
+    __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U const&,
+        T>) constexpr optional_base(optional_base<U> const&
             other) noexcept(std::is_nothrow_constructible_v<T, U const&>)
         : optional_base(generating, other.has_value(), other.union_ref()) {}
 
@@ -310,13 +310,13 @@ public:
         !std::is_convertible_v<U, T>) constexpr optional_base(optional_base<U>&&
             other) noexcept(std::is_nothrow_constructible_v<T, U>)
         : optional_base(
-              generating, other.has_value(), std::move(other.union_ref())) {}
+              generating, other.has_value(), __RXX move(other.union_ref())) {}
 
     template <typename... Args>
     requires std::constructible_from<T, Args...>
     __RXX_HIDE_FROM_ABI explicit constexpr optional_base(std::in_place_t tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
-        : container_(tag, tag, std::forward<Args>(args)...) {}
+        : container_(tag, tag, __RXX forward<Args>(args)...) {}
 
     template <typename U, typename... Args>
     requires std::constructible_from<T, std::initializer_list<U>&, Args...>
@@ -324,7 +324,7 @@ public:
         std::initializer_list<U> list,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
         std::initializer_list<U>&, Args...>)
-        : container_(tag, tag, list, std::forward<Args>(args)...) {}
+        : container_(tag, tag, list, __RXX forward<Args>(args)...) {}
 
     template <typename U = std::remove_cv_t<T>>
     requires (!std::same_as<std::remove_cvref_t<U>, std::in_place_t> &&
@@ -335,7 +335,7 @@ public:
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr optional_base(U&&
             other) noexcept(std::is_nothrow_constructible_v<T, U>)
-        : container_(std::in_place, std::in_place, std::forward<U>(other)) {}
+        : container_(std::in_place, std::in_place, __RXX forward<U>(other)) {}
 
     __RXX_HIDE_FROM_ABI inline constexpr optional_base& operator=(
         decltype(nullptr)) noexcept {
@@ -394,12 +394,12 @@ public:
     {
         if (this->has_value() != other.has_value()) {
             if (other.has_value()) {
-                this->emplace(std::move(*other));
+                this->emplace(__RXX move(*other));
             } else {
                 this->reset();
             }
         } else if (other.has_value()) {
-            **this = std::move(*other);
+            **this = __RXX move(*other);
         }
 
         return *this;
@@ -434,12 +434,12 @@ public:
         std::is_nothrow_assignable_v<T&, U>) {
         if (this->has_value() != other.has_value()) {
             if (other.has_value()) {
-                this->emplace(std::move(*other));
+                this->emplace(__RXX move(*other));
             } else {
                 this->reset();
             }
         } else if (other.has_value()) {
-            **this = std::move(*other);
+            **this = __RXX move(*other);
         }
 
         return *this;
@@ -453,9 +453,9 @@ public:
         U&& other) noexcept(std::is_nothrow_constructible_v<T, U> &&
         std::is_nothrow_assignable_v<T&, U>) {
         if (this->has_value()) {
-            **this = std::forward<U>(other);
+            **this = __RXX forward<U>(other);
         } else {
-            this->emplace(std::forward<U>(other));
+            this->emplace(__RXX forward<U>(other));
         }
 
         return *this;
@@ -473,12 +473,12 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
     constexpr auto union_ref() const&& noexcept -> decltype(auto) {
-        return std::move(container_.data.union_.data);
+        return __RXX move(container_.data.union_.data);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
     constexpr auto union_ref() && noexcept -> decltype(auto) {
-        return std::move(container_.data.union_.data);
+        return __RXX move(container_.data.union_.data);
     }
 
     __RXX_HIDE_FROM_ABI constexpr bool has_value() const noexcept {
@@ -506,11 +506,11 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr T const&& operator*() const&& noexcept {
-        return std::move(union_ref().value);
+        return __RXX move(union_ref().value);
     }
 
     __RXX_HIDE_FROM_ABI constexpr T&& operator*() && noexcept {
-        return std::move(union_ref().value);
+        return __RXX move(union_ref().value);
     }
 
     __RXX_HIDE_FROM_ABI constexpr void reset() noexcept {
@@ -532,11 +532,11 @@ public:
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
             __RXX destroy_at(ptr);
             __RXX construct_at(
-                ptr, std::in_place, std::forward<Args>(args)...);
+                ptr, std::in_place, __RXX forward<Args>(args)...);
         } else {
             container_.data.destroy_union();
             container_.data.construct_union(
-                std::in_place, std::forward<Args>(args)...);
+                std::in_place, __RXX forward<Args>(args)...);
         }
         return **this;
     }
@@ -550,11 +550,11 @@ public:
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
             __RXX destroy_at(ptr);
             __RXX construct_at(
-                ptr, std::in_place, list, std::forward<Args>(args)...);
+                ptr, std::in_place, list, __RXX forward<Args>(args)...);
         } else {
             container_.data.destroy_union();
             container_.data.construct_union(
-                std::in_place, list, std::forward<Args>(args)...);
+                std::in_place, list, __RXX forward<Args>(args)...);
         }
         return **this;
     }
@@ -562,19 +562,18 @@ public:
     template <typename F, typename... Args>
     requires std::regular_invocable<F, Args...> &&
         requires { T{std::invoke(std::declval<F>(), std::declval<Args>()...)}; }
-    __RXX_HIDE_FROM_ABI constexpr T&
-    generate(F&& func, Args&&... args) noexcept(
-        std::is_nothrow_invocable_v<F, Args...>&& noexcept(
-            T{static_cast<std::invoke_result_t<F, Args...> (*)()>(0)()})) {
+    __RXX_HIDE_FROM_ABI constexpr T& generate(F&& func,
+        Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...> &&
+        noexcept(T{static_cast<std::invoke_result_t<F, Args...> (*)()>(0)()})) {
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
             __RXX destroy_at(ptr);
             __RXX construct_at(ptr, std::in_place, generating,
-                std::forward<F>(func), std::forward<Args>(args)...);
+                __RXX forward<F>(func), __RXX forward<Args>(args)...);
         } else {
             container_.data.destroy_union();
-            container_.data.construct_union(
-                generating, std::forward<F>(func), std::forward<Args>(args)...);
+            container_.data.construct_union(generating, __RXX forward<F>(func),
+                __RXX forward<Args>(args)...);
         }
         return **this;
     }
@@ -603,16 +602,16 @@ private:
         U&& u) noexcept(std::is_nothrow_constructible_v<container, generating_t,
         bool, U>)
     requires (allow_external_overlap)
-        : container_{std::in_place, tag, has_value, std::forward<U>(u)} {}
+        : container_{std::in_place, tag, has_value, __RXX forward<U>(u)} {}
 
     template <typename U>
     __RXX_HIDE_FROM_ABI constexpr optional_base(generating_t tag,
         bool has_value,
         U&& u) noexcept(noexcept(make_container(has_value, std::declval<U>())))
     requires (place_flag_in_tail)
-        : container_{tag,
-              [&]() { return make_container(has_value, std::forward<U>(u)); }} {
-    }
+        : container_{tag, [&]() {
+                         return make_container(has_value, __RXX forward<U>(u));
+                     }} {}
 
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)
     overlappable_if<allow_external_overlap, container> container_;

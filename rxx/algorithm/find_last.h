@@ -3,7 +3,6 @@
 
 #include "rxx/config.h"
 
-#include "rxx/algorithm/find.h"
 #include "rxx/functional/equal_to.h"
 #include "rxx/functional/identity.h"
 #include "rxx/iterator/iter_traits.h"
@@ -12,7 +11,6 @@
 #include "rxx/ranges/subrange.h"
 #include "rxx/utility.h"
 
-#include <algorithm>
 #include <functional>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -33,11 +31,11 @@ protected:
             auto last_it = ranges::next(first, last);
             for (auto it = ranges::prev(last_it); it != first; --it) {
                 if (std::invoke(pred, std::invoke(proj, *it))) {
-                    return subrange<I>(std::move(it), std::move(last_it));
+                    return subrange<I>(__RXX move(it), __RXX move(last_it));
                 }
             }
             if (std::invoke(pred, std::invoke(proj, *first))) {
-                return subrange<I>(std::move(first), std::move(last_it));
+                return subrange<I>(__RXX move(first), __RXX move(last_it));
             }
             return subrange<I>(last_it, last_it);
         } else {
@@ -51,7 +49,7 @@ protected:
             }
 
             if (found) {
-                return subrange<I>(std::move(found_it), std::move(first));
+                return subrange<I>(__RXX move(found_it), __RXX move(first));
             } else {
                 return subrange<I>(first, first);
             }
@@ -63,12 +61,13 @@ public:
         typename Proj = std::identity, typename T = projected_value_t<I, Proj>>
     requires std::indirect_binary_predicate<ranges::equal_to,
         std::projected<I, Proj>, T const*>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr ranges::subrange<I>
-    operator()(I first, S last, T const& value, Proj proj = {}) RXX_CONST_CALL {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr ranges::subrange<I> operator()(
+        I first, S last, T const& value, Proj proj = {}) RXX_CONST_CALL {
         return impl(
-            std::move(first), std::move(last),
-            [&]<typename U>(U&& val) { return value == std::forward<U>(val); },
+            __RXX move(first), __RXX move(last),
+            [&]<typename U>(
+                U&& val) { return value == __RXX forward<U>(val); },
             proj);
     }
 
@@ -76,12 +75,13 @@ public:
         typename T = projected_value_t<iterator_t<R>, Proj>>
     requires std::indirect_binary_predicate<ranges::equal_to,
         std::projected<iterator_t<R>, Proj>, T const*>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL
-        constexpr ranges::borrowed_subrange_t<R>
-        operator()(R&& range, T const& value, Proj proj = {}) RXX_CONST_CALL {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr ranges::borrowed_subrange_t<R> operator()(
+        R&& range, T const& value, Proj proj = {}) RXX_CONST_CALL {
         return impl(
             ranges::begin(range), ranges::end(range),
-            [&]<typename U>(U&& val) { return value == std::forward<U>(val); },
+            [&]<typename U>(
+                U&& val) { return value == __RXX forward<U>(val); },
             proj);
     }
 };
@@ -93,7 +93,8 @@ struct find_last_if_t : private find_last_t {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr subrange<I> operator()(
         I first, S last, Pred pred, Proj proj = {}) RXX_CONST_CALL {
-        return find_last_t::impl(std::move(first), std::move(last), pred, proj);
+        return find_last_t::impl(
+            __RXX move(first), __RXX move(last), pred, proj);
     }
 
     template <forward_range R, typename Proj = identity,
@@ -114,9 +115,9 @@ struct find_last_if_not_t : private find_last_t {
     RXX_STATIC_CALL constexpr subrange<I> operator()(
         I first, S last, Pred pred, Proj proj = {}) RXX_CONST_CALL {
         return impl(
-            std::move(first), std::move(last),
+            __RXX move(first), __RXX move(last),
             [&]<typename U>(
-                U&& val) { return !std::invoke(pred, std::forward<U>(val)); },
+                U&& val) { return !std::invoke(pred, __RXX forward<U>(val)); },
             proj);
     }
 
@@ -128,7 +129,7 @@ struct find_last_if_not_t : private find_last_t {
         return impl(
             ranges::begin(range), ranges::end(range),
             [&]<typename U>(
-                U&& val) { return !std::invoke(pred, std::forward<U>(val)); },
+                U&& val) { return !std::invoke(pred, __RXX forward<U>(val)); },
             proj);
     }
 };

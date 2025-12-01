@@ -45,7 +45,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr non_propagating_cache& operator=(T val) {
         this->reset();
-        this->emplace(std::move(val));
+        this->emplace(__RXX move(val));
         return *this;
     }
 
@@ -73,7 +73,7 @@ public:
     __RXX_HIDE_FROM_ABI non_propagating_cache&
     operator=(non_propagating_cache<U>&& other) noexcept(
         std::is_nothrow_assignable_v<base_type&, optional_base<U>>) {
-        base_type::operator=((optional_base<U>&&)std::move(other));
+        base_type::operator=((optional_base<U>&&)__RXX move(other));
         return *this;
     }
 

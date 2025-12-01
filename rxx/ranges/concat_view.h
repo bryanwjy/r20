@@ -42,13 +42,13 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr concat_view(Vs... views) noexcept(
         (... && std::is_nothrow_move_constructible_v<Vs>))
-        : views_{std::move(views)...} {}
+        : views_{__RXX move(views)...} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator<false> begin() noexcept(
         std::is_nothrow_constructible_v<iterator<false>, concat_view&,
             std::in_place_index_t<0>,
-            iterator_t<View<0>>>&&                           //
+            iterator_t<View<0>>> &&                          //
         noexcept(ranges::begin(std::declval<View<0>&>())) && //
         noexcept(std::declval<iterator<false>&>().template satisfy<0>()))
     requires (!(... && details::simple_view<Vs>))
@@ -60,11 +60,11 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr iterator<true> begin() const noexcept(
-        std::is_nothrow_constructible_v<iterator<true>, concat_view const&,
-            std::in_place_index_t<0>,
-            iterator_t<View<0>>>&&                              //
-        noexcept(ranges::begin(std::declval<View<0> const&>())) //
+    constexpr iterator<true> begin() const
+        noexcept(std::is_nothrow_constructible_v<iterator<true>,
+                     concat_view const&, std::in_place_index_t<0>,
+                     iterator_t<View<0>>> &&                        //
+            noexcept(ranges::begin(std::declval<View<0> const&>())) //
             && noexcept(std::declval<iterator<true>&>().template satisfy<0>()))
     requires (... && range<Vs const>) && details::concatable<Vs const...>
     {
@@ -78,10 +78,10 @@ public:
     constexpr auto end() noexcept(
         std::is_nothrow_constructible_v<iterator<false>, concat_view&,
             std::in_place_index_t<sizeof...(Vs) - 1>,
-            sentinel_t<View<sizeof...(Vs) - 1>>>&&                           //
+            sentinel_t<View<sizeof...(Vs) - 1>>> &&                          //
         noexcept(ranges::begin(std::declval<View<sizeof...(Vs) - 1>&>())) && //
         noexcept(std::declval<iterator<false>&>()
-                     .template satisfy<sizeof...(Vs) - 1>()))
+                .template satisfy<sizeof...(Vs) - 1>()))
     requires (!(... && details::simple_view<Vs>))
     {
         constexpr auto N = sizeof...(Vs);
@@ -99,11 +99,11 @@ public:
     constexpr auto end() const noexcept(
         std::is_nothrow_constructible_v<iterator<false>, concat_view const&,
             std::in_place_index_t<sizeof...(Vs) - 1>,
-            sentinel_t<View<sizeof...(Vs) - 1>>>&& //
+            sentinel_t<View<sizeof...(Vs) - 1>>> && //
         noexcept(
             ranges::begin(std::declval<View<sizeof...(Vs) - 1> const&>())) && //
         noexcept(std::declval<iterator<false>&>()
-                     .template satisfy<sizeof...(Vs) - 1>()))
+                .template satisfy<sizeof...(Vs) - 1>()))
     requires (... && range<Vs const>) && details::concatable<Vs const...>
     {
         constexpr auto N = sizeof...(Vs);
@@ -119,7 +119,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto size() noexcept(
-        (...&& noexcept(ranges::size(std::declval<Vs&>()))) && //
+        (... && noexcept(ranges::size(std::declval<Vs&>()))) && //
         (... &&
             std::is_nothrow_convertible_v<range_size_t<Vs>,
                 std::common_type_t<range_size_t<Vs>...>>))
@@ -134,11 +134,11 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto size() const
-        noexcept((...&& noexcept(ranges::size(std::declval<Vs const&>()))) && //
-            (... &&
-                std::is_nothrow_convertible_v<range_size_t<Vs const>,
-                    std::common_type_t<range_size_t<Vs const>...>>))
+    constexpr auto size() const noexcept(
+        (... && noexcept(ranges::size(std::declval<Vs const&>()))) && //
+        (... &&
+            std::is_nothrow_convertible_v<range_size_t<Vs const>,
+                std::common_type_t<range_size_t<Vs const>...>>))
     requires (... && sized_range<Vs const>)
     {
         return __RXX apply(
@@ -189,23 +189,21 @@ private:
         if constexpr (!std::is_reference_v<concat_reference_t<
                           details::const_if<Const, Vs>...>>) {
             return std::input_iterator_tag{};
-        } else if constexpr (
-            (... &&
-                std::derived_from<
-                    typename std::iterator_traits<iterator_t<
-                        details::const_if<Const, Vs>>>::iterator_category,
-                    std::
-                        random_access_iterator_tag>)&&concat_is_random_access<Const,
-                Vs...>) {
+        } else if constexpr ((... &&
+                                 std::derived_from<
+                                     typename std::iterator_traits<
+                                         iterator_t<details::const_if<Const,
+                                             Vs>>>::iterator_category,
+                                     std::random_access_iterator_tag>) &&
+            concat_is_random_access<Const, Vs...>) {
             return std::random_access_iterator_tag{};
-        } else if constexpr (
-            (... &&
-                std::derived_from<
-                    typename std::iterator_traits<iterator_t<
-                        details::const_if<Const, Vs>>>::iterator_category,
-                    std::
-                        bidirectional_iterator_tag>)&&concat_is_bidirectional<Const,
-                Vs...>) {
+        } else if constexpr ((... &&
+                                 std::derived_from<
+                                     typename std::iterator_traits<
+                                         iterator_t<details::const_if<Const,
+                                             Vs>>>::iterator_category,
+                                     std::bidirectional_iterator_tag>) &&
+            concat_is_bidirectional<Const, Vs...>) {
             return std::bidirectional_iterator_tag{};
         } else if constexpr ((... &&
                                  std::derived_from<
@@ -232,9 +230,10 @@ consteval bool all_but_first_sized_range() noexcept {
 
 template <bool Const, typename... Vs>
 consteval bool all_nothrow_iter_swappable() noexcept {
-    return (...&& noexcept(ranges::iter_swap(
-        std::declval<iterator_t<details::const_if<Const, Vs>> const&>(),
-        std::declval<iterator_t<details::const_if<Const, Vs>> const&>())));
+    return (... &&
+        noexcept(ranges::iter_swap(
+            std::declval<iterator_t<details::const_if<Const, Vs>> const&>(),
+            std::declval<iterator_t<details::const_if<Const, Vs>> const&>())));
 }
 
 } // namespace details
@@ -245,8 +244,8 @@ template <bool Const>
 class concat_view<Vs...>::iterator :
     public details::concat_view_iterator_category<Const, Vs...> {
 private:
-    using base_iter =
-        details::variant_base<iterator_t<details::const_if<Const, Vs>>...>;
+    using base_iter = __RXX details::variant_base<
+        iterator_t<details::const_if<Const, Vs>>...>;
     friend concat_view;
 
     template <typename... Args>
@@ -256,7 +255,7 @@ private:
         Args...>)
     requires std::constructible_from<base_iter, Args...>
         : parent_{RXX_BUILTIN_addressof(parent)}
-        , it_{std::forward<Args>(args)...} {}
+        , it_{__RXX forward<Args>(args)...} {}
 
     static consteval auto make_iterator_concept() noexcept {
         if constexpr (details::concat_is_random_access<Const, Vs...>) {
@@ -283,21 +282,22 @@ public:
     requires (Const && ... &&
                  std::convertible_to<iterator_t<Vs>, iterator_t<Vs const>>)
         : parent_{other.parent_}
-        , it_{details::jump_table_for<base_iter>(
-              [&]<size_t I>(details::size_constant<I>) {
+        , it_{__RXX details::jump_table_for<base_iter>(
+              [&]<size_t I>(__RXX details::size_constant<I>) {
                   return base_iter{std::in_place_index<I>,
-                      std::move(other.it_).template value_ref<I>()};
+                      __RXX move(other.it_).template value_ref<I>()};
               },
               other.it_.index())} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto operator*() const noexcept((...&& noexcept(
-        *std::declval<iterator_t<details::const_if<Const, Vs>> const&>())))
+    constexpr auto operator*() const noexcept((... &&
+        noexcept(
+            *std::declval<iterator_t<details::const_if<Const, Vs>> const&>())))
         -> decltype(auto) {
         using reference =
             details::concat_reference_t<details::const_if<Const, Vs>...>;
-        return details::jump_table_for<base_iter>(
-            [&]<size_t I>(details::size_constant<I>) -> reference {
+        return __RXX details::jump_table_for<base_iter>(
+            [&]<size_t I>(__RXX details::size_constant<I>) -> reference {
                 return *it_.template value_ref<I>();
             },
             it_.index());
@@ -312,8 +312,8 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
-        details::jump_table_for<base_iter>(
-            [&]<size_t I>(details::size_constant<I>) {
+        __RXX details::jump_table_for<base_iter>(
+            [&]<size_t I>(__RXX details::size_constant<I>) {
                 ++get_iter<I>();
                 satisfy<I>();
             },
@@ -335,8 +335,8 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
     requires details::concat_is_bidirectional<Const, Vs...>
     {
-        details::jump_table_for<base_iter>(
-            [&]<size_t I>(details::size_constant<I>) { prev<I>(); },
+        __RXX details::jump_table_for<base_iter>(
+            [&]<size_t I>(__RXX details::size_constant<I>) { prev<I>(); },
             it_.index());
         return *this;
     }
@@ -352,8 +352,8 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type val)
     requires details::concat_is_random_access<Const, Vs...>
     {
-        details::jump_table_for<base_iter>(
-            [&]<size_t I>(details::size_constant<I>) {
+        __RXX details::jump_table_for<base_iter>(
+            [&]<size_t I>(__RXX details::size_constant<I>) {
                 auto offset = get_iter<I>() - get_begin<I>();
                 if (val > 0) {
                     advance_fwd<I>(offset, val);
@@ -395,8 +395,8 @@ public:
     {
         return left.it_.index() < right.it_.index() ||
             (left.it_.index() == right.it_.index() &&
-                details::jump_table_for<base_iter>(
-                    [&]<size_t I>(details::size_constant<I>) {
+                __RXX details::jump_table_for<base_iter>(
+                    [&]<size_t I>(__RXX details::size_constant<I>) {
                         return left.it_.template value_ref<I>() <
                             right.it_.template value_ref<I>();
                     },
@@ -475,21 +475,24 @@ public:
         }
 
         if (cmp == 0) {
-            return details::jump_table_for<base_iter>(
-                [&]<size_t I>(details::size_constant<I>) -> difference_type {
+            return __RXX details::jump_table_for<base_iter>(
+                [&]<size_t I>(
+                    __RXX details::size_constant<I>) -> difference_type {
                     return left.it_.template value_ref<I>() -
                         right.it_.template value_ref<I>();
                 },
                 left.it_.index());
         }
 
-        return details::jump_table_for<base_iter>(
-            [&]<size_t Ix>(details::size_constant<Ix>) -> difference_type {
+        return __RXX details::jump_table_for<base_iter>(
+            [&]<size_t Ix>(
+                __RXX details::size_constant<Ix>) -> difference_type {
                 if constexpr (Ix != 0) {
-                    return details::jump_table_for<base_iter>(
+                    return __RXX details::jump_table_for<base_iter>(
                         [&]<size_t Iy>
                         requires (Ix > Iy)
-                        (details::size_constant<Iy>) -> difference_type {
+                        (__RXX details::size_constant<Iy>)
+                            -> difference_type {
                             auto const diff_y = ranges::distance(
                                 right.it_.template value_ref<Iy>(),
                                 right.template get_end<Iy>());
@@ -498,12 +501,12 @@ public:
                                     left.it_.template value_ref<Ix>());
 
                             difference_type result = 0;
-                            [&]<size_t... Is>(std::index_sequence<Is...>) {
+                            [&]<size_t... Is>(__RXX index_sequence<Is...>) {
                                 (...,
                                     (result +=
                                         ranges::size(left.template get_view<Is +
-                                                     Iy + 1>())));
-                            }(std::make_index_sequence<Ix - Iy - 1>{});
+                                            Iy + 1>())));
+                            }(__RXX make_index_sequence_v<Ix - Iy - 1>);
 
                             return diff_y + result + diff_x;
                         },
@@ -525,18 +528,19 @@ public:
         (details::all_but_first_sized_range<Const, Vs...>())
     {
 
-        return details::jump_table_for<base_iter>(
-            [&]<size_t Ix>(details::size_constant<Ix>) -> difference_type {
+        return __RXX details::jump_table_for<base_iter>(
+            [&]<size_t Ix>(
+                __RXX details::size_constant<Ix>) -> difference_type {
                 auto const diff_x =
                     ranges::distance(left.it_.template value_ref<Ix>(),
                         left.template get_end<Ix>());
 
                 difference_type result = 0;
-                [&]<size_t... Is>(std::index_sequence<Is...>) {
+                [&]<size_t... Is>(__RXX index_sequence<Is...>) {
                     (...,
                         (result += ranges::distance(
                              left.template get_view<Ix + 1 + Is>())));
-                }(std::make_index_sequence<(sizeof...(Vs) - Ix - 1)>{});
+                }(__RXX make_index_sequence_v<(sizeof...(Vs) - Ix - 1)>);
 
                 return -(diff_x + result);
             },
@@ -565,8 +569,8 @@ public:
                     details::const_if<Const, Vs>...>>))) {
         using Ref =
             details::concat_rvalue_reference_t<details::const_if<Const, Vs>...>;
-        return details::jump_table_for<base_iter>(
-            [&]<size_t I>(details::size_constant<I>) -> Ref {
+        return __RXX details::jump_table_for<base_iter>(
+            [&]<size_t I>(__RXX details::size_constant<I>) -> Ref {
                 return ranges::iter_move(self.it_.template value_ref<I>());
             },
             self.it_.index());
@@ -580,14 +584,13 @@ public:
         (... &&
             std::indirectly_swappable<iterator_t<details::const_if<Const, Vs>>>)
     {
-        details::jump_table_for<base_iter>(
-            [&]<size_t Ix>(details::size_constant<Ix>) {
-                details::jump_table_for<base_iter>(
-                    [&]<size_t Iy>(details::size_constant<Iy>) {
-                        if constexpr (
-                            std::is_same_v<
-                                details::template_element_t<Ix, base_iter>,
-                                details::template_element_t<Iy, base_iter>>) {
+        __RXX details::jump_table_for<base_iter>(
+            [&]<size_t Ix>(__RXX details::size_constant<Ix>) {
+                __RXX details::jump_table_for<base_iter>(
+                    [&]<size_t Iy>(__RXX details::size_constant<Iy>) {
+                        if constexpr (std::is_same_v<
+                                          template_element_t<Ix, base_iter>,
+                                          template_element_t<Iy, base_iter>>) {
                             ranges::iter_swap(left.it_.template value_ref<Ix>(),
                                 right.it_.template value_ref<Iy>());
                         } else {
@@ -628,8 +631,8 @@ private:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     static constexpr auto to_underlying_diff_type(difference_type
             value) noexcept(std::is_nothrow_convertible_v<difference_type,
-        std::iter_difference_t<details::template_element_t<I, base_iter>>>) {
-        using Type = details::template_element_t<I, base_iter>;
+        std::iter_difference_t<template_element_t<I, base_iter>>>) {
+        using Type = template_element_t<I, base_iter>;
         return static_cast<std::iter_difference_t<Type>>(value);
     }
 
@@ -694,15 +697,15 @@ namespace details {
 struct concat_t {
     template <typename... Ts>
     requires requires { concat_view(std::declval<Ts>()...); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(Ts&&... args) RXX_CONST_CALL {
-        return concat_view(std::forward<Ts>(args)...);
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(Ts&&... args) RXX_CONST_CALL {
+        return concat_view(__RXX forward<Ts>(args)...);
     }
 
     template <input_range R>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()(R&& args) RXX_CONST_CALL {
-        return __RXX ranges::views::all(std::forward<R>(args));
+        return __RXX ranges::views::all(__RXX forward<R>(args));
     }
 };
 } // namespace details

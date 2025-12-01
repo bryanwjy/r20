@@ -3,11 +3,17 @@
 
 #include "rxx/config.h"
 
+#if RXX_LIBSTDCXX & __has_include(<bits/stl_pair.h>)
+#  include <bits/stl_pair.h>
+#elif RXX_LIBCXX & __has_include(<__fwd/pair.h>)
+#  include <__fwd/pair.h>
+#else
+#  include <utility>
+#endif
+
 #if RXX_LIBSTDCXX && !RXX_LIBSTDCXX_AFTER(2024, 04, 16)
 
 #  include "rxx/compare/three_way_synthesizer.h"
-
-#  include <utility>
 
 RXX_STD_NAMESPACE_BEGIN
 

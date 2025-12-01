@@ -22,7 +22,7 @@ namespace ranges {
 
 namespace details {
 template <typename T, size_t I>
-concept has_tuple_element = tuple_like<T> && I < std::tuple_size<T>::value;
+concept has_tuple_element = tuple_like<T> && (I < std::tuple_size<T>::value);
 
 template <typename T, size_t I>
 concept returnable_element = std::is_reference_v<T> ||
@@ -49,7 +49,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr elements_view(V base) noexcept(
         std::is_nothrow_move_constructible_v<V>)
-        : base_{std::move(base)} {}
+        : base_{__RXX move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -60,22 +60,22 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() noexcept(
-        std::is_nothrow_constructible_v<iterator<false>,
-            iterator_t<V>>&& noexcept(ranges::begin(base_)))
+        std::is_nothrow_constructible_v<iterator<false>, iterator_t<V>> &&
+        noexcept(ranges::begin(base_)))
     requires (!details::simple_view<V>)
     {
         return iterator<false>{ranges::begin(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto begin() const
-        noexcept(std::is_nothrow_constructible_v<iterator<true>,
-            iterator_t<V const>>&& noexcept(ranges::begin(base_)))
+    constexpr auto begin() const noexcept(
+        std::is_nothrow_constructible_v<iterator<true>, iterator_t<V const>> &&
+        noexcept(ranges::begin(base_)))
     requires range<V const>
     {
         return iterator<true>{ranges::begin(base_)};
@@ -83,8 +83,8 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() noexcept(
-        std::is_nothrow_constructible_v<sentinel<false>,
-            sentinel_t<V>>&& noexcept(ranges::end(base_)))
+        std::is_nothrow_constructible_v<sentinel<false>, sentinel_t<V>> &&
+        noexcept(ranges::end(base_)))
     requires (!details::simple_view<V> && !common_range<V>)
     {
         return sentinel<false>{ranges::end(base_)};
@@ -92,26 +92,26 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() noexcept(
-        std::is_nothrow_constructible_v<iterator<false>,
-            sentinel_t<V>>&& noexcept(ranges::end(base_)))
+        std::is_nothrow_constructible_v<iterator<false>, sentinel_t<V>> &&
+        noexcept(ranges::end(base_)))
     requires (!details::simple_view<V> && common_range<V>)
     {
         return iterator<false>{ranges::end(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto end() const
-        noexcept(std::is_nothrow_constructible_v<sentinel<true>,
-            sentinel_t<V>>&& noexcept(ranges::end(base_)))
+    constexpr auto end() const noexcept(
+        std::is_nothrow_constructible_v<sentinel<true>, sentinel_t<V>> &&
+        noexcept(ranges::end(base_)))
     requires range<V const>
     {
         return sentinel<true>{ranges::end(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr auto end() const
-        noexcept(std::is_nothrow_constructible_v<iterator<true>,
-            sentinel_t<V>>&& noexcept(ranges::end(base_)))
+    constexpr auto end() const noexcept(
+        std::is_nothrow_constructible_v<iterator<true>, sentinel_t<V>> &&
+        noexcept(ranges::end(base_)))
     requires common_range<V const>
     {
         return iterator<true>{ranges::end(base_)};
@@ -132,7 +132,7 @@ public:
     }
 
 private:
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_ {};
 };
 
 namespace details {
@@ -225,12 +225,12 @@ public:
     __RXX_HIDE_FROM_ABI constexpr explicit iterator(
         iterator_t<Base> current) noexcept(std::
             is_nothrow_move_constructible_v<iterator_t<Base>>)
-        : current_(std::move(current)) {}
+        : current_(__RXX move(current)) {}
 
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other) noexcept(
         std::is_nothrow_convertible_v<iterator_t<V>, iterator_t<Base>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
-        : current_(std::move(other.current_)) {}
+        : current_(__RXX move(other.current_)) {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<Base> const& base() const& noexcept {
@@ -240,7 +240,7 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<Base> base() && noexcept(
         std::is_nothrow_move_constructible_v<iterator_t<Base>>) {
-        return std::move(current_);
+        return __RXX move(current_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -261,8 +261,8 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator++(int) noexcept(
-        std::is_nothrow_copy_constructible_v<iterator_t<Base>>&& noexcept(
-            ++current_))
+        std::is_nothrow_copy_constructible_v<iterator_t<Base>> &&
+        noexcept(++current_))
     requires forward_range<Base>
     {
         auto prev = *this;
@@ -279,8 +279,8 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator operator--(int) noexcept(
-        std::is_nothrow_copy_constructible_v<iterator_t<Base>>&& noexcept(
-            --current_))
+        std::is_nothrow_copy_constructible_v<iterator_t<Base>> &&
+        noexcept(--current_))
     requires bidirectional_range<Base>
     {
         auto prev = *this;
@@ -370,8 +370,8 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator
     operator+(iterator const& iter, difference_type offset) noexcept(
-        std::is_nothrow_copy_constructible_v<iterator_t<Base>>&& noexcept(
-            std::declval<iterator&>() += offset))
+        std::is_nothrow_copy_constructible_v<iterator_t<Base>> &&
+        noexcept(std::declval<iterator&>() += offset))
     requires random_access_range<Base>
     {
         return iterator{iter} += offset;
@@ -388,8 +388,8 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iterator
     operator-(iterator const& iter, difference_type offset) noexcept(
-        std::is_nothrow_copy_constructible_v<iterator_t<Base>>&& noexcept(
-            std::declval<iterator&>() -= offset))
+        std::is_nothrow_copy_constructible_v<iterator_t<Base>> &&
+        noexcept(std::declval<iterator&>() -= offset))
     requires random_access_range<Base>
     {
         return iterator{iter} -= offset;
@@ -431,12 +431,12 @@ public:
     __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
         sentinel_t<Base> end) noexcept(std::
             is_nothrow_move_constructible_v<sentinel_t<Base>>)
-        : end_(std::move(end)) {}
+        : end_(__RXX move(end)) {}
 
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other) noexcept(
         std::is_nothrow_convertible_v<sentinel_t<V>, sentinel_t<Base>>)
     requires Const && std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
-        : end_(std::move(other.end_)) {}
+        : end_(__RXX move(other.end_)) {}
 
     __RXX_HIDE_FROM_ABI constexpr sentinel_t<Base> base() const
         noexcept(std::is_nothrow_copy_constructible_v<sentinel_t<Base>>) {
@@ -446,8 +446,8 @@ public:
     template <bool OtherConst>
     requires std::sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
-        iterator<OtherConst> const& iter,
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(iterator<OtherConst> const& iter,
         sentinel const& sent) noexcept(noexcept(get_current(iter) ==
         std::declval<sentinel_t<Base> const&>())) {
         return get_current(iter) == sent.end_;
@@ -456,9 +456,8 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, V>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<details::const_if<OtherConst, V>>
     operator-(iterator<OtherConst> const& iter, sentinel const& sent) noexcept(
         noexcept(get_current(iter) - std::declval<sentinel_t<Base> const&>())) {
         return get_current(iter) - sent.end_;
@@ -467,16 +466,15 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, V>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<details::const_if<OtherConst, V>>
     operator-(sentinel const& sent, iterator<OtherConst> const& iter) noexcept(
         noexcept(std::declval<sentinel_t<Base> const&>() - get_current(iter))) {
         return sent.end_ - get_current(iter);
     }
 
 private:
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) sentinel_t<Base> end_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) sentinel_t<Base> end_ {};
 };
 
 template <typename R>
@@ -491,11 +489,12 @@ template <size_t N>
 struct elements_t : ranges::details::adaptor_closure<elements_t<N>> {
     template <typename R>
     requires requires { elements_view<all_t<R>, N>{std::declval<R>()}; }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& range) RXX_CONST_CALL
-        noexcept(noexcept(elements_view<all_t<R>, N>(std::forward<R>(range))))
-            -> decltype(elements_view<all_t<R>, N>(std::forward<R>(range))) {
-        return elements_view<all_t<R>, N>(std::forward<R>(range));
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(R&& range) RXX_CONST_CALL
+        noexcept(
+            noexcept(elements_view<all_t<R>, N>(__RXX forward<R>(range))))
+            -> decltype(elements_view<all_t<R>, N>(__RXX forward<R>(range))) {
+        return elements_view<all_t<R>, N>(__RXX forward<R>(range));
     }
 
 #if RXX_LIBSTDCXX

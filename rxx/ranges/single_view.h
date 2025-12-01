@@ -42,13 +42,13 @@ public:
 
     __RXX_HIDE_FROM_ABI explicit constexpr single_view(T&& value) noexcept(
         std::is_nothrow_move_constructible_v<T>)
-        : value_{std::move(value)} {}
+        : value_{__RXX move(value)} {}
 
     template <typename... Args>
     requires std::constructible_from<T, Args...>
     __RXX_HIDE_FROM_ABI explicit constexpr single_view(std::in_place_t,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
-        : value_{std::in_place, std::forward<Args>(args)...} {}
+        : value_{std::in_place, __RXX forward<Args>(args)...} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr T* data() noexcept {
         return RXX_BUILTIN_addressof(*value_);
@@ -91,10 +91,11 @@ namespace details {
 struct single_t : __RXX ranges::details::adaptor_closure<single_t> {
     template <typename T>
     requires requires { single_view<std::decay_t<T>>(std::declval<T>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& value) RXX_CONST_CALL noexcept(
-        noexcept(single_view<std::decay_t<T>>(std::forward<T>(value)))) {
-        return single_view<std::decay_t<T>>(std::forward<T>(value));
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& value) RXX_CONST_CALL
+        noexcept(
+            noexcept(single_view<std::decay_t<T>>(__RXX forward<T>(value)))) {
+        return single_view<std::decay_t<T>>(__RXX forward<T>(value));
     }
 };
 } // namespace details

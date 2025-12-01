@@ -4,7 +4,10 @@
 
 #include "rxx/config.h"
 
-#include <utility>
+#include "rxx/utility/as_const.h"
+#include "rxx/utility/move.h"
+
+#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -14,13 +17,13 @@ __RXX_HIDE_FROM_ABI constexpr auto&& forward_like(U&& x) noexcept {
         std::is_const_v<std::remove_reference_t<T>>;
     if constexpr (std::is_lvalue_reference_v<T&&>) {
         if constexpr (is_adding_const)
-            return std::as_const(x);
+            return __RXX as_const(x);
         else
             return static_cast<U&>(x);
     } else if constexpr (is_adding_const)
-        return std::move(std::as_const(x));
+        return __RXX move(__RXX as_const(x));
     else
-        return std::move(x);
+        return __RXX move(x);
 }
 
 RXX_DEFAULT_NAMESPACE_END

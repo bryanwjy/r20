@@ -16,12 +16,12 @@ namespace details {
 
 template <typename L, typename R>
 concept no_unqualified_less_operator = !requires(L&& left, R&& right) {
-    operator<(std::forward<L>(left), std::forward<R>(right));
+    operator<(__RXX forward<L>(left), __RXX forward<R>(right));
 };
 
 template <typename L, typename R>
 concept no_member_less_operator = !requires(L&& left, R&& right) {
-    std::forward<L>(left).operator<(std::forward<R>(right));
+    __RXX forward<L>(left).operator<(__RXX forward<R>(right));
 };
 
 template <typename L, typename R>
@@ -38,8 +38,9 @@ struct less {
 
     template <typename L, typename R>
     requires totally_ordered_with<L, R>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(L&& left, R&& right) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(
+        L&& left, R&& right) RXX_CONST_CALL
         noexcept(noexcept(std::declval<L>() < std::declval<R>())) {
         if constexpr (details::builtin_ptr_less<L, R>) {
             if (std::is_constant_evaluated()) {
@@ -47,12 +48,12 @@ struct less {
             }
 
             auto const left_val = reinterpret_cast<uintptr_t>(
-                static_cast<void const volatile*>(std::forward<L>(left)));
+                static_cast<void const volatile*>(__RXX forward<L>(left)));
             auto const right_val = reinterpret_cast<uintptr_t>(
-                static_cast<void const volatile*>(std::forward<R>(right)));
+                static_cast<void const volatile*>(__RXX forward<R>(right)));
             return left_val < right_val;
         } else {
-            return std::forward<L>(left) < std::forward<R>(right);
+            return __RXX forward<L>(left) < __RXX forward<R>(right);
         }
     }
 };

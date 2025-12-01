@@ -30,7 +30,7 @@ struct generate_random_t {
         if constexpr (requires {
                           generator.generate_random(std::declval<R>());
                       }) {
-            generator.generate_random(std::forward<R>(range));
+            generator.generate_random(__RXX forward<R>(range));
             return range.end();
         } else if constexpr (sized_range<R>) {
             using I = std::invoke_result_t<G&>;
@@ -46,7 +46,7 @@ struct generate_random_t {
                         remaining -= 32;
                     } else { // Tail
                         return ranges::generate(
-                            std::move(it), range.end(), std::ref(generator));
+                            __RXX move(it), range.end(), std::ref(generator));
                     }
                 }
                 return range.end();
@@ -63,14 +63,14 @@ struct generate_random_t {
                         remaining -= vec_size;
                     } else { // Tail
                         return ranges::generate(
-                            std::move(it), range.end(), std::ref(generator));
+                            __RXX move(it), range.end(), std::ref(generator));
                     }
                 }
                 return range.end();
             }
         } else {
             return ranges::generate(
-                std::forward<R>(range), std::ref(generator));
+                __RXX forward<R>(range), std::ref(generator));
         }
     }
 
@@ -79,8 +79,8 @@ struct generate_random_t {
     requires std::uniform_random_bit_generator<std::remove_cvref_t<G>>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr O operator()(
         O first, S last, G&& generator) RXX_CONST_CALL {
-        return operator()(ranges::subrange<O, S>(std::move(first), last),
-            std::forward<G>(generator));
+        return operator()(ranges::subrange<O, S>(__RXX move(first), last),
+            __RXX forward<G>(generator));
     }
 
     template <typename R, typename G, typename D>
@@ -94,7 +94,7 @@ struct generate_random_t {
                           distribution.generate_random(
                               std::declval<R>(), generator);
                       }) {
-            distribution.generate_random(std::forward<R>(range), generator);
+            distribution.generate_random(__RXX forward<R>(range), generator);
             return range.end();
         } else if constexpr (sized_range<R>) {
             using I = std::invoke_result_t<D&, G&>;
@@ -110,7 +110,7 @@ struct generate_random_t {
                         remaining -= 32;
                     } else { // Tail
                         return ranges::generate(
-                            std::move(it), range.end(), [&]() {
+                            __RXX move(it), range.end(), [&]() {
                                 return std::invoke(distribution, generator);
                             });
                     }
@@ -130,7 +130,7 @@ struct generate_random_t {
                         remaining -= vec_size;
                     } else {
                         return ranges::generate(
-                            std::move(it), range.end(), [&]() {
+                            __RXX move(it), range.end(), [&]() {
                                 return std::invoke(distribution, generator);
                             });
                     }
@@ -138,7 +138,8 @@ struct generate_random_t {
                 return range.end();
             }
         } else {
-            return ranges::generate(std::forward<R>(range),
+            return ranges::generate(
+                __RXX forward<R>(range),
                 [&]() { return std::invoke(distribution, generator); });
         }
     }
@@ -151,8 +152,8 @@ struct generate_random_t {
         std::is_arithmetic_v<std::invoke_result_t<D&, G&>>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr O generate_random(
         O first, S last, G&& generator, D&& distribution) RXX_CONST_CALL {
-        return operator()(ranges::subrange<O, S>(std::move(first), last),
-            std::forward<G>(generator), std::forward<D>(distribution));
+        return operator()(ranges::subrange<O, S>(__RXX move(first), last),
+            __RXX forward<G>(generator), __RXX forward<D>(distribution));
     }
 };
 } // namespace details

@@ -4,8 +4,10 @@
 
 #include "rxx/config.h"
 
+#include "rxx/utility/forward.h"
+#include "rxx/utility/move.h"
+
 #include <concepts>
-#include <utility>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -14,8 +16,8 @@ requires std::assignable_from<T&, U>
 __RXX_HIDE_FROM_ABI constexpr T exchange(T& obj, U&& new_value) noexcept(
     std::is_nothrow_move_constructible_v<T> &&
     std::is_nothrow_assignable_v<T&, U>) {
-    T previous(std::move(obj));
-    obj = std::forward<U>(new_value);
+    T previous(__RXX move(obj));
+    obj = __RXX forward<U>(new_value);
     return previous;
 }
 

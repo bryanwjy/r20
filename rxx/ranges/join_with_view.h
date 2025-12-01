@@ -174,10 +174,10 @@ private:
     using InnerType RXX_NODEBUG =
         details::non_propagating_cache<std::remove_cv_t<InnerRange>>;
 
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_ {};
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterItType outer_;
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) InnerType inner_;
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) P pattern_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) P pattern_ {};
 };
 
 template <typename R, typename P>
@@ -399,9 +399,8 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr common_reference_t<iter_reference_t<InnerIter>,
         iter_reference_t<PatternIter>>
-    operator*() const
-        noexcept(noexcept(*std::declval<PatternIter const&>()) && noexcept(
-            *std::declval<InnerIter const&>())) {
+    operator*() const noexcept(noexcept(*std::declval<PatternIter const&>()) &&
+        noexcept(*std::declval<InnerIter const&>())) {
         if (inner_.index() == 0) {
             return *inner_.template value_ref<0>();
         } else {
@@ -491,9 +490,9 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr common_reference_t<iter_rvalue_reference_t<InnerIter>,
         iter_rvalue_reference_t<PatternIter>>
-    iter_move(iterator const& iter) noexcept(noexcept(ranges::iter_move(
-        std::declval<PatternIter const&>())) && noexcept(ranges::
-            iter_move(std::declval<InnerIter const&>()))) {
+    iter_move(iterator const& iter) noexcept(
+        noexcept(ranges::iter_move(std::declval<PatternIter const&>())) &&
+        noexcept(ranges::iter_move(std::declval<InnerIter const&>()))) {
         switch (iter.inner_.index()) {
         case 0:
             return ranges::iter_move(iter.inner_.template value_ref<0>());
@@ -505,11 +504,11 @@ public:
     __RXX_HIDE_FROM_ABI friend constexpr void
     iter_swap(iterator const& left, iterator const& right) noexcept(
         noexcept(ranges::iter_swap(std::declval<InnerIter const&>(),
-            std::declval<InnerIter const&>())) && noexcept(ranges::
-                iter_swap(std::declval<PatternIter const&>(),
-                    std::declval<PatternIter const&>())) && noexcept(std::
-                ranges::iter_swap(std::declval<InnerIter const&>(),
-                    std::declval<PatternIter const&>())))
+            std::declval<InnerIter const&>())) &&
+        noexcept(ranges::iter_swap(std::declval<PatternIter const&>(),
+            std::declval<PatternIter const&>())) &&
+        noexcept(std::ranges::iter_swap(std::declval<InnerIter const&>(),
+            std::declval<PatternIter const&>())))
     requires std::indirectly_swappable<InnerIter, InnerIter> &&
         std::indirectly_swappable<PatternIter, PatternIter> &&
         std::indirectly_swappable<InnerIter, PatternIter>
@@ -537,9 +536,10 @@ private:
     struct nothing_t {};
     using OuterType RXX_NODEBUG =
         std::conditional_t<forward_range<Base>, OuterIter, nothing_t>;
-    using InnerType RXX_NODEBUG = details::variant_base<PatternIter, InnerIter>;
+    using InnerType RXX_NODEBUG =
+        __RXX details::variant_base<PatternIter, InnerIter>;
     Parent* parent_ = nullptr;
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterType outer_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterType outer_ {};
     InnerType inner_;
 };
 
@@ -576,7 +576,8 @@ public:
     template <bool OtherConst>
     requires std::sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         iterator<OtherConst> const& left, sentinel const& right) {
         return iter_outer(left) == right.end_;
     }
@@ -590,9 +591,11 @@ namespace details {
 struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
     template <typename R, typename P>
     requires requires { join_with_view(std::declval<R>(), std::declval<P>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& range, P&& pattern) RXX_CONST_CALL noexcept(
-        noexcept(join_with_view(std::declval<R>(), std::declval<P>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(
+        R&& range, P&& pattern) RXX_CONST_CALL
+        noexcept(
+            noexcept(join_with_view(std::declval<R>(), std::declval<P>()))) {
         return join_with_view(std::forward<R>(range), std::forward<P>(pattern));
     }
 
@@ -605,8 +608,8 @@ struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(D&& delimiter) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(D&& delimiter) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(join_with_t{}),

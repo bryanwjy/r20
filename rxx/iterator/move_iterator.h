@@ -4,7 +4,6 @@
 #include "rxx/config.h"
 
 #include "iter_traits.h"
-#include "rxx/concepts/boolean_testable.h"
 #include "rxx/iterator/iter_move.h"
 #include "rxx/iterator/iter_swap.h"
 #include "rxx/iterator/move_sentinel.h"
@@ -71,7 +70,7 @@ public:
         std::is_nothrow_default_constructible_v<It>) = default;
     __RXX_HIDE_FROM_ABI constexpr explicit move_iterator(
         iterator_type other) noexcept(std::is_nothrow_move_constructible_v<It>)
-        : current_{std::move(other)} {}
+        : current_{__RXX move(other)} {}
     template <typename U>
     requires (!std::is_same_v<U, It>) && std::convertible_to<U const&, It>
     __RXX_HIDE_FROM_ABI constexpr move_iterator(move_iterator<U> const&
@@ -92,7 +91,7 @@ public:
     constexpr It const& base() const& noexcept { return current_; }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr It base() && noexcept(std::is_nothrow_move_constructible_v<It>) {
-        return std::move(current_);
+        return __RXX move(current_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -113,8 +112,8 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto operator++(int) noexcept(
-        std::is_nothrow_copy_constructible_v<move_iterator>&& noexcept(
-            ++std::declval<It&>()))
+        std::is_nothrow_copy_constructible_v<move_iterator> &&
+        noexcept(++std::declval<It&>()))
     requires std::forward_iterator<It>
     {
         move_iterator prev(*this);
@@ -134,8 +133,8 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr move_iterator operator--(int) noexcept(
-        std::is_nothrow_copy_constructible_v<move_iterator>&& noexcept(
-            --std::declval<It&>())) {
+        std::is_nothrow_copy_constructible_v<move_iterator> &&
+        noexcept(--std::declval<It&>())) {
         move_iterator prev(*this);
         --current_;
         return prev;
@@ -143,7 +142,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr move_iterator operator+(
         difference_type offset) const
-        noexcept(std::is_nothrow_constructible_v<move_iterator, It>&& //
+        noexcept(std::is_nothrow_constructible_v<move_iterator, It> && //
             noexcept(std::declval<It const&>() + offset)) {
         return move_iterator(current_ + offset);
     }
@@ -157,7 +156,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr move_iterator operator-(
         difference_type offset) const
-        noexcept(std::is_nothrow_constructible_v<move_iterator, It>&& //
+        noexcept(std::is_nothrow_constructible_v<move_iterator, It> && //
             noexcept(std::declval<It const&>() - offset)) {
         return move_iterator(current_ - offset);
     }
@@ -172,9 +171,10 @@ public:
     template <std::sentinel_for<It> S>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr bool operator==(move_iterator const& left,
-        move_sentinel<S> const& right) noexcept(noexcept(std::
-            is_nothrow_copy_constructible_v<S>&& noexcept(static_cast<bool>(
-                std::declval<It const&>() == std::declval<S>()))))
+        move_sentinel<S> const&
+            right) noexcept(noexcept(std::is_nothrow_copy_constructible_v<S> &&
+        noexcept(
+            static_cast<bool>(std::declval<It const&>() == std::declval<S>()))))
     requires details::move_iter_comparable<It, S>
     {
         return static_cast<bool>(left.base() == right.base());
@@ -184,18 +184,18 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iter_difference_t<It> operator-(
         move_sentinel<S> const& left,
-        move_iterator const& right) noexcept(noexcept(std::
-            is_nothrow_copy_constructible_v<S>&& noexcept(
-                std::declval<S>() - std::declval<It const&>()))) {
+        move_iterator const&
+            right) noexcept(noexcept(std::is_nothrow_copy_constructible_v<S> &&
+        noexcept(std::declval<S>() - std::declval<It const&>()))) {
         return left.base() - right.base();
     }
 
     template <std::sized_sentinel_for<It> S>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr iter_difference_t<It> operator-(move_iterator const& left,
-        move_sentinel<S> const& right) noexcept(noexcept(std::
-            is_nothrow_copy_constructible_v<S>&& noexcept(
-                std::declval<It const&>() - std::declval<S>()))) {
+        move_sentinel<S> const&
+            right) noexcept(noexcept(std::is_nothrow_copy_constructible_v<S> &&
+        noexcept(std::declval<It const&>() - std::declval<S>()))) {
         return left.base() - right.base();
     }
 
@@ -300,7 +300,8 @@ template <typename It>
 requires requires(It const& it, iter_difference_t<It> offset) {
     { it + offset } -> std::same_as<It>;
 }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr move_iterator<It> operator+(
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr move_iterator<It> operator+(
     iter_difference_t<It> offset, move_iterator<It> const& iter) {
     return iter + offset;
 }
@@ -309,7 +310,7 @@ template <typename It>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr move_iterator<It> make_move_iterator(It iter) noexcept(
     std::is_nothrow_move_constructible_v<It>) {
-    return move_iterator<It>(std::move(iter));
+    return move_iterator<It>(__RXX move(iter));
 }
 
 RXX_DEFAULT_NAMESPACE_END

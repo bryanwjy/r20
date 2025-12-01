@@ -28,20 +28,21 @@ concept default_drop = !specialized_drop<V, N> &&
 struct drop_t : ranges::details::adaptor_non_closure<drop_t> {
     template <typename V, typename N>
     requires default_drop<V, N>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL
-        constexpr decltype(auto)
-        operator()(V&& view, N&& num) RXX_CONST_CALL noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr decltype(auto) operator()(
+        V&& view, N&& num) RXX_CONST_CALL
+        noexcept(
             noexcept(std::views::drop(std::declval<V>(), std::declval<N>()))) {
-        return std::views::drop(std::forward<V>(view), std::forward<N>(num));
+        return std::views::drop(__RXX forward<V>(view), __RXX forward<N>(num));
     }
 
     template <typename V, typename N>
     requires specialized_drop<V, N>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL
-        constexpr decltype(auto)
-        operator()(V&& view, N&& num) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr decltype(auto) operator()(
+        V&& view, N&& num) RXX_CONST_CALL
         noexcept(noexcept(drop(std::declval<V>(), std::declval<N>()))) {
-        return drop(std::forward<V>(view), std::forward<N>(num));
+        return drop(__RXX forward<V>(view), __RXX forward<N>(num));
     }
 
 #if RXX_LIBSTDCXX
@@ -55,12 +56,12 @@ struct drop_t : ranges::details::adaptor_non_closure<drop_t> {
 #elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename N>
     requires std::constructible_from<std::decay_t<N>, N>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(N&& num) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(N&& num) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<N>, N>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(drop_t{}),
-            std::forward<N>(num));
+            __RXX forward<N>(num));
     }
 #else
 #  error "Unsupported"

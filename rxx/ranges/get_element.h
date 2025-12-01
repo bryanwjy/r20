@@ -18,11 +18,11 @@ __RXX_HIDE_FROM_ABI void get(T&&) = delete;
 
 template <typename T, size_t I>
 concept has_member_get =
-    requires(T&& t) { std::forward<T>(t).template get<I>(); };
+    requires(T&& t) { __RXX forward<T>(t).template get<I>(); };
 
 template <typename T, size_t I>
 concept has_adl_get =
-    !has_member_get<T, I> && requires(T&& t) { get<I>(std::forward<T>(t)); };
+    !has_member_get<T, I> && requires(T&& t) { get<I>(__RXX forward<T>(t)); };
 
 template <size_t I>
 struct get_element_t {
@@ -58,7 +58,7 @@ public:
     RXX_STATIC_CALL constexpr decltype(auto) operator()(
         T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL
         noexcept(nothrow_adl_get<T>()) {
-        return get<I>(std::forward<T>(t));
+        return get<I>(__RXX forward<T>(t));
     }
 
     template <has_member_get<I> T>
@@ -66,7 +66,7 @@ public:
     RXX_STATIC_CALL constexpr decltype(auto) operator()(
         T&& t RXX_LIFETIMEBOUND) RXX_CONST_CALL
         noexcept(nothrow_member_get<T>()) {
-        return std::forward<T>(t).template get<I>();
+        return __RXX forward<T>(t).template get<I>();
     }
 };
 
@@ -90,16 +90,16 @@ template <typename T, size_t I>
 concept has_element = has_size<T> && requires(T t) {
     requires I < std::tuple_size_v<T>;
     typename std::tuple_element_t<I, T>;
-    ranges::get_element<I>(std::forward<T>(t));
+    ranges::get_element<I>(__RXX forward<T>(t));
 };
 
 template <has_size T>
-inline std::make_index_sequence<std::tuple_size_v<T>> sequence_for{};
+inline __RXX make_index_sequence<std::tuple_size_v<T>> sequence_for{};
 } // namespace details::tuple
 
 template <typename T>
 concept tuple_like =
-    []<size_t... Is>(std::index_sequence<Is...>) {
+    []<size_t... Is>(__RXX index_sequence<Is...>) {
         return (... && details::tuple::has_element<std::remove_cvref_t<T>, Is>);
     }(details::tuple::sequence_for<std::remove_cvref_t<T>>) ||
     (details::tuple::has_size<std::remove_cvref_t<T>> &&

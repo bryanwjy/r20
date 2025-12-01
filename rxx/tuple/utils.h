@@ -22,8 +22,9 @@ using decl_element_t = decltype(ranges::get_element<I>(std::declval<T>()));
 
 template <tuple_like Tuple>
 inline constexpr bool is_nothrow_accessible_v =
-    []<size_t... Is>(std::index_sequence<Is...>) {
-        return (...&& noexcept(ranges::get_element<Is>(std::declval<Tuple>())));
+    []<size_t... Is>(__RXX index_sequence<Is...>) {
+        return (
+            ... && noexcept(ranges::get_element<Is>(std::declval<Tuple>())));
     }(sequence_for<std::remove_cvref_t<Tuple>>);
 
 struct ignore_t {

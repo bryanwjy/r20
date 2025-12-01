@@ -21,9 +21,10 @@ void swap(T&, U&) = delete;
 
 template <typename L, typename R>
 concept unqualified_swappable = (class_or_enum<std::remove_cvref_t<L>> ||
-    class_or_enum<std::remove_cvref_t<R>>)&&requires(L&& left, R&& right) {
-    swap(std::forward<L>(left), std::forward<R>(right));
-};
+                                    class_or_enum<std::remove_cvref_t<R>>) &&
+    requires(L&& left, R&& right) {
+        swap(__RXX forward<L>(left), __RXX forward<R>(right));
+    };
 
 template <typename L, typename R, size_t N>
 concept swappable_array = (!unqualified_swappable<L (&)[N], R (&)[N]> &&
@@ -39,11 +40,10 @@ concept exchangable = !unqualified_swappable<T&, T&> &&
 struct swap_t {
     template <typename L, typename R>
     requires unqualified_swappable<L, R>
-    __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr void operator()(
-        L&& left, R&& right) RXX_CONST_CALL
-        noexcept(
-            noexcept(swap(std::forward<L>(left), std::forward<R>(right)))) {
-        (void)swap(std::forward<L>(left), std::forward<R>(right));
+    __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr void
+    operator()(L&& left, R&& right) RXX_CONST_CALL noexcept(
+        noexcept(swap(__RXX forward<L>(left), __RXX forward<R>(right)))) {
+        (void)swap(__RXX forward<L>(left), __RXX forward<R>(right));
     }
 
     template <typename L, typename R, size_t N>
@@ -61,9 +61,9 @@ struct swap_t {
         T& left, T& right) RXX_CONST_CALL
         noexcept(std::is_nothrow_move_constructible_v<T> &&
             std::is_nothrow_move_assignable_v<T>) {
-        T tmp{std::move(left)};
-        left = std::move(right);
-        right = std::move(tmp);
+        T tmp{__RXX move(left)};
+        left = __RXX move(right);
+        right = __RXX move(tmp);
     }
 };
 } // namespace details

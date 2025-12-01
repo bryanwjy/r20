@@ -20,11 +20,12 @@ struct starts_with_t {
         typename Pred = equal_to, typename Proj1 = identity,
         typename Proj2 = identity>
     requires std::indirectly_comparable<I1, I2, Pred, Proj1, Proj2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {},
-        Proj1 proj1 = {}, Proj2 proj2 = {}) RXX_CONST_CALL {
-        return ranges::mismatch(std::move(first1), std::move(last1),
-                   std::move(first2), std::move(last2), std::ref(pred),
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(I1 first1, S1 last1, I2 first2,
+        S2 last2, Pred pred = {}, Proj1 proj1 = {},
+        Proj2 proj2 = {}) RXX_CONST_CALL {
+        return ranges::mismatch(__RXX move(first1), __RXX move(last1),
+                   __RXX move(first2), __RXX move(last2), std::ref(pred),
                    std::ref(proj1), std::ref(proj2))
                    .in2 == last2;
     }
@@ -33,9 +34,9 @@ struct starts_with_t {
         typename Proj1 = identity, typename Proj2 = identity>
     requires std::indirectly_comparable<iterator_t<R1>, iterator_t<R2>, Pred,
         Proj1, Proj2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(R1&& range1, R2&& range2, Pred pred = {}, Proj1 proj1 = {},
-        Proj2 proj2 = {}) RXX_CONST_CALL {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(R1&& range1, R2&& range2,
+        Pred pred = {}, Proj1 proj1 = {}, Proj2 proj2 = {}) RXX_CONST_CALL {
         return ranges::mismatch(ranges::begin(range1), ranges::end(range1),
                    ranges::begin(range2), ranges::end(range2), std::ref(pred),
                    std::ref(proj1), std::ref(proj2))

@@ -39,13 +39,14 @@ struct overlappable_if {
     requires std::constructible_from<T, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         std::in_place_t, Args&&... args)
-        : data{std::forward<Args>(args)...} {}
+        : data{__RXX forward<Args>(args)...} {}
 
     template <typename F, typename... Args>
     requires std::regular_invocable<F, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         generating_t, F&& f, Args&&... args)
-        : data{std::invoke(std::forward<F>(f), std::forward<Args>(args)...)} {}
+        : data{std::invoke(
+              __RXX forward<F>(f), __RXX forward<Args>(args)...)} {}
 
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) T data;
 };
@@ -63,13 +64,14 @@ struct overlappable_if<false, T> {
     requires std::constructible_from<T, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         std::in_place_t, Args&&... args)
-        : data{std::forward<Args>(args)...} {}
+        : data{__RXX forward<Args>(args)...} {}
 
     template <typename F, typename... Args>
     requires std::regular_invocable<F, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         generating_t, F&& f, Args&&... args)
-        : data{std::invoke(std::forward<F>(f), std::forward<Args>(args)...)} {}
+        : data{std::invoke(
+              __RXX forward<F>(f), __RXX forward<Args>(args)...)} {}
 
     T data;
 };

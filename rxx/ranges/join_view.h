@@ -40,7 +40,7 @@ public:
 
     __RXX_HIDE_FROM_ABI explicit constexpr join_view(V base) noexcept(
         std::is_nothrow_move_constructible_v<V>)
-        : base_{std::move(base)} {}
+        : base_{__RXX move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -51,7 +51,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto begin() {
@@ -100,7 +100,7 @@ public:
     }
 
 private:
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_ {};
     static constexpr bool use_outer_cache = !forward_range<V>;
     using OuterCache RXX_NODEBUG = std::conditional_t<use_outer_cache,
         details::non_propagating_cache<iterator_t<V>>, details::empty_cache>;
@@ -234,7 +234,7 @@ class join_view<V>::iterator final :
         OuterIter
             outer) noexcept(std::is_nothrow_move_constructible_v<OuterIter>)
     requires forward_range<Base>
-        : outer_{std::move(outer)}
+        : outer_{__RXX move(outer)}
         , parent_{RXX_BUILTIN_addressof(parent)} {
         satisfy();
     }
@@ -251,8 +251,8 @@ class join_view<V>::iterator final :
             inner) noexcept(std::is_nothrow_move_constructible_v<OuterIter> &&
         std::is_nothrow_move_constructible_v<InnerIter>)
     requires forward_range<Base>
-        : outer_(std::move(outer))
-        , inner_(std::move(inner))
+        : outer_(__RXX move(outer))
+        , inner_(__RXX move(inner))
         , parent_(parent) {}
 
     static consteval auto make_iterator_concept() noexcept {
@@ -289,8 +289,8 @@ public:
                  std::convertible_to<typename iterator<!Const>::OuterType,
                      OuterType> &&
                  std::convertible_to<iterator_t<InnerRange>, InnerIter>
-        : outer_{std::move(other.outer_)}
-        , inner_{std::move(other.inner_)}
+        : outer_{__RXX move(other.outer_)}
+        , inner_{__RXX move(other.inner_)}
         , parent_{other.parent_} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -386,7 +386,7 @@ public:
     }
 
 private:
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterType outer_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterType outer_ {};
     details::optional_base<InnerIter> inner_{};
     Parent* parent_ = nullptr;
 };
@@ -421,12 +421,13 @@ public:
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other) noexcept(
         std::is_nothrow_constructible_v<sentinel_t<Base>, sentinel_t<V>>)
     requires Const && std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
-        : end_(std::move(other.end_)) {}
+        : end_(__RXX move(other.end_)) {}
 
     template <bool OtherConst>
     requires std::sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         iterator<OtherConst> const& left, sentinel const& right) {
         return iter_outer(left) == right.end_;
     }
@@ -440,11 +441,11 @@ namespace details {
 struct join_t : __RXX ranges::details::adaptor_closure<join_t> {
     template <typename R>
     requires requires { join_view<all_t<R&&>>(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& arg) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(R&& arg) RXX_CONST_CALL
         noexcept(noexcept(join_view<all_t<R&&>>(std::declval<R>())))
             -> decltype(join_view<all_t<R&&>>(std::declval<R>())) {
-        return join_view<all_t<R&&>>(std::forward<R>(arg));
+        return join_view<all_t<R&&>>(__RXX forward<R>(arg));
     }
 
 #if RXX_LIBSTDCXX

@@ -12,9 +12,10 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 template <typename T, typename... Args>
 __RXX_HIDE_FROM_ABI constexpr T* construct_at(
-    T* location, Args&&... args) noexcept(noexcept(::new((void*)0)
+    T* location, Args&&... args) noexcept(noexcept(::new ((void*)0)
         T{std::declval<Args>()...})) {
-    [[msvc::constexpr]] return ::new (location) T{std::forward<Args>(args)...};
+    [[msvc::constexpr]] return ::new (location)
+        T{__RXX forward<Args>(args)...};
 }
 
 RXX_DEFAULT_NAMESPACE_END

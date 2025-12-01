@@ -3,9 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "rxx/details/template_access.h"
 #include "rxx/ranges/get_element.h"
 #include "rxx/type_traits/common_reference.h"
+#include "rxx/type_traits/template_access.h"
 
 #include <array>
 #include <type_traits>
@@ -57,31 +57,32 @@ template <__RXX tuple_like T, __RXX tuple_like U,
     template <typename> class TQual, template <typename> class UQual>
 requires (details::not_std_tuple<T> || details::not_std_tuple<U>) &&
     (std::tuple_size_v<T> == std::tuple_size_v<U>) &&
-    ([]<size_t... Is>(std::index_sequence<Is...>) {
+    ([]<size_t... Is>(__RXX index_sequence<Is...>) {
         return requires {
             typename __RXX tuple< __RXX common_reference_t<
                 TQual<std::tuple_element_t<Is, T>>...,
                 UQual<std::tuple_element_t<Is, U>>>...>;
         };
-    }(std::make_index_sequence<std::tuple_size_v<T>>{}))
+    }(__RXX make_index_sequence_v<std::tuple_size_v<T>>))
 struct std::basic_common_reference<T, U, TQual, UQual> {
 private:
     template <size_t... Is>
-    static auto make_type(std::index_sequence<Is...>) noexcept -> __RXX tuple<
-        __RXX common_reference_t<TQual<std::tuple_element_t<Is, T>>,
-            UQual<std::tuple_element_t<Is, U>>>...>;
+    static auto make_type(__RXX index_sequence<Is...>) noexcept
+        -> __RXX tuple<
+            __RXX common_reference_t<TQual<std::tuple_element_t<Is, T>>,
+                UQual<std::tuple_element_t<Is, U>>>...>;
 
 public:
-    using type RXX_NODEBUG =
-        decltype(make_type(std::make_index_sequence<std::tuple_size_v<T>>{}));
+    using type RXX_NODEBUG = decltype(make_type(
+        __RXX make_index_sequence_v<std::tuple_size_v<T>>));
 };
 
 template <size_t I, typename... Ts>
 requires requires {
-    typename __RXX details::template_element_t<I, __RXX tuple<Ts...>>;
+    typename __RXX template_element_t<I, __RXX tuple<Ts...>>;
 }
 struct std::tuple_element<I, __RXX tuple<Ts...>> {
-    using type = __RXX details::template_element_t<I, __RXX tuple<Ts...>>;
+    using type = __RXX template_element_t<I, __RXX tuple<Ts...>>;
 };
 
 template <typename... Ts>
@@ -92,19 +93,23 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>>& get(tuple<Ts...>& arg RXX_LIFETIMEBOUND) noexcept;
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>>& get(
+    tuple<Ts...>& arg RXX_LIFETIMEBOUND) noexcept;
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>>&& get(tuple<Ts...>&& arg RXX_LIFETIMEBOUND) noexcept;
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>>&& get(
+    tuple<Ts...>&& arg RXX_LIFETIMEBOUND) noexcept;
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>> const& get(tuple<Ts...> const& arg RXX_LIFETIMEBOUND) noexcept;
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>> const& get(
+    tuple<Ts...> const& arg RXX_LIFETIMEBOUND) noexcept;
 template <size_t I, typename... Ts>
 requires requires { typename std::tuple_element_t<I, tuple<Ts...>>; }
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr std::tuple_element_t<I,
-    tuple<Ts...>> const&& get(tuple<Ts...> const&& arg RXX_LIFETIMEBOUND) noexcept;
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr std::tuple_element_t<I, tuple<Ts...>> const&& get(
+    tuple<Ts...> const&& arg RXX_LIFETIMEBOUND) noexcept;
 
 RXX_DEFAULT_NAMESPACE_END

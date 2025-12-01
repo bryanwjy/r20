@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/algorithm/all_of.h"
+#include "rxx/algorithm/count.h"
 #include "rxx/algorithm/find.h"
 #include "rxx/algorithm/mismatch.h"
 #include "rxx/algorithm/return_types.h"
@@ -38,7 +39,7 @@ private:
         return ranges::all_of(views::iota(first1, last1), [&](auto&& it) {
             auto const val = std::invoke(proj1, *it);
             auto const cmp = [&]<typename R>(R&& right) {
-                return std::invoke(pred, val, std::forward<R>(right));
+                return std::invoke(pred, val, __RXX forward<R>(right));
             };
 
             if (it != ranges::find_if(first1, it, cmp, proj1)) {
@@ -66,13 +67,13 @@ public:
             first1, last1, first2, last2,
             [&]<typename L, typename R>(L&& left, R&& right) -> decltype(auto) {
                 return std::invoke(
-                    pred, std::forward<L>(left), std::forward<R>(right));
+                    pred, __RXX forward<L>(left), __RXX forward<R>(right));
             },
             [&]<typename T>(T&& arg) -> decltype(auto) {
-                return std::invoke(proj1, std::forward<T>(arg));
+                return std::invoke(proj1, __RXX forward<T>(arg));
             },
             [&]<typename T>(T&& arg) -> decltype(auto) {
-                return std::invoke(proj2, std::forward<T>(arg));
+                return std::invoke(proj2, __RXX forward<T>(arg));
             });
     }
 
@@ -96,13 +97,13 @@ public:
             ranges::end(r2),
             [&]<typename L, typename R>(L&& left, R&& right) -> decltype(auto) {
                 return std::invoke(
-                    pred, std::forward<L>(left), std::forward<R>(right));
+                    pred, __RXX forward<L>(left), __RXX forward<R>(right));
             },
             [&]<typename T>(T&& arg) -> decltype(auto) {
-                return std::invoke(proj1, std::forward<T>(arg));
+                return std::invoke(proj1, __RXX forward<T>(arg));
             },
             [&]<typename T>(T&& arg) -> decltype(auto) {
-                return std::invoke(proj2, std::forward<T>(arg));
+                return std::invoke(proj2, __RXX forward<T>(arg));
             });
     }
 };

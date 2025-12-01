@@ -104,24 +104,25 @@ public:
 
     template <typename R2, typename V2, typename A2, typename Unused>
     requires std::same_as<yielded_for<R2, V2>, Y>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    auto yield_value(
         ranges::elements_of<__RXX generator<R2, V2, A2>&&, Unused>
             elements) noexcept {
-        return nested_awaiter{std::move(elements.range)};
+        return nested_awaiter{__RXX move(elements.range)};
     }
 
     template <typename R2, typename V2, typename A2, typename Unused>
     requires std::same_as<yielded_for<R2, V2>, Y>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
-        ranges::elements_of<__RXX generator<R2, V2, A2>&, Unused>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    auto yield_value(ranges::elements_of<__RXX generator<R2, V2, A2>&, Unused>
             elements) noexcept {
-        return nested_awaiter{std::move(elements.range)};
+        return nested_awaiter{__RXX move(elements.range)};
     }
 
     template <ranges::input_range R, typename Alloc>
     requires std::convertible_to<ranges::range_reference_t<R>, Y>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
-        ranges::elements_of<R, Alloc> elements) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    auto yield_value(ranges::elements_of<R, Alloc> elements) {
         auto executor = [](::std::allocator_arg_t, Alloc,
                             ranges::iterator_t<R> it,
                             ranges::sentinel_t<R> sentinel)
@@ -176,7 +177,7 @@ class promise_base<Y>::stack_descriptor {
         pointer value = nullptr;
     };
     using stack_type RXX_NODEBUG =
-        __RXX ranges::details::variant_base<bottom_frame, stack_frame>;
+        __RXX details::variant_base<bottom_frame, stack_frame>;
 
 public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) bool is_bottom() const noexcept {
@@ -303,7 +304,7 @@ struct promise_base<Y>::nested_awaiter {
     static_assert(std::same_as<typename Generator::yielded, Y>);
 
     __RXX_HIDE_FROM_ABI nested_awaiter(Generator generator) noexcept
-        : generator(std::move(generator)) {
+        : generator(__RXX move(generator)) {
         this->generator.activate();
     }
 
@@ -396,7 +397,7 @@ class promise_allocator {
             auto* const ptr = alloc.allocate(block_count);
             auto const address = reinterpret_cast<uintptr_t>(ptr);
             auto* alloc_ptr = allocator_address(address, size_bytes);
-            ::new (alloc_ptr) allocator_type(std::move(alloc));
+            ::new (alloc_ptr) allocator_type(__RXX move(alloc));
             return ptr;
         }
     }
@@ -435,7 +436,7 @@ public:
                 allocation_block::count(allocation_size_bytes(count));
             auto const address = reinterpret_cast<uintptr_t>(ptr);
             auto* alloc_ptr = allocator_address(address, count);
-            allocator_type alloc(std::move(*alloc_ptr));
+            allocator_type alloc(__RXX move(*alloc_ptr));
             alloc_ptr->~allocator_type();
             alloc.deallocate(
                 reinterpret_cast<allocation_block*>(ptr), block_count);
@@ -499,7 +500,7 @@ class promise_allocator<void> {
         } else {
             auto const address = reinterpret_cast<uintptr_t>(ptr);
             auto const alloc_ptr = allocator_address<A>(address, size);
-            A alloc(std::move(*alloc_ptr));
+            A alloc(__RXX move(*alloc_ptr));
             alloc_ptr->~A();
             alloc.deallocate(
                 reinterpret_cast<allocation_block*>(ptr), block_count);
@@ -523,7 +524,7 @@ class promise_allocator<void> {
         *deallocator_address(address, size) = &deallocate<allocator_type>;
         if constexpr (!stateless_allocator<allocator_type>) {
             auto alloc_ptr = allocator_address<allocator_type>(address, size);
-            ::new (alloc_ptr) allocator_type(std::move(alloc));
+            ::new (alloc_ptr) allocator_type(__RXX move(alloc));
         }
         return ptr;
     }
@@ -632,7 +633,7 @@ private:
 
     __RXX_HIDE_FROM_ABI generator(
         std::coroutine_handle<promise_type> coroutine) noexcept
-        : coroutine_{std::move(coroutine)} {}
+        : coroutine_{__RXX move(coroutine)} {}
 
     __RXX_HIDE_FROM_ABI void activate() noexcept {
         assert(!this->active_);

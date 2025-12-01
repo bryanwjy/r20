@@ -4,9 +4,9 @@
 #include "rxx/config.h"
 
 #include "rxx/details/class_or_enum.h"
-#include "rxx/iterator/iter_traits.h"
+#include "rxx/utility/forward.h"
+#include "rxx/utility/move.h"
 
-#include <iterator>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -22,15 +22,16 @@ concept unqualified_iter_move = class_or_enum<std::remove_cvref_t<T>> &&
 
 template <typename T>
 concept move_deref = !unqualified_iter_move<T> && requires(T&& arg) {
-    *std::forward<T>(arg);
-    requires std::is_lvalue_reference_v<decltype(*std::forward<T>(arg))>;
+    *__RXX forward<T>(arg);
+    requires std::is_lvalue_reference_v<decltype(*__RXX forward<T>(arg))>;
 };
 
 template <typename T>
 concept value_deref =
     !unqualified_iter_move<T> && !move_deref<T> && requires(T&& arg) {
-        *std::forward<T>(arg);
-        requires (!std::is_lvalue_reference_v<decltype(*std::forward<T>(arg))>);
+        *__RXX forward<T>(arg);
+        requires (
+            !std::is_lvalue_reference_v<decltype(*__RXX forward<T>(arg))>);
     };
 
 template <typename I>
@@ -41,23 +42,23 @@ struct iter_move_t {
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()(I&& iter) RXX_CONST_CALL
         noexcept(noexcept(iter_move(std::declval<I>()))) -> decltype(auto) {
-        return iter_move(std::forward<I>(iter));
+        return iter_move(__RXX forward<I>(iter));
     }
 
     template <move_deref I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()(I&& iter) RXX_CONST_CALL
-        noexcept(noexcept(std::move(*std::declval<I>())))
+        noexcept(noexcept(__RXX move(*std::declval<I>())))
             -> decltype(std::declval<
                 std::remove_reference_t<iter_move_ref_t<I>>>()) {
-        return std::move(*std::forward<I>(iter));
+        return __RXX move(*__RXX forward<I>(iter));
     }
 
     template <value_deref I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()(I&& iter) RXX_CONST_CALL
         noexcept(noexcept(*std::declval<I>())) -> iter_move_ref_t<I> {
-        return *std::forward<I>(iter);
+        return *__RXX forward<I>(iter);
     }
 };
 

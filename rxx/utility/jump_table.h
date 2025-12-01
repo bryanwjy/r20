@@ -13,8 +13,6 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-namespace ranges::details {
-
 template <typename T, T... Ns>
 class jump_table;
 
@@ -103,11 +101,11 @@ private:
         F&& callable, T value, Args&&... args) {
         if constexpr (std::invocable<F, T, Args...>) {
             if (std::is_void_v<result_type<F, Args...>>) {
-                std::invoke(std::forward<F>(callable), value,
-                    std::forward<Args>(args)...);
+                std::invoke(__RXX forward<F>(callable), value,
+                    __RXX forward<Args>(args)...);
             } else {
-                return std::invoke(std::forward<F>(callable), value,
-                    std::forward<Args>(args)...);
+                return std::invoke(__RXX forward<F>(callable), value,
+                    __RXX forward<Args>(args)...);
             }
         } else if constexpr (!std::is_void_v<result_type<F, Args...>>) {
             RXX_BUILTIN_unreachable();
@@ -121,15 +119,15 @@ private:
         if constexpr (I < size) {
             if constexpr (std::invocable<F, ith_type<I>, Args...>) {
                 constexpr ith_type<I> case_arg{};
-                return std::invoke(std::forward<F>(callable), case_arg,
-                    std::forward<Args>(args)...);
+                return std::invoke(__RXX forward<F>(callable), case_arg,
+                    __RXX forward<Args>(args)...);
             } else {
-                return default_(std::forward<F>(callable), value,
-                    std::forward<Args>(args)...);
+                return default_(__RXX forward<F>(callable), value,
+                    __RXX forward<Args>(args)...);
             }
         } else {
-            return default_(
-                std::forward<F>(callable), value, std::forward<Args>(args)...);
+            return default_( __RXX forward<F>(callable), value,
+                __RXX forward<Args>(args)...);
         }
     }
 
@@ -137,11 +135,11 @@ private:
     __RXX_HIDE_FROM_ABI static constexpr auto next_(
         F&& callable, T value, Args&&... args) -> decltype(auto) {
         if constexpr (I < size) {
-            return impl<I>(
-                std::forward<F>(callable), value, std::forward<Args>(args)...);
+            return impl<I>( __RXX forward<F>(callable), value,
+                __RXX forward<Args>(args)...);
         } else {
-            return default_(
-                std::forward<F>(callable), value, std::forward<Args>(args)...);
+            return default_( __RXX forward<F>(callable), value,
+                __RXX forward<Args>(args)...);
         }
     }
 
@@ -151,11 +149,11 @@ private:
 #define __RXX_JT_CASE(X)        \
     case index_to_value(I + X): \
         return case_<I + X>(    \
-            std::forward<F>(callable), value, std::forward<Args>(args)...)
+            __RXX forward<F>(callable), value, __RXX forward<Args>(args)...)
 #define __RXX_JT_DEFAULT(X)  \
     default:                 \
         return next_<I + X>( \
-            std::forward<F>(callable), value, std::forward<Args>(args)...)
+            __RXX forward<F>(callable), value, __RXX forward<Args>(args)...)
         if constexpr (size >= 16 + I) {
             switch (value) {
                 __RXX_JT_CASE(0);
@@ -264,10 +262,9 @@ public:
     requires requires { typename result_type<F, Args...>; }
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(F&& callable,
         U&& value, Args&&... args) RXX_CONST_CALL->decltype(auto) {
-        return impl<0>(std::forward<F>(callable), static_cast<T>(value),
-            std::forward<Args>(args)...);
+        return impl<0>(__RXX forward<F>(callable), static_cast<T>(value),
+            __RXX forward<Args>(args)...);
     }
 };
-} // namespace ranges::details
 
 RXX_DEFAULT_NAMESPACE_END

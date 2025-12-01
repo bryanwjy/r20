@@ -30,7 +30,7 @@ template <size_t, typename T>
 using always_type RXX_NODEBUG = T;
 
 template <typename T, size_t... Is>
-__RXX_HIDE_FROM_ABI auto repeat(std::index_sequence<Is...>) noexcept
+__RXX_HIDE_FROM_ABI auto repeat(__RXX index_sequence<Is...>) noexcept
     -> tuple<always_type<Is, T>...>;
 
 template <size_t N, typename T>
@@ -58,7 +58,7 @@ public:
 
     __RXX_HIDE_FROM_ABI explicit constexpr adjacent_view(V base) noexcept(
         std::is_nothrow_move_constructible_v<V>)
-        : base_{std::move(base)} {}
+        : base_{__RXX move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -69,7 +69,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -197,10 +197,9 @@ class adjacent_view<V, N>::iterator {
         std::is_nothrow_constructible_v<iterator_t<Base>, iterator_t<V>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
     {
-        constexpr std::make_index_sequence<N> seq{};
-        return [&]<size_t... Is>(std::index_sequence<Is...>) {
-            return std::array<iterator_t<Base>, N>{std::move(other[Is])...};
-        }(seq);
+        return [&]<size_t... Is>(__RXX index_sequence<Is...>) {
+            return std::array<iterator_t<Base>, N>{__RXX move(other[Is])...};
+        }(__RXX make_index_sequence_v<N>);
     }
 
     static consteval auto make_iterator_concept() noexcept {
@@ -225,7 +224,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other) noexcept(
         std::is_nothrow_constructible_v<iterator_t<Base>, iterator_t<V>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
-        : current_{move_from(std::move(other.current_))} {}
+        : current_{move_from(__RXX move(other.current_))} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator*() const {
         return details::transform(
@@ -367,9 +366,9 @@ public:
         iterator const& left, iterator const& right)
     requires std::indirectly_swappable<iterator_t<Base>>
     {
-        [&]<size_t... Is>(std::index_sequence<Is...>) {
+        [&]<size_t... Is>(__RXX index_sequence<Is...>) {
             (..., ranges::iter_swap(left.current_[Is], right.current_[Is]));
-        }(std::make_index_sequence<N>{});
+        }(__RXX make_index_sequence_v<N>);
     }
 
 private:
@@ -387,7 +386,7 @@ class adjacent_view<V, N>::sentinel {
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(
         sentinel_t<Base> end) noexcept(std::
             is_nothrow_move_constructible_v<sentinel_t<Base>>)
-        : end_(std::move(end)) {}
+        : end_(__RXX move(end)) {}
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
@@ -396,12 +395,13 @@ public:
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other) noexcept(
         std::is_nothrow_constructible_v<sentinel_t<V>, sentinel_t<Base>>)
     requires Const && std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
-        : end_{std::move(other.end_)} {}
+        : end_{__RXX move(other.end_)} {}
 
     template <bool OtherConst>
     requires std::sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         iterator<OtherConst> const& iter, sentinel const& self) {
         return get_current(iter).back() == self.end_;
     }
@@ -409,9 +409,8 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, V>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<details::const_if<OtherConst, V>>
     operator-(iterator<OtherConst> const& iter, sentinel const& self) {
         return get_current(iter).back() - self.end_;
     }
@@ -419,9 +418,8 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, V>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<details::const_if<OtherConst, V>>
     operator-(sentinel const& self, iterator<OtherConst> const& iter) {
         return self.end_ - get_current(iter).back();
     }
@@ -438,12 +436,12 @@ struct adjacent_t : __RXX ranges::details::adaptor_closure<adjacent_t<N>> {
     template <viewable_range R>
     requires (N == 0) ||
         requires { adjacent_view<all_t<R>, N>(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& arg) RXX_CONST_CALL {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(R&& arg) RXX_CONST_CALL {
         if constexpr (N == 0) {
             return views::empty<tuple<>>;
         } else {
-            return adjacent_view<all_t<R>, N>(std::forward<R>(arg));
+            return adjacent_view<all_t<R>, N>(__RXX forward<R>(arg));
         }
     }
 };

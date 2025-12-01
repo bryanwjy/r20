@@ -3,8 +3,9 @@
 
 #include "rxx/config.h"
 
-#include <concepts>
+#include "rxx/utility/move.h"
 
+#include <concepts>
 #if RXX_LIBCXX
 
 #  if __has_include(<__algorithm/in_fun_result.h>)
@@ -72,8 +73,8 @@ struct in_value_result {
     template <typename I2, typename T2>
     requires std::convertible_to<I const&, I2> &&
         std::convertible_to<T const&, T2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator in_value_result<I2, T2>() const& noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator in_value_result<I2, T2>() const& noexcept(
         std::is_nothrow_copy_constructible_v<I> &&
         std::is_nothrow_copy_constructible_v<T>) {
         return {in, value};
@@ -81,11 +82,11 @@ struct in_value_result {
 
     template <typename I2, typename T2>
     requires std::convertible_to<I, I2> && std::convertible_to<T, T2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator in_value_result<I2, T2>() && noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator in_value_result<I2, T2>() && noexcept(
         std::is_nothrow_move_constructible_v<I> &&
         std::is_nothrow_move_constructible_v<T>) {
-        return {std::move(in), std::move(value)};
+        return {__RXX move(in), __RXX move(value)};
     }
 
 #if RXX_CXX23 & RXX_ENABLE_RANGES_ALGO_STD_INTEROP
@@ -95,8 +96,8 @@ struct in_value_result {
         Other<I, T>{.in = self.in, .value = self.value};
         func({self.in, self.value});
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other<I, T>() const& noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other<I, T>() const& noexcept(
         std::is_nothrow_copy_constructible_v<I> &&
         std::is_nothrow_copy_constructible_v<T>) {
         return {in, value};
@@ -105,14 +106,15 @@ struct in_value_result {
     template <template <typename, typename> class Other>
     requires requires(in_value_result self, void (*func)(Other<I, T>)) {
         requires !std::same_as<Other<I, T>, in_value_result>;
-        Other<I, T>{.in = std::move(self.in), .value = std::move(self.value)};
-        func({std::move(self.in), std::move(self.value)});
+        Other<I, T>{
+            .in = __RXX move(self.in), .value = __RXX move(self.value)};
+        func({__RXX move(self.in), __RXX move(self.value)});
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other<I, T>() && noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other<I, T>() && noexcept(
         std::is_nothrow_move_constructible_v<I> &&
         std::is_nothrow_move_constructible_v<T>) {
-        return {std::move(in), std::move(value)};
+        return {__RXX move(in), __RXX move(value)};
     }
 
     template <typename Other>
@@ -121,8 +123,8 @@ struct in_value_result {
         requires std::convertible_to<in_value_result const&,
             details::rebind_as_t<in_value_result, Other>>;
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other() const& noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other() const& noexcept(
         std::is_nothrow_convertible_v<in_value_result const&,
             details::rebind_as_t<in_value_result, Other>>) {
         return {in, value};
@@ -134,10 +136,11 @@ struct in_value_result {
         requires std::convertible_to<in_value_result,
             details::rebind_as_t<in_value_result, Other>>;
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other() && noexcept(std::is_nothrow_convertible_v<in_value_result,
-        details::rebind_as_t<in_value_result, Other>>) {
-        return {std::move(in), std::move(value)};
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other() && noexcept(
+        std::is_nothrow_convertible_v<in_value_result,
+            details::rebind_as_t<in_value_result, Other>>) {
+        return {__RXX move(in), __RXX move(value)};
     }
 #endif
 };
@@ -150,16 +153,16 @@ struct out_value_result {
     template <typename O2, typename T2>
     requires std::convertible_to<O const&, O2> &&
         std::convertible_to<T const&, T2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator out_value_result<O2, T2>() const& {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator out_value_result<O2, T2>() const& {
         return {out, value};
     }
 
     template <typename O2, typename T2>
     requires std::convertible_to<O, O2> && std::convertible_to<T, T2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator out_value_result<O2, T2>() && {
-        return {std::move(out), std::move(value)};
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator out_value_result<O2, T2>() && {
+        return {__RXX move(out), __RXX move(value)};
     }
 
 #if RXX_CXX23 & RXX_ENABLE_RANGES_ALGO_STD_INTEROP
@@ -169,8 +172,8 @@ struct out_value_result {
         Other<O, T>{.out = self.out, .value = self.value};
         func({self.out, self.value});
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other<O, T>() const& noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other<O, T>() const& noexcept(
         std::is_nothrow_copy_constructible_v<O> &&
         std::is_nothrow_copy_constructible_v<T>) {
         return {out, value};
@@ -179,14 +182,15 @@ struct out_value_result {
     template <template <typename, typename> class Other>
     requires requires(out_value_result self, void (*func)(Other<O, T>)) {
         requires !std::same_as<Other<O, T>, out_value_result>;
-        Other<O, T>{.out = std::move(self.out), .value = std::move(self.value)};
-        func({std::move(self.out), std::move(self.value)});
+        Other<O, T>{
+            .out = __RXX move(self.out), .value = __RXX move(self.value)};
+        func({__RXX move(self.out), __RXX move(self.value)});
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other<O, T>() && noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other<O, T>() && noexcept(
         std::is_nothrow_move_constructible_v<O> &&
         std::is_nothrow_move_constructible_v<T>) {
-        return {std::move(out), std::move(value)};
+        return {__RXX move(out), __RXX move(value)};
     }
 
     template <typename Other>
@@ -195,8 +199,8 @@ struct out_value_result {
         requires std::convertible_to<out_value_result const&,
             details::rebind_as_t<out_value_result, Other>>;
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other() const& noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other() const& noexcept(
         std::is_nothrow_convertible_v<out_value_result const&,
             details::rebind_as_t<out_value_result, Other>>) {
         return {out, value};
@@ -208,10 +212,11 @@ struct out_value_result {
         requires std::convertible_to<out_value_result,
             details::rebind_as_t<out_value_result, Other>>;
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr
-    operator Other() && noexcept(std::is_nothrow_convertible_v<out_value_result,
-        details::rebind_as_t<out_value_result, Other>>) {
-        return {std::move(out), std::move(value)};
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr operator Other() && noexcept(
+        std::is_nothrow_convertible_v<out_value_result,
+            details::rebind_as_t<out_value_result, Other>>) {
+        return {__RXX move(out), __RXX move(value)};
     }
 #endif
 };

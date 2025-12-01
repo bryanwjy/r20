@@ -36,7 +36,7 @@ public:
 
     __RXX_HIDE_FROM_ABI explicit constexpr cache_latest_view(V base) noexcept(
         std::is_nothrow_move_constructible_v<V>)
-        : base_{std::move(base)} {}
+        : base_{__RXX move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -47,7 +47,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -94,7 +94,7 @@ public:
     using iterator_concept = std::input_iterator_tag;
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-    constexpr iterator_t<V> base() && { return std::move(current_); }
+    constexpr iterator_t<V> base() && { return __RXX move(current_); }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<V> const& base() const& noexcept { return current_; }
@@ -209,10 +209,10 @@ struct cache_latest_t : __RXX ranges::details::adaptor_closure<cache_latest_t> {
 
     template <viewable_range R>
     requires requires { cache_latest_view(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& arg) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(R&& arg) RXX_CONST_CALL
         noexcept(noexcept(cache_latest_view(std::declval<R>()))) {
-        return cache_latest_view(std::forward<R>(arg));
+        return cache_latest_view(__RXX forward<R>(arg));
     }
 
 #if RXX_LIBSTDCXX

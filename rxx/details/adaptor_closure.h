@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/functional/bind_back.h"
+#include "rxx/utility/forward.h"
 
 #include <ranges> // IWYU pragma: keep
 #include <type_traits>
@@ -29,7 +30,7 @@ constexpr auto make_pipeable(F&&, Args&&... args) noexcept(
         std::ranges::_Range_closure<std::decay_t<F>, std::decay_t<Args>...>,
         Args...>) {
     return std::ranges::_Range_closure<std::decay_t<F>, std::decay_t<Args>...>{
-        std::forward<Args>(args)...};
+        __RXX forward<Args>(args)...};
 }
 
 #elif RXX_LIBCXX
@@ -54,13 +55,13 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
 constexpr auto make_pipeable(F&& func) noexcept(
     std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
 #  if RXX_LIBCXX_AT_LEAST(20, 00, 00)
-    return std::ranges::__pipeable<std::decay_t<F>>{std::forward<F>(func)};
+    return std::ranges::__pipeable<std::decay_t<F>>{__RXX forward<F>(func)};
 #  elif RXX_LIBCXX_AT_LEAST(19, 01, 00)
     return std::ranges::__range_adaptor_closure_t<std::decay_t<F>>{
-        std::forward<F>(func)};
+        __RXX forward<F>(func)};
 #  else
     return std::__range_adaptor_closure_t<std::decay_t<F>>{
-        std::forward<F>(func)};
+        __RXX forward<F>(func)};
 #  endif
 }
 
@@ -70,7 +71,7 @@ constexpr auto make_pipeable(F&& func, Args&&... args) noexcept(
     (std::is_nothrow_constructible_v<std::decay_t<F>, F> && ... &&
         std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
     return make_pipeable(
-        __RXX bind_back(std::forward<F>(func), std::forward<Args>(args)...));
+        __RXX bind_back(__RXX forward<F>(func), __RXX forward<Args>(args)...));
 }
 
 #elif RXX_LIBSTDCXX
@@ -94,7 +95,7 @@ public:
     using F::operator();
     template <typename U>
     __RXX_HIDE_FROM_ABI constexpr pipeable(U&& func)
-        : F{std::forward<U>(func)} {}
+        : F{__RXX forward<U>(func)} {}
 };
 
 template <typename F>
@@ -103,7 +104,7 @@ constexpr auto make_pipeable(F&& func) noexcept(
     std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
     static_assert(std::is_object_v<F>);
     using Base = std::decay_t<F>;
-    return pipeable<Base>(std::forward<F>(func));
+    return pipeable<Base>(__RXX forward<F>(func));
 }
 
 template <typename F, typename... Args>
@@ -112,7 +113,7 @@ constexpr auto make_pipeable(F&& func, Args&&... args) noexcept(
     (std::is_nothrow_constructible_v<std::decay_t<F>, F> && ... &&
         std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
     return make_pipeable(
-        __RXX bind_back(std::forward<F>(func), std::forward<Args>(args)...));
+        __RXX bind_back(__RXX forward<F>(func), __RXX forward<Args>(args)...));
 }
 
 #else

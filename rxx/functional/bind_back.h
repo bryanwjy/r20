@@ -22,8 +22,8 @@ public:
     __RXX_HIDE_FROM_ABI constexpr bind_back_t(Func&& func,
         Args&&... args) noexcept((std::is_nothrow_constructible_v<F, Func> &&
         ... && std::is_nothrow_constructible_v<Ts, Args>))
-        : container_{std::in_place, std::forward<Func>(func),
-              std::forward<Args>(args)...} {}
+        : container_{std::in_place, __RXX forward<Func>(func),
+              __RXX forward<Args>(args)...} {}
 
     __RXX_HIDE_FROM_ABI constexpr bind_back_t(bind_back_t const&) = default;
     __RXX_HIDE_FROM_ABI constexpr bind_back_t& operator=(
@@ -40,7 +40,7 @@ public:
         return apply(
             [&](Ts const&... bound) -> decltype(auto) {
                 return std::invoke(container_.data.func.data,
-                    std::forward<Us>(args)..., bound...);
+                    __RXX forward<Us>(args)..., bound...);
             },
             container_.data.args);
     }
@@ -53,10 +53,10 @@ public:
         -> decltype(auto) {
         return apply(
             [&](Ts const&&... bound) -> decltype(auto) {
-                return std::invoke(std::move(container_.data.func.data),
-                    std::forward<Us>(args)..., std::move(bound)...);
+                return std::invoke(__RXX move(container_.data.func.data),
+                    __RXX forward<Us>(args)..., __RXX move(bound)...);
             },
-            std::move(container_.data.args));
+            __RXX move(container_.data.args));
     }
 
     template <typename... Us>
@@ -66,7 +66,7 @@ public:
         return apply(
             [&](Ts&... bound) -> decltype(auto) {
                 return std::invoke(container_.data.func.data,
-                    std::forward<Us>(args)..., bound...);
+                    __RXX forward<Us>(args)..., bound...);
             },
             container_.data.args);
     }
@@ -77,10 +77,10 @@ public:
         std::is_nothrow_invocable_v<F, Us..., Ts...>) -> decltype(auto) {
         return apply(
             [&](Ts&&... bound) -> decltype(auto) {
-                return std::invoke(std::move(container_.data.func.data),
-                    std::forward<Us>(args)..., std::move(bound)...);
+                return std::invoke(__RXX move(container_.data.func.data),
+                    __RXX forward<Us>(args)..., __RXX move(bound)...);
             },
-            std::move(container_.data.args));
+            __RXX move(container_.data.args));
     }
 
 private:
@@ -97,8 +97,8 @@ private:
             Args&&... args) noexcept((std::is_nothrow_constructible_v<F,
                                           Func> &&
             ... && std::is_nothrow_constructible_v<Ts, Args>))
-            : func{std::in_place, std::forward<Func>(func)}
-            , args{std::forward<Args>(args)...} {}
+            : func{std::in_place, __RXX forward<Func>(func)}
+            , args{__RXX forward<Args>(args)...} {}
         __RXX_HIDE_FROM_ABI constexpr container(container const&) = default;
         __RXX_HIDE_FROM_ABI constexpr container& operator=(
             container const&) = default;
@@ -125,13 +125,13 @@ public:
     requires std::constructible_from<F, Func>
     __RXX_HIDE_FROM_ABI constexpr set_arity_t(Func&& func) noexcept(
         std::is_nothrow_constructible_v<F, Func>)
-        : func_{std::forward<Func>(func)} {}
+        : func_{__RXX forward<Func>(func)} {}
 
     template <typename... Us>
     requires (sizeof...(Us) == N) && std::regular_invocable<F const&, Us...>
     __RXX_HIDE_FROM_ABI constexpr auto operator()(Us&&... args) const& noexcept(
         std::is_nothrow_invocable_v<F const&, Us...>) -> decltype(auto) {
-        return std::invoke(func_, std::forward<Us>(args)...);
+        return std::invoke(func_, __RXX forward<Us>(args)...);
     }
 
     template <typename... Us>
@@ -139,21 +139,21 @@ public:
     __RXX_HIDE_FROM_ABI constexpr auto
     operator()(Us&&... args) const&& noexcept(
         std::is_nothrow_invocable_v<F const, Us...>) -> decltype(auto) {
-        return std::invoke(std::move(func_), std::forward<Us>(args)...);
+        return std::invoke(__RXX move(func_), __RXX forward<Us>(args)...);
     }
 
     template <typename... Us>
     requires (sizeof...(Us) == N) && std::regular_invocable<F&, Us...>
     __RXX_HIDE_FROM_ABI constexpr auto operator()(Us&&... args) & noexcept(
         std::is_nothrow_invocable_v<F&, Us...>) -> decltype(auto) {
-        return std::invoke(func_, std::forward<Us>(args)...);
+        return std::invoke(func_, __RXX forward<Us>(args)...);
     }
 
     template <typename... Us>
     requires (sizeof...(Us) == N) && std::regular_invocable<F, Us...>
     __RXX_HIDE_FROM_ABI constexpr auto operator()(Us&&... args) && noexcept(
         std::is_nothrow_invocable_v<F, Us...>) -> decltype(auto) {
-        return std::invoke(std::move(func_), std::forward<Us>(args)...);
+        return std::invoke(__RXX move(func_), __RXX forward<Us>(args)...);
     }
 
 private:
@@ -162,9 +162,10 @@ private:
 
 template <size_t Min, typename F>
 requires std::constructible_from<std::decay_t<F>, F>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto set_arity(
-    F&& func) noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
-    return set_arity_t<std::decay_t<F>, Min>{std::forward<F>(func)};
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr auto set_arity(F&& func) noexcept(
+    std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
+    return set_arity_t<std::decay_t<F>, Min>{__RXX forward<F>(func)};
 }
 
 } // namespace ranges::details
@@ -172,12 +173,12 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto set_arity(
 template <typename F, typename... Args>
 requires (std::constructible_from<std::decay_t<F>, F> && ... &&
     std::constructible_from<std::decay_t<Args>, Args>)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto bind_back(F&& func,
-    Args&&... args) noexcept((std::is_nothrow_constructible_v<std::decay_t<F>,
-                                  F> &&
-    ... && std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr auto bind_back(F&& func, Args&&... args) noexcept(
+    (std::is_nothrow_constructible_v<std::decay_t<F>, F> && ... &&
+        std::is_nothrow_constructible_v<std::decay_t<Args>, Args>)) {
     return ranges::details::bind_back_t<std::decay_t<F>, std::decay_t<Args>...>{
-        std::forward<F>(func), std::forward<Args>(args)...};
+        __RXX forward<F>(func), __RXX forward<Args>(args)...};
 }
 
 RXX_DEFAULT_NAMESPACE_END

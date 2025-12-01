@@ -91,7 +91,7 @@ struct advance_t final {
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr void operator()(
         It& iter, Sent bound) RXX_CONST_CALL {
         if constexpr (std::assignable_from<It&, Sent>) {
-            iter = std::move(bound);
+            iter = __RXX move(bound);
         } else if constexpr (std::sized_sentinel_for<Sent, It>) {
             operator()(iter, bound - iter);
         } else {
@@ -149,9 +149,9 @@ struct distance_t final {
 
     template <typename It, std::sentinel_for<It> Sent>
     requires (!std::sized_sentinel_for<Sent, It>)
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL
-        constexpr iter_difference_t<It>
-        operator()(It first, Sent last) RXX_CONST_CALL {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr iter_difference_t<It> operator()(
+        It first, Sent last) RXX_CONST_CALL {
         iter_difference_t<It> count = 0;
         while (first != last) {
             ++first;

@@ -30,7 +30,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr explicit as_rvalue_view(V base) noexcept(
         std::is_nothrow_move_constructible_v<V>)
-        : base_{std::move(base)} {}
+        : base_{__RXX move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -41,7 +41,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -108,18 +108,18 @@ struct as_rvalue_t : __RXX ranges::details::adaptor_closure<as_rvalue_t> {
     template <typename R>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()(R&& range) RXX_CONST_CALL
-        noexcept(noexcept(as_rvalue_view(std::forward<R>(range))))
+        noexcept(noexcept(as_rvalue_view(__RXX forward<R>(range))))
             -> decltype(as_rvalue_view(std::declval<R>())) {
-        return as_rvalue_view(std::forward<R>(range));
+        return as_rvalue_view(__RXX forward<R>(range));
     }
 
     template <typename R>
     requires std::same_as<range_rvalue_reference_t<R>, range_reference_t<R>> &&
         requires { views::all(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& range) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(R&& range) RXX_CONST_CALL
         noexcept(noexcept(views::all(std::declval<R>()))) {
-        return views::all(std::forward<R>(range));
+        return views::all(__RXX forward<R>(range));
     }
 };
 } // namespace details
