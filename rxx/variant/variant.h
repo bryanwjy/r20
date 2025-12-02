@@ -4,16 +4,39 @@
 
 #include "rxx/config.h"
 
+#include "rxx/variant/fwd.h"
+
+#include "rxx/concepts/swap.h"
+#include "rxx/configuration/abi.h"
 #include "rxx/functional/invoke_r.h"
 #include "rxx/memory/construct_at.h"
 #include "rxx/memory/destroy_at.h"
+#include "rxx/preprocessor/attribute_list.h"
+#include "rxx/type_traits/copy_cvref.h"                // IWYU pragma: keep
+#include "rxx/type_traits/is_explicit_constructible.h" // IWYU pragma: keep
 #include "rxx/type_traits/template_access.h"
 #include "rxx/utility.h"
+#include "rxx/variant/bad_variant_access.h"
 
 #include <concepts>
+#include <initializer_list>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
+
+template <typename T>
+__RXX_HIDE_FROM_ABI inline constexpr auto visit_table_for =
+    []<size_t... Is>(__RXX index_sequence<Is...>) {
+        return jump_table<size_t, Is..., variant_npos>{};
+    }(__RXX make_index_sequence<variant_size_v<T>>{});
+
+template <typename T, typename... Ts>
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr bool holds_alternative(variant<Ts...> const& var) noexcept {
+    static_assert(
+        template_count_v<T, variant<Ts...>> == 1, "Invalid alternative");
+    return var.index() == template_index_v<T, variant<Ts...>>;
+}
 
 namespace details {
 template <size_t I>
@@ -260,15 +283,6 @@ union multi_union<Head, Tail...> {
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) second_type second;
 };
 
-template <typename T>
-__RXX_HIDE_FROM_ABI inline constexpr auto jump_table_for = jump_table<size_t>{};
-
-template <template <typename...> class T, typename... Args>
-__RXX_HIDE_FROM_ABI inline constexpr auto jump_table_for<T<Args...>> =
-    []<size_t... Is>(__RXX index_sequence<Is...>) {
-        return jump_table<size_t, Is...>{};
-    }(__RXX index_sequence_for<Args...>{});
-
 template <typename T, typename U, size_t... Is>
 consteval bool nothrow_make_from_multi_union(
     __RXX index_sequence<Is...>) noexcept {
@@ -283,7 +297,7 @@ make_from_multi_union(size_t index, U&& arg) noexcept(
     nothrow_make_from_multi_union<T, U>(
         __RXX make_index_sequence_v<template_size_v<T>>)) {
     static_assert(template_size_v<T> == template_size_v<U>);
-    return jump_table_for<U>(
+    return iota_table_for<U>(
         [&]<size_t I>(size_constant<I>) {
             return T{std::in_place_index<I>,
                 __RXX forward<U>(arg).template get<I>()};
@@ -295,7 +309,11 @@ template <typename T>
 using array_t = T[1];
 template <typename T, typename>
 struct variant_overload {
-    static void test() noexcept;
+private:
+    class inaccessible_t {};
+
+public:
+    static void test(inaccessible_t) noexcept;
 };
 template <size_t I, typename T>
 struct variant_typeid {};
@@ -349,12 +367,28 @@ inline constexpr bool is_tag_v<__RXX generating_type_t<T>> = true;
 template <size_t I>
 inline constexpr bool is_tag_v<__RXX generating_index_t<I>> = true;
 
+template <typename T, typename F, typename... Args>
+concept generatable_from =
+    std::invocable<F> && requires(T* ptr, F&& func, Args&&... args) {
+        ::new (ptr) T(std::invoke(
+            __RXX forward<F>(func), __RXX forward<Args>(args)...));
+    };
+
+template <typename T, typename F, typename... Args>
+concept nothrow_generatable_from = generatable_from<T, F, Args...> &&
+    requires(T* ptr, F&& func, Args&&... args) {
+        {
+            ::new (ptr) T(std::invoke(
+                __RXX forward<F>(func), __RXX forward<Args>(args)...))
+        } noexcept;
+    };
+
 template <typename... Ts>
 class variant_base;
 
 template <typename U, typename... Ts>
 concept overloadable_conversion_to = sizeof...(Ts) > 0 &&
-    !std::same_as<variant_base<Ts...>, std::remove_cvref_t<U>> &&
+    !std::same_as<__RXX variant<Ts...>, std::remove_cvref_t<U>> &&
     !is_tag_v<std::remove_cvref_t<U>> && requires(U&& val) {
         typename make_variant_overload_for_t<U, Ts...>;
         make_variant_overload_for_t<U, Ts...>::test(__RXX forward<U>(val));
@@ -501,7 +535,7 @@ class variant_base {
 
     private:
         __RXX_HIDE_FROM_ABI constexpr void destroy_member() noexcept {
-            jump_table_for<union_type>(
+            iota_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
                     __RXX destroy_at(
                         RXX_BUILTIN_addressof(union_.data.template get<I>()));
@@ -526,7 +560,7 @@ class variant_base {
     requires (place_index_in_tail)
     {
         static_assert(template_size_v<union_type> == template_size_v<U>);
-        return jump_table_for<union_type>(
+        return iota_table_for<union_type>(
             [&]<size_t I>(size_constant<I>) -> container {
                 return container{std::in_place_index<I>,
                     __RXX forward<U>(arg).template get<I>()};
@@ -558,12 +592,6 @@ public:
         !(... && std::is_trivially_copy_constructible_v<Ts>))
         : variant_base(dispatch, other.index(), other.union_ref()) {}
 
-    template <overloadable_conversion_to<Ts...> U>
-    __RXX_HIDE_FROM_ABI constexpr variant_base(U&& arg) noexcept(
-        std::is_nothrow_constructible_v<conversion_type<U, Ts...>, U>)
-        : variant_base(std::in_place_index<conversion_index<U, Ts...>>,
-              __RXX forward<U>(arg)) {}
-
     __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) = delete;
     __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) noexcept
     requires ((... && std::is_move_constructible_v<Ts>) &&
@@ -585,26 +613,6 @@ public:
                  (... && std::is_trivially_copy_assignable_v<Ts>))
     = default;
 
-    template <overloadable_conversion_to<Ts...> U>
-    __RXX_HIDE_FROM_ABI constexpr variant_base& operator=(U&& arg) noexcept(
-        std::is_nothrow_constructible_v<conversion_type<U, Ts...>, U> &&
-        std::is_nothrow_move_constructible_v<conversion_type<U, Ts...>> &&
-        std::is_nothrow_assignable_v<conversion_type<U, Ts...>&, U>) {
-        constexpr auto idx = conversion_index<U, Ts...>;
-        if (idx == index()) {
-            value_ref<idx>() = __RXX forward<U>(arg);
-        } else if constexpr (std::is_nothrow_constructible_v<
-                                 conversion_type<U, Ts...>, U> ||
-            !std::is_nothrow_move_constructible_v<conversion_type<U, Ts...>>) {
-            reinitialize_value<idx>(__RXX forward<U>(arg));
-        } else {
-            reinitialize_value<idx>(
-                conversion_type<U, Ts...>(__RXX forward<U>(arg)));
-        }
-
-        return *this;
-    }
-
     __RXX_HIDE_FROM_ABI constexpr variant_base&
     operator=(variant_base const& other) noexcept(
         (... && std::is_nothrow_copy_assignable_v<Ts>) &&
@@ -613,13 +621,13 @@ public:
         !(... && std::is_trivially_copy_assignable_v<Ts>))
     {
         if (this->index() != other.index()) {
-            jump_table_for<union_type>(
+            iota_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
                     this->reinitialize_value<I>(other.template value_ref<I>());
                 },
                 other.index());
         } else {
-            jump_table_for<union_type>(
+            iota_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
                     this->template value_ref<I>() =
                         other.template value_ref<I>();
@@ -645,14 +653,14 @@ public:
         !(... && std::is_trivially_move_assignable_v<Ts>))
     {
         if (this->index() != other.index()) {
-            jump_table_for<union_type>(
+            iota_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
                     this->reinitialize_value<I>(
                         __RXX move(other).template value_ref<I>());
                 },
                 other.index());
         } else {
-            jump_table_for<union_type>(
+            iota_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
                     this->template value_ref<I>() =
                         __RXX move(other).template value_ref<I>();
@@ -697,52 +705,24 @@ public:
         return container_.data.index_;
     }
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() const& noexcept -> decltype(auto) {
-        return (container_.data.union_.data);
-    }
+protected:
+    template <size_t I, typename U, typename... Args>
+    __RXX_HIDE_FROM_ABI constexpr auto
+    reinitialize_value(std::initializer_list<U> ilist, Args&&... args) noexcept(
+        std::is_nothrow_constructible_v<template_element_t<I, union_type>,
+            Args...>) {
+        using target_type = template_element_t<I, union_type>;
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() & noexcept -> decltype(auto) {
-        return (container_.data.union_.data);
-    }
-
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() const&& noexcept -> decltype(auto) {
-        return __RXX move(container_.data.union_.data);
-    }
-
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() && noexcept -> decltype(auto) {
-        return __RXX move(container_.data.union_.data);
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() const& noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return union_ref().template get<I>();
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() & noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return union_ref().template get<I>();
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() const&& noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return __RXX move(union_ref().template get<I>());
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() && noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return __RXX move(union_ref().template get<I>());
+        destroy();
+        if constexpr (std::is_nothrow_constructible_v<target_type, Args...>) {
+            return construct_value<I>(ilist, __RXX forward<Args>(args)...);
+        } else
+            try {
+                return construct_value<I>(ilist, __RXX forward<Args>(args)...);
+            } catch (...) {
+                construct_value<sizeof...(Ts)>();
+                throw;
+            }
     }
 
     template <size_t I, typename... Args>
@@ -786,50 +766,73 @@ public:
             }
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr bool operator==(
-        variant_base const& self, variant_base const& right) noexcept((... &&
-        noexcept(std::declval<Ts const&>() == std::declval<Ts const&>())))
-    requires (... && std::equality_comparable<Ts>)
-    {
-        return self.index() == right.index() &&
-            jump_table_for<union_type>(
-                [&]<size_t I>(size_constant<I>) {
-                    if constexpr (I >= sizeof...(Ts)) {
-                        return true;
-                    } else {
-                        return self.template value_ref<I>() ==
-                            right.template value_ref<I>();
-                    }
-                },
-                self.index());
+#if RXX_CXX23
+    template <size_t I, typename Self>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr decltype(auto) value_ref(this Self&& self) noexcept {
+        return __RXX forward_like<Self>(
+            ((copy_cvref_t<Self, variant_base>&&)self)
+                .union_ref()
+                .template get<I>());
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr auto operator<=>(
-        variant_base const& self, variant_base const& right) noexcept
-    requires (... && std::three_way_comparable<Ts>)
-    {
-        using result = std::common_comparison_category<
-            std::compare_three_way_result_t<index_type>,
-            std::compare_three_way_result_t<Ts>...>;
-
-        auto cmp = self.index() <=> right.index();
-        if (cmp != 0) {
-            return [&]() -> result { return cmp; }();
-        }
-
-        return jump_table_for<union_type>(
-            [&]<size_t I>(size_constant<I>) -> result {
-                if constexpr (I >= sizeof...(Ts)) {
-                    return 0 <=> 0;
-                } else {
-                    return self.template value_ref<I>() <=>
-                        right.template value_ref<I>();
-                }
-            },
-            self.index());
+    template <typename Self>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr decltype(auto) union_ref(this Self&& self) noexcept {
+        return __RXX forward_like<Self>(
+            ((copy_cvref_t<Self, variant_base>&&)self)
+                .container_.data.union_.data);
     }
 
-private:
+#else
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() const& noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return union_ref().template get<I>();
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() & noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return union_ref().template get<I>();
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() const&& noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return __RXX move(union_ref().template get<I>());
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() && noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return __RXX move(union_ref().template get<I>());
+    }
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() const& noexcept -> decltype(auto) {
+        return (container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() & noexcept -> decltype(auto) {
+        return (container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() const&& noexcept -> decltype(auto) {
+        return __RXX move(container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() && noexcept -> decltype(auto) {
+        return __RXX move(container_.data.union_.data);
+    }
+#endif
+
     template <typename U>
     __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_t tag, size_t index,
         U&& arg) noexcept(std::is_nothrow_constructible_v<container, dispatch_t,
@@ -856,6 +859,21 @@ private:
         } else {
             return container_.data.construct_union(
                 std::in_place_index<I>, __RXX forward<Args>(args)...);
+        }
+    }
+
+    template <size_t I, typename U, typename... Args>
+    __RXX_HIDE_FROM_ABI constexpr auto
+    construct_value(std::initializer_list<U> ilist, Args&&... args) noexcept(
+        std::is_nothrow_constructible_v<template_element_t<I, union_type>,
+            Args...>) {
+        if constexpr (place_index_in_tail) {
+            construct_at(RXX_BUILTIN_addressof(container_.data),
+                std::in_place_index<I>, ilist, __RXX forward<Args>(args)...);
+            return RXX_BUILTIN_addressof(value_ref<I>());
+        } else {
+            return container_.data.construct_union(
+                std::in_place_index<I>, ilist, __RXX forward<Args>(args)...);
         }
     }
 
@@ -887,5 +905,389 @@ private:
     overlappable_if<allow_external_overlap, container> container_;
 };
 } // namespace details
+
+template <typename... Ts>
+class variant : private details::variant_base<Ts...> {
+    static_assert(sizeof...(Ts) > 0, "Empty variant");
+    static_assert((... && std::is_destructible_v<Ts>), "Invalid type");
+    static_assert((... && !std::is_reference_v<Ts>), "Invalid type");
+    static_assert((... && !std::is_function_v<Ts>), "Invalid type");
+    static_assert((... && !details::is_tag_v<Ts>), "Invalid type");
+    using first_type = template_element_t<0, variant>;
+    using base_type = details::variant_base<Ts...>;
+    template <typename... Us>
+    friend class variant;
+
+    template <size_t I, typename... Us>
+    requires requires { typename template_element_t<I, variant<Us...>>; }
+    friend constexpr template_element_t<I, variant<Us...>> const& get(
+        variant<Us...> const& val) noexcept;
+    template <size_t I, typename... Us>
+    requires requires { typename template_element_t<I, variant<Us...>>; }
+    friend constexpr template_element_t<I, variant<Us...>>& get(
+        variant<Us...>& val) noexcept;
+    template <size_t I, typename... Us>
+    requires requires { typename template_element_t<I, variant<Us...>>; }
+    friend constexpr template_element_t<I, variant<Us...>> const&& get(
+        variant<Us...> const&& val) noexcept;
+    template <size_t I, typename... Us>
+    requires requires { typename template_element_t<I, variant<Us...>>; }
+    friend constexpr template_element_t<I, variant<Us...>>&& get(
+        variant<Us...>&& val) noexcept;
+
+public:
+    __RXX_HIDE_FROM_ABI constexpr explicit(
+        (... || __RXX is_explicit_constructible_v<Ts>)) variant() = default;
+    __RXX_HIDE_FROM_ABI constexpr variant(variant const&) = default;
+    __RXX_HIDE_FROM_ABI constexpr variant(variant&&) = default;
+    __RXX_HIDE_FROM_ABI constexpr variant& operator=(variant const&) = default;
+    __RXX_HIDE_FROM_ABI constexpr variant& operator=(variant&&) = default;
+    __RXX_HIDE_FROM_ABI constexpr ~variant() = default;
+
+    template <typename U, typename... Args>
+    __RXX_HIDE_FROM_ABI constexpr explicit variant(std::in_place_type_t<U> tag,
+        Args&&... args) noexcept(std::is_nothrow_constructible_v<U,
+        std::in_place_type_t<U>, Args...>)
+        : base_type{tag, __RXX forward<Args>(args)...} {}
+
+    template <size_t I, typename... Args>
+    __RXX_HIDE_FROM_ABI constexpr explicit variant(
+        std::in_place_index_t<I> tag, Args&&... args) noexcept(std::
+            is_nothrow_constructible_v<template_element_t<I, variant>,
+                std::in_place_index_t<I>, Args...>)
+        : base_type{tag, __RXX forward<Args>(args)...} {}
+
+    template <typename U, typename F, typename... Args>
+    requires (template_count_v<U, variant> == 1) &&
+        details::generatable_from<U, F, Args...>
+    __RXX_HIDE_FROM_ABI constexpr explicit variant(generating_type_t<U> tag,
+        F&& callable,
+        Args&&... args) noexcept(details::nothrow_generatable_from<U, F,
+        Args...>)
+        : base_type{tag, __RXX forward<F>(callable),
+              __RXX forward<Args>(args)...} {}
+
+    template <size_t I, typename F, typename... Args>
+    requires (I < sizeof...(Ts)) &&
+        details::generatable_from<template_element_t<I, variant>, F, Args...>
+    __RXX_HIDE_FROM_ABI constexpr explicit variant(generating_index_t<I> tag,
+        F&& callable, Args&&... args) noexcept(details::
+            nothrow_generatable_from<template_element_t<I, variant>, F,
+                Args...>)
+        : base_type(tag, __RXX forward<F>(callable),
+              __RXX forward<Args>(args)...) {}
+
+    template <details::overloadable_conversion_to<Ts...> U>
+    __RXX_HIDE_FROM_ABI constexpr variant(U&& arg) noexcept(
+        std::is_nothrow_constructible_v<details::conversion_type<U, Ts...>, U>)
+        : variant(std::in_place_index<details::conversion_index<U, Ts...>>,
+              __RXX forward<U>(arg)) {}
+
+    template <details::overloadable_conversion_to<Ts...> U>
+    __RXX_HIDE_FROM_ABI constexpr variant& operator=(U&& arg) noexcept(
+        std::is_nothrow_constructible_v<details::conversion_type<U, Ts...>,
+            U> &&
+        std::is_nothrow_move_constructible_v<
+            details::conversion_type<U, Ts...>> &&
+        std::is_nothrow_assignable_v<details::conversion_type<U, Ts...>&, U>) {
+        constexpr auto idx = details::conversion_index<U, Ts...>;
+        if (idx == index()) {
+            this->template value_ref<idx>() = __RXX forward<U>(arg);
+        } else if constexpr (std::is_nothrow_constructible_v<
+                                 details::conversion_type<U, Ts...>, U> ||
+            !std::is_nothrow_move_constructible_v<
+                details::conversion_type<U, Ts...>>) {
+            this->template reinitialize_value<idx>(__RXX forward<U>(arg));
+        } else {
+            this->template reinitialize_value<idx>(
+                conversion_type<U, Ts...>(__RXX forward<U>(arg)));
+        }
+
+        return *this;
+    }
+
+    using base_type::index;
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr bool valueless_by_exception() const noexcept {
+        return index() == sizeof...(Ts);
+    }
+
+    template <typename T, typename... Args>
+    requires std::constructible_from<T, Args...> &&
+        (template_count_v<T, variant> == 1)
+    __RXX_HIDE_FROM_ABI constexpr T& emplace(Args&&... args) noexcept(
+        std::is_nothrow_constructible_v<T, Args...>) {
+        return *this->template reinitialize_value<template_index_v<T, variant>>(
+            __RXX forward<Args>(args)...);
+    }
+
+    template <typename T, typename U, typename... Args>
+    requires std::constructible_from<T, Args...> &&
+        (template_count_v<T, variant> == 1)
+    __RXX_HIDE_FROM_ABI constexpr T& emplace(std::initializer_list<U> ilist,
+        Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
+        return *this->template reinitialize_value<template_index_v<T, variant>>(
+            ilist, __RXX forward<Args>(args)...);
+    }
+
+    template <size_t I, typename... Args>
+    requires (I < sizeof...(Ts)) &&
+        std::constructible_from<template_element_t<I, variant>, Args...>
+    __RXX_HIDE_FROM_ABI constexpr template_element_t<I, variant>&
+    emplace(Args&&... args) noexcept(
+        std::is_nothrow_constructible_v<template_element_t<I, variant>,
+            Args...>) {
+        return *this->template reinitialize_value<I>(
+            __RXX forward<Args>(args)...);
+    }
+
+    template <size_t I, typename U, typename... Args>
+    requires (I < sizeof...(Ts)) &&
+        std::constructible_from<template_element_t<I, variant>, Args...>
+    __RXX_HIDE_FROM_ABI constexpr template_element_t<I, variant>&
+    emplace(std::initializer_list<U> ilist, Args&&... args) noexcept(
+        std::is_nothrow_constructible_v<template_element_t<I, variant>,
+            Args...>) {
+        return *this->template reinitialize_value<I>(
+            ilist, __RXX forward<Args>(args)...);
+    }
+
+    template <typename T, typename F, typename... Args>
+    requires details::generatable_from<T, F, Args...> &&
+        (template_count_v<T, variant> == 1)
+    __RXX_HIDE_FROM_ABI constexpr T&
+    generate(F&& generator, Args&&... args) noexcept(
+        details::nothrow_generatable_from<T, F, Args...>) {
+        return *this->template regenerate_value<template_index_v<T, variant>>(
+            __RXX forward<F>(generator), __RXX forward<Args>(args)...);
+    }
+
+    template <size_t I, typename F, typename... Args>
+    requires (I < sizeof...(Ts)) &&
+        details::generatable_from<template_element_t<I, variant>, F, Args...>
+    __RXX_HIDE_FROM_ABI constexpr template_element_t<I, variant>&
+    generate(F&& generator, Args&&... args) noexcept(
+        details::nothrow_generatable_from<template_element_t<I, variant>, F,
+            Args...>) {
+        return *this->template regenerate_value<I>(
+            __RXX forward<F>(generator), __RXX forward<Args>(args)...);
+    }
+
+    __RXX_HIDE_FROM_ABI constexpr void swap(variant& other) noexcept(
+        (noexcept(std::declval<variant&>() = __RXX exchange(
+                      std::declval<variant&>(), std::declval<variant>())) &&
+            ... && std::is_nothrow_swappable_v<Ts>)) {
+        if (base_type::index() == static_cast<base_type&>(other).index()) {
+            iota_table_for<variant<Ts..., details::valueless_t>>(
+                [&]<size_t I>(details::size_constant<I>) {
+                    ranges::swap(this->template value_ref<I>(),
+                        other.template value_ref<I>());
+                },
+                index());
+        } else {
+            other = __RXX exchange(*this, std::move(other));
+        }
+    }
+
+    __RXX_HIDE_FROM_ABI friend constexpr void swap(
+        variant& left, variant& right) noexcept(noexcept(left.swap(right))) {
+        return left.swap(right);
+    }
+
+#if __cpp_explicit_this_parameter >= 202110L && (RXX_CXX23 | RXX_COMPILER_CLANG)
+
+#  if RXX_COMPILER_CLANG && !RXX_CXX23
+    RXX_DISABLE_WARNING_PUSH()
+    RXX_DISABLE_WARNING("-Wc++23-extensions")
+#  endif
+    // NOLINTBEGIN
+    template <typename Self, typename F>
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(
+        this Self&& self, F&& visitor)
+    requires (... && std::invocable<F, copy_cvref_t<Self, Ts>>)
+    {
+        if (self.valueless_by_exception()) {
+            RXX_THROW(bad_variant_access());
+        }
+
+        return iota_table_for<variant>(
+            [&]<size_t I>(details::size_constant<I>) -> decltype(auto) {
+                return std::invoke(__RXX forward<F>(visitor),
+                    __RXX forward_like<Self>(self.template value_ref<I>()));
+            },
+            self.index());
+    }
+
+    template <typename R, typename Self, typename F>
+    __RXX_HIDE_FROM_ABI constexpr R visit(this Self&& self, F&& visitor)
+    requires (... && std::is_invocable_r_v<R, F, copy_cvref_t<Self, Ts>>)
+    {
+        if constexpr (std::is_void_v<R>) {
+            __RXX forward<Self>(self).visit(__RXX forward<F>(visitor));
+        } else {
+            return __RXX forward<Self>(self).visit(__RXX forward<F>(visitor));
+        }
+    }
+    // NOLINTEND
+#  if RXX_COMPILER_CLANG && !RXX_CXX23
+    RXX_DISABLE_WARNING_POP()
+#  endif
+
+#else
+
+    template <typename F>
+    requires (... && std::invocable<F, Ts&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) & {
+        if (valueless_by_exception()) {
+            RXX_THROW(bad_variant_access());
+        }
+
+        return iota_table_for<variant>(
+            [&]<size_t I>(details::size_constant<I>) -> decltype(auto) {
+                if constexpr (I >= sizeof...(Ts)) {
+                    RXX_THROW(bad_variant_access());
+                } else {
+                    return std::invoke(__RXX forward<F>(visitor),
+                        this->template value_ref<I>());
+                }
+            },
+            this->index());
+    }
+
+    template <typename F>
+    requires (... && std::invocable<F, Ts const&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) const& {
+        if (valueless_by_exception()) {
+            RXX_THROW(bad_variant_access());
+        }
+
+        return iota_table_for<variant>(
+            [&]<size_t I>(details::size_constant<I>) -> decltype(auto) {
+                if constexpr (I >= sizeof...(Ts)) {
+                    RXX_THROW(bad_variant_access());
+                } else {
+                    return std::invoke(__RXX forward<F>(visitor),
+                        this->template value_ref<I>());
+                }
+            },
+            this->index());
+    }
+
+    template <typename F>
+    requires (... && std::invocable<F, Ts &&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) && {
+        if (valueless_by_exception()) {
+            RXX_THROW(bad_variant_access());
+        }
+
+        return iota_table_for<variant>(
+            [&]<size_t I>(details::size_constant<I>) -> decltype(auto) {
+                return std::invoke(__RXX forward<F>(visitor),
+                    __RXX move(this->template value_ref<I>()));
+            },
+            this->index());
+    }
+
+    template <typename F>
+    requires (... && std::invocable<F, Ts const &&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) const&& {
+        if (valueless_by_exception()) {
+            RXX_THROW(bad_variant_access());
+        }
+
+        return iota_table_for<variant>(
+            [&]<size_t I>(details::size_constant<I>) -> decltype(auto) {
+                return std::invoke(__RXX forward<F>(visitor),
+                    __RXX move(this->template value_ref<I>()));
+            },
+            this->index());
+    }
+
+    template <typename R, typename F>
+    requires (... && std::invocable<F, Ts&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) & {
+        if constexpr (std::is_void_v<R>) {
+            this->visit(__RXX forward<F>(visitor));
+        } else {
+            return this->visit(__RXX forward<F>(visitor));
+        }
+    }
+
+    template <typename R, typename F>
+    requires (... && std::invocable<F, Ts const&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) const& {
+        if constexpr (std::is_void_v<R>) {
+            this->visit(__RXX forward<F>(visitor));
+        } else {
+            return this->visit(__RXX forward<F>(visitor));
+        }
+    }
+
+    template <typename R, typename F>
+    requires (... && std::invocable<F, Ts &&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) && {
+        if constexpr (std::is_void_v<R>) {
+            __RXX move(*this).visit(__RXX forward<F>(visitor));
+        } else {
+            return __RXX move(*this).visit(__RXX forward<F>(visitor));
+        }
+    }
+
+    template <typename R, typename F>
+    requires (... && std::invocable<F, Ts const &&>)
+    __RXX_HIDE_FROM_ABI constexpr decltype(auto) visit(F&& visitor) const&& {
+        if constexpr (std::is_void_v<R>) {
+            __RXX move(*this).visit(__RXX forward<F>(visitor));
+        } else {
+            return __RXX move(*this).visit(__RXX forward<F>(visitor));
+        }
+    }
+
+#endif
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr bool operator==(variant const& right) const noexcept((... &&
+        noexcept(std::declval<Ts const&>() == std::declval<Ts const&>())))
+    requires (... && std::equality_comparable<Ts>)
+    {
+        return this->index() == right.index() &&
+            visit_table_for<variant>(
+                [&]<size_t I>(details::size_constant<I>) {
+                    if constexpr (I == variant_npos) {
+                        return true;
+                    } else {
+                        return this->template value_ref<I>() ==
+                            right.template value_ref<I>();
+                    }
+                },
+                this->index());
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto operator<=>(variant const& right) const noexcept
+    requires (... && std::three_way_comparable<Ts>)
+    {
+        using result = std::common_comparison_category<
+            std::compare_three_way_result_t<size_t>,
+            std::compare_three_way_result_t<Ts>...>;
+
+        auto cmp = this->index() <=> right.index();
+        if (cmp != 0) {
+            return [&]() -> result { return cmp; }();
+        }
+
+        return visit_table_for<variant>(
+            [&]<size_t I>(details::size_constant<I>) -> result {
+                if constexpr (I == variant_npos) {
+                    return 0 <=> 0;
+                } else {
+                    return this->template value_ref<I>() <=>
+                        right.template value_ref<I>();
+                }
+            },
+            this->index());
+    }
+};
 
 RXX_DEFAULT_NAMESPACE_END

@@ -155,9 +155,9 @@ RXX_DEFAULT_NAMESPACE_END
 #  define __cpp_lib_tuple_like 0
 #endif
 
-#if !RXX_CXX23
+#if !RXX_CXX23 || __cpp_lib_tuple_like < 202207L
 
-#  include "rxx/utility.h"
+#  include "rxx/utility/pair.h" // IWYU pragma: keep
 
 template <typename T1, typename T2, typename U1, typename U2,
     template <typename> class TQual, template <typename> class UQual>

@@ -19,6 +19,13 @@ template <size_t I, typename List>
 struct template_element {};
 
 template <size_t I, typename List>
+struct template_element<I, List const> : template_element<I, List> {};
+template <size_t I, typename List>
+struct template_element<I, List volatile> : template_element<I, List> {};
+template <size_t I, typename List>
+struct template_element<I, List const volatile> : template_element<I, List> {};
+
+template <size_t I, typename List>
 using template_element_t RXX_NODEBUG = typename template_element<I, List>::type;
 #  if RXX_COMPILER_CLANG
 RXX_DISABLE_WARNING_PUSH()
@@ -49,12 +56,28 @@ struct template_element<I, List<Head, Tail...>> :
 #endif
 template <typename List>
 inline constexpr size_t template_size_v = 0;
+template <typename List>
+inline constexpr size_t template_size_v<List const> = template_size_v<List>;
+template <typename List>
+inline constexpr size_t template_size_v<List volatile> = template_size_v<List>;
+template <typename List>
+inline constexpr size_t template_size_v<List const volatile> =
+    template_size_v<List>;
 
 template <template <typename...> class List, typename... Args>
 inline constexpr size_t template_size_v<List<Args...>> = sizeof...(Args);
 
 template <typename T, typename TList>
 inline constexpr size_t template_index_v = static_cast<size_t>(-1);
+template <typename T, typename List>
+inline constexpr size_t template_index_v<T, List const> =
+    template_index_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_index_v<T, List volatile> =
+    template_index_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_index_v<T, List const volatile> =
+    template_index_v<T, List>;
 
 template <typename T, template <typename...> class TList, typename... Tail>
 inline constexpr size_t template_index_v<T, TList<T, Tail...>> = 0;
@@ -66,6 +89,15 @@ inline constexpr size_t template_index_v<T, TList<Head, Tail...>> =
 
 template <typename T, typename TList>
 inline constexpr size_t template_count_v = 0;
+template <typename T, typename List>
+inline constexpr size_t template_count_v<T, List const> =
+    template_count_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_count_v<T, List volatile> =
+    template_count_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_count_v<T, List const volatile> =
+    template_count_v<T, List>;
 
 template <typename T, template <typename...> class List, typename... Args>
 inline constexpr size_t template_count_v<T, List<T, Args...>> =

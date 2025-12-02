@@ -5,7 +5,8 @@
 #include "rxx/config.h"
 
 #include "rxx/type_traits/common_reference.h"
-#include "rxx/utility.h"
+#include "rxx/utility/forward.h"
+#include "rxx/utility/sequence.h"
 
 #include <concepts>
 #include <functional>
@@ -266,5 +267,20 @@ public:
             __RXX forward<Args>(args)...);
     }
 };
+
+template <typename T>
+__RXX_HIDE_FROM_ABI inline constexpr auto iota_table_for = jump_table<size_t>{};
+
+template <template <typename...> class T, typename... Args>
+__RXX_HIDE_FROM_ABI inline constexpr auto iota_table_for<T<Args...>> =
+    []<size_t... Is>(__RXX index_sequence<Is...>) {
+        return jump_table<size_t, Is...>{};
+    }(__RXX index_sequence_for<Args...>{});
+
+template <size_t N>
+__RXX_HIDE_FROM_ABI inline constexpr auto iota_table =
+    []<size_t... Is>(__RXX index_sequence<Is...>) {
+        return jump_table<size_t, Is...>{};
+    }(__RXX make_index_sequence_v<N>);
 
 RXX_DEFAULT_NAMESPACE_END

@@ -8,7 +8,6 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
 #include "rxx/details/tuple_functions.h"
-#include "rxx/details/variant_base.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -16,6 +15,7 @@
 #include "rxx/ranges/primitives.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/tuple.h"
+#include "rxx/variant.h"
 
 #include <concepts>
 #include <type_traits>
@@ -244,8 +244,8 @@ template <bool Const>
 class concat_view<Vs...>::iterator :
     public details::concat_view_iterator_category<Const, Vs...> {
 private:
-    using base_iter = __RXX details::variant_base<
-        iterator_t<details::const_if<Const, Vs>>...>;
+    using base_iter =
+        __RXX variant<iterator_t<details::const_if<Const, Vs>>...>;
     friend concat_view;
 
     template <typename... Args>
@@ -282,10 +282,10 @@ public:
     requires (Const && ... &&
                  std::convertible_to<iterator_t<Vs>, iterator_t<Vs const>>)
         : parent_{other.parent_}
-        , it_{__RXX details::jump_table_for<base_iter>(
-              [&]<size_t I>(__RXX details::size_constant<I>) {
-                  return base_iter{std::in_place_index<I>,
-                      __RXX move(other.it_).template value_ref<I>()};
+        , it_{__RXX iota_table_for<base_iter>(
+              [&]<size_t I>(__RXX details::size_constant<I>) -> base_iter {
+                  return base_iter(std::in_place_index<I>,
+                      __RXX move(__RXX get<I>(other.it_)));
               },
               other.it_.index())} {}
 
@@ -296,11 +296,8 @@ public:
         -> decltype(auto) {
         using reference =
             details::concat_reference_t<details::const_if<Const, Vs>...>;
-        return __RXX details::jump_table_for<base_iter>(
-            [&]<size_t I>(__RXX details::size_constant<I>) -> reference {
-                return *it_.template value_ref<I>();
-            },
-            it_.index());
+        return __RXX visit<reference>(
+            [&](auto const& it) -> reference { return *it; }, it_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -312,7 +309,7 @@ public:
     }
 
     __RXX_HIDE_FROM_ABI constexpr iterator& operator++() {
-        __RXX details::jump_table_for<base_iter>(
+        __RXX iota_table_for<base_iter>(
             [&]<size_t I>(__RXX details::size_constant<I>) {
                 ++get_iter<I>();
                 satisfy<I>();
@@ -335,7 +332,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator& operator--()
     requires details::concat_is_bidirectional<Const, Vs...>
     {
-        __RXX details::jump_table_for<base_iter>(
+        __RXX iota_table_for<base_iter>(
             [&]<size_t I>(__RXX details::size_constant<I>) { prev<I>(); },
             it_.index());
         return *this;
@@ -352,7 +349,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator& operator+=(difference_type val)
     requires details::concat_is_random_access<Const, Vs...>
     {
-        __RXX details::jump_table_for<base_iter>(
+        __RXX iota_table_for<base_iter>(
             [&]<size_t I>(__RXX details::size_constant<I>) {
                 auto offset = get_iter<I>() - get_begin<I>();
                 if (val > 0) {
@@ -376,7 +373,7 @@ public:
     friend constexpr bool operator==(
         iterator const& left, std::default_sentinel_t) {
         return left.it_.index() == (sizeof...(Vs) - 1) &&
-            left.it_.template value_ref<sizeof...(Vs) - 1>() ==
+            __RXX get<sizeof...(Vs) - 1>(left.it_) ==
             left.template get_end<sizeof...(Vs) - 1>();
     }
 
@@ -395,10 +392,14 @@ public:
     {
         return left.it_.index() < right.it_.index() ||
             (left.it_.index() == right.it_.index() &&
-                __RXX details::jump_table_for<base_iter>(
+                __RXX visit_table_for<base_iter>(
                     [&]<size_t I>(__RXX details::size_constant<I>) {
-                        return left.it_.template value_ref<I>() <
-                            right.it_.template value_ref<I>();
+                        if constexpr (I == variant_npos) {
+                            return false;
+                        } else {
+                            return __RXX get<I>(left.it_) <
+                                __RXX get<I>(right.it_);
+                        }
                     },
                     left.it_.index()));
     }
@@ -475,30 +476,29 @@ public:
         }
 
         if (cmp == 0) {
-            return __RXX details::jump_table_for<base_iter>(
+            return __RXX iota_table_for<base_iter>(
                 [&]<size_t I>(
                     __RXX details::size_constant<I>) -> difference_type {
-                    return left.it_.template value_ref<I>() -
-                        right.it_.template value_ref<I>();
+                    return __RXX get<I>(left.it_) - __RXX get<I>(right.it_);
                 },
                 left.it_.index());
         }
 
-        return __RXX details::jump_table_for<base_iter>(
+        return __RXX iota_table_for<base_iter>(
             [&]<size_t Ix>(
                 __RXX details::size_constant<Ix>) -> difference_type {
                 if constexpr (Ix != 0) {
-                    return __RXX details::jump_table_for<base_iter>(
+                    return __RXX iota_table_for<base_iter>(
                         [&]<size_t Iy>
                         requires (Ix > Iy)
                         (__RXX details::size_constant<Iy>)
                             -> difference_type {
-                            auto const diff_y = ranges::distance(
-                                right.it_.template value_ref<Iy>(),
-                                right.template get_end<Iy>());
+                            auto const diff_y =
+                                ranges::distance( __RXX get<Iy>(right.it_),
+                                    right.template get_end<Iy>());
                             auto const diff_x =
                                 ranges::distance(left.template get_begin<Ix>(),
-                                    left.it_.template value_ref<Ix>());
+                                    __RXX get<Ix>(left.it_));
 
                             difference_type result = 0;
                             [&]<size_t... Is>(__RXX index_sequence<Is...>) {
@@ -527,13 +527,11 @@ public:
                      iterator_t<details::const_if<Const, Vs>>>) &&
         (details::all_but_first_sized_range<Const, Vs...>())
     {
-
-        return __RXX details::jump_table_for<base_iter>(
+        return __RXX iota_table_for<base_iter>(
             [&]<size_t Ix>(
                 __RXX details::size_constant<Ix>) -> difference_type {
-                auto const diff_x =
-                    ranges::distance(left.it_.template value_ref<Ix>(),
-                        left.template get_end<Ix>());
+                auto const diff_x = ranges::distance(
+                    __RXX get<Ix>(left.it_), left.template get_end<Ix>());
 
                 difference_type result = 0;
                 [&]<size_t... Is>(__RXX index_sequence<Is...>) {
@@ -569,9 +567,9 @@ public:
                     details::const_if<Const, Vs>...>>))) {
         using Ref =
             details::concat_rvalue_reference_t<details::const_if<Const, Vs>...>;
-        return __RXX details::jump_table_for<base_iter>(
+        return __RXX iota_table_for<base_iter>(
             [&]<size_t I>(__RXX details::size_constant<I>) -> Ref {
-                return ranges::iter_move(self.it_.template value_ref<I>());
+                return ranges::iter_move(__RXX get<I>(self.it_));
             },
             self.it_.index());
     }
@@ -584,18 +582,18 @@ public:
         (... &&
             std::indirectly_swappable<iterator_t<details::const_if<Const, Vs>>>)
     {
-        __RXX details::jump_table_for<base_iter>(
+        __RXX iota_table_for<base_iter>(
             [&]<size_t Ix>(__RXX details::size_constant<Ix>) {
-                __RXX details::jump_table_for<base_iter>(
+                __RXX iota_table_for<base_iter>(
                     [&]<size_t Iy>(__RXX details::size_constant<Iy>) {
                         if constexpr (std::is_same_v<
                                           template_element_t<Ix, base_iter>,
                                           template_element_t<Iy, base_iter>>) {
-                            ranges::iter_swap(left.it_.template value_ref<Ix>(),
-                                right.it_.template value_ref<Iy>());
+                            ranges::iter_swap(__RXX get<Ix>(left.it_),
+                                __RXX get<Iy>(right.it_));
                         } else {
-                            ranges::swap(*left.it_.template value_ref<Ix>(),
-                                *right.it_.template value_ref<Iy>());
+                            ranges::swap(*__RXX get<Ix>(left.it_),
+                                *__RXX get<Iy>(right.it_));
                         }
                     },
                     right.it_.index());
@@ -607,7 +605,7 @@ private:
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto get_iter() noexcept -> decltype(auto) {
-        return it_.template value_ref<I>();
+        return __RXX get<I>(it_);
     }
     template <size_t I>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -640,7 +638,7 @@ private:
     __RXX_HIDE_FROM_ABI constexpr void satisfy() {
         if constexpr (I < sizeof...(Vs) - 1) {
             if (get_iter<I>() == get_end<I>()) {
-                it_.template reinitialize_value<I + 1>(get_begin<I + 1>());
+                it_.template emplace<I + 1>(get_begin<I + 1>());
                 satisfy<I + 1>();
             }
         }
@@ -651,7 +649,7 @@ private:
         if constexpr (I == 0) {
             --get_iter<0>();
         } else if (get_iter<I>() == get_begin<I>()) {
-            it_.template reinitialize_value<I - 1>(get_end<I - 1>());
+            it_.template emplace<I - 1>(get_end<I - 1>());
             prev<I - 1>();
         } else {
             --get_iter<I>();
@@ -668,7 +666,7 @@ private:
             if (offset + steps < n_size)
                 get_iter<I>() += to_underlying_diff_type<I>(steps);
             else {
-                it_.template reinitialize_value<I + 1>(get_begin<I + 1>());
+                it_.template emplace<I + 1>(get_begin<I + 1>());
                 advance_fwd<I + 1>(0, offset + steps - n_size);
             }
         }
@@ -683,7 +681,7 @@ private:
             get_iter<I>() -= to_underlying_diff_type<I>(steps);
         } else {
             auto prev_size = ranges::distance(get_view<I - 1>());
-            it_.template reinitialize_value<I - 1>(get_end<I - 1>());
+            it_.template emplace<I - 1>(get_end<I - 1>());
             advance_bwd<I - 1>(prev_size, steps - offset);
         }
     }
