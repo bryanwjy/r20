@@ -5,6 +5,28 @@
 
 #include "rxx/type_traits/copy_cvref.h"
 
+// IWYU pragma: begin_exports
+#if RXX_LIBCXX
+
+#  if __has_include(<__type_traits/common_reference.h>)
+#    include <__type_traits/common_reference.h>
+#  else
+#    include <type_traits>
+#  endif
+
+#  if __has_include(<__type_traits/common_type.h>)
+#    include <__type_traits/common_type.h>
+#  else
+#    include <type_traits>
+#  endif
+
+#else
+
+#  include <type_traits>
+
+#endif
+// IWYU pragma: end_exports
+
 #include <concepts>
 #include <type_traits>
 

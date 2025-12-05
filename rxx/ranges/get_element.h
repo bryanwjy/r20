@@ -3,9 +3,9 @@
 
 #include "rxx/config.h"
 
+#include "rxx/tuple/traits.h"
 #include "rxx/utility.h"
 
-#include <array>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN

@@ -4,11 +4,9 @@
 #include "rxx/config.h"
 
 #include "rxx/ranges/get_element.h"
+#include "rxx/tuple/traits.h"
 #include "rxx/type_traits/common_reference.h"
 #include "rxx/type_traits/template_access.h"
-
-#include <array>
-#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 template <typename...>

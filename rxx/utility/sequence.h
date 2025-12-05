@@ -4,10 +4,29 @@
 
 #include "rxx/config.h"
 
+#include "rxx/utility/forward.h"
+
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 template <typename T, T... Is>
-struct integer_sequence {};
+struct integer_sequence {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    static constexpr auto size() noexcept { return sizeof...(Is); }
+};
+
+#if RXX_HAS_BUILTIN(__make_integer_seq)
+
+template <typename T, T N>
+using make_integer_sequence RXX_NODEBUG =
+    __make_integer_seq<__RXX integer_sequence, T, N>;
+
+#elif RXX_HAS_BUILTIN(__integer_pack)
+
+template <typename T, T N>
+using make_integer_sequence RXX_NODEBUG =
+    __RXX integer_sequence<T, __integer_pack(N)...>;
+
+#else
 
 namespace details {
 
@@ -46,8 +65,9 @@ struct generate :
 } // namespace details
 
 template <typename T, T N>
-using make_integer_sequence =
+using make_integer_sequence RXX_NODEBUG =
     typename details::generate<T, (N < 0) ? 0 : N>::type;
+#endif
 
 template <size_t... Is>
 using index_sequence = integer_sequence<size_t, Is...>;
@@ -64,5 +84,17 @@ template <size_t N>
 inline constexpr make_index_sequence<N> make_index_sequence_v{};
 template <typename... Ts>
 inline constexpr index_sequence_for<Ts...> index_sequence_for_v{};
+
+template <size_t... Is, typename F>
+__RXX_HIDE_FROM_ABI constexpr void for_each_index_sequence(
+    index_sequence<Is...>, F callable) {
+    (callable.template operator()<Is>(), ...);
+}
+
+template <size_t N, typename F>
+__RXX_HIDE_FROM_ABI constexpr void for_each_index_sequence(F&& callable) {
+    for_each_index_sequence(
+        make_index_sequence_v<N>, __RXX forward<F>(callable));
+}
 
 RXX_DEFAULT_NAMESPACE_END

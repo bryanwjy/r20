@@ -2,6 +2,7 @@
 #pragma once
 
 // IWYU pragma: begin_exports
+#include "rxx/ranges/get_element.h"
 #include "rxx/tuple/apply.h"
 #include "rxx/tuple/cat.h"
 #include "rxx/tuple/cmp.h"
