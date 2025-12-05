@@ -102,26 +102,19 @@ protected:
                 this->template get_data<Is>(), other.template get_data<Is>()));
     }
 
-#if RXX_COMPILER_CLANG
-    RXX_DISABLE_WARNING_PUSH()
-    RXX_DISABLE_WARNING("-Wunused-value")
-#endif
     template <typename... Us>
     requires (sizeof...(Us) == element_count)
     __RXX_HIDE_FROM_ABI constexpr D& assign(Us&&... others) {
-        (..., (this->template get_data<Is>() == std::forward<Us>(others)));
+        (..., (this->template get_data<Is>() = std::forward<Us>(others)));
         return static_cast<D&>(*this);
     }
 
     template <typename... Us>
     requires (sizeof...(Us) == element_count)
     __RXX_HIDE_FROM_ABI constexpr D const& assign(Us&&... others) const {
-        (..., (this->template get_data<Is>() == std::forward<Us>(others)));
+        (..., (this->template get_data<Is>() = std::forward<Us>(others)));
         return static_cast<D const&>(*this);
     }
-#if RXX_COMPILER_CLANG
-    RXX_DISABLE_WARNING_POP()
-#endif
 
 private:
     template <size_t I>
