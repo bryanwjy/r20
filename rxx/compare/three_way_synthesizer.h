@@ -8,7 +8,6 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-namespace details {
 inline constexpr struct three_way_synthesizer_t {
 private:
     template <typename L, typename R>
@@ -17,9 +16,9 @@ private:
             return noexcept(
                 std::declval<L const&>() <=> std::declval<R const&>());
         } else {
-            return noexcept(std::declval<L const&>() <
-                std::declval<R const&>())&& noexcept(std::declval<R const&>() <
-                std::declval<L const&>());
+            return noexcept(
+                       std::declval<L const&>() < std::declval<R const&>()) &&
+                noexcept(std::declval<R const&>() < std::declval<L const&>());
         }
     }
 
@@ -29,9 +28,9 @@ public:
         left < right ? true : false;
         right < left ? false : true;
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(L const& left, R const& right) RXX_CONST_CALL
-        noexcept(nothrow_call<L, R>()) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(L const& left,
+        R const& right) RXX_CONST_CALL noexcept(nothrow_call<L, R>()) {
         if constexpr (std::three_way_comparable_with<L, R>) {
             return left <=> right;
         } else {
@@ -48,6 +47,5 @@ public:
 
 template <typename L, typename R>
 using three_way_result_t = std::invoke_result_t<three_way_synthesizer_t, L, R>;
-} // namespace details
 
 RXX_DEFAULT_NAMESPACE_END

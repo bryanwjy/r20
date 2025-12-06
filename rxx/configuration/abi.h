@@ -68,11 +68,11 @@ static_assert(true, RXX_DEFAULT_ABI_TAG);
 #  define __RXX_ATTRIBUTE__PUBLIC_TEMPLATE (VISIBILITY("default"))
 #  define __RXX_ATTRIBUTE_TYPE_AGGREGATE__PUBLIC_TEMPLATE
 #  define __RXX_PUBLIC_TYPE_VISIBILITY
-#  define __RXX_PRIVTAE_TYPE_VISIBILITY
+#  define __RXX_PRIVATE_TYPE_VISIBILITY
 #else
 #  define __RXX_PUBLIC_TYPE_VISIBILITY \
       __attribute__((__type_visibility__("default")))
-#  define __RXX_PRIVTAE_TYPE_VISIBILITY \
+#  define __RXX_PRIVATE_TYPE_VISIBILITY \
       __attribute__((__type_visibility__("hidden")))
 #  define __RXX_PUBLIC_TEMPLATE
 #  define __RXX_ATTRIBUTE__PUBLIC_TEMPLATE

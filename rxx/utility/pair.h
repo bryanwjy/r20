@@ -27,21 +27,17 @@ operator==(pair<L1, L2> const& left, pair<R1, R2> const& right) noexcept(
 
 template <typename L1, typename L2, typename R1, typename R2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr std::common_comparison_category_t<
-    __RXX details::three_way_result_t<L1, R1>,
-    __RXX details::three_way_result_t<L2, R2>>
+constexpr std::common_comparison_category_t< __RXX three_way_result_t<L1, R1>,
+    __RXX three_way_result_t<L2, R2>>
 operator<=>(pair<L1, L2> const& left, pair<R1, R2> const& right) noexcept(
-    std::is_nothrow_invocable_v<__RXX details::three_way_synthesizer_t, L1,
-        R1> &&
-    std::is_nothrow_invocable_v<__RXX details::three_way_synthesizer_t, L2,
-        R2>) {
-    if (auto const cmp =
-            __RXX details::three_way_synthesizer(left.first, right.first);
+    std::is_nothrow_invocable_v<__RXX three_way_synthesizer_t, L1, R1> &&
+    std::is_nothrow_invocable_v<__RXX three_way_synthesizer_t, L2, R2>) {
+    if (auto const cmp = __RXX three_way_synthesizer(left.first, right.first);
         cmp != 0) {
         return cmp;
     }
 
-    return __RXX details::three_way_synthesizer(left.second, right.second);
+    return __RXX three_way_synthesizer(left.second, right.second);
 }
 
 RXX_STD_NAMESPACE_END

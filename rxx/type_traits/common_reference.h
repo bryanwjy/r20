@@ -177,7 +177,31 @@ RXX_DEFAULT_NAMESPACE_END
 #  define __cpp_lib_tuple_like 0
 #endif
 
-#if !RXX_CXX23 || __cpp_lib_tuple_like < 202207L
+#if !RXX_CXX23
+#  define __RXX_DEFINES_COMMON_PAIR
+#elif RXX_LIBSTDCXX
+#  ifndef __glibcxx_ranges_zip
+#    define __RXX_DEFINES_COMMON_PAIR
+#  else
+#    if !__glibcxx_ranges_zip
+#      define __RXX_DEFINES_COMMON_PAIR
+#    endif
+#  endif
+#elif RXX_LIBCXX
+#  if !RXX_LIBCXX_AT_LEAST(15, 0, 0)
+#    define __RXX_DEFINES_COMMON_PAIR
+#  endif
+#else
+#  ifndef __cpp_lib_ranges_zip
+#    define __RXX_DEFINES_COMMON_PAIR
+#  else
+#    if __cpp_lib_ranges_zip < 202110L
+#      define __RXX_DEFINES_COMMON_PAIR
+#    endif
+#  endif
+#endif
+
+#ifdef __RXX_DEFINES_COMMON_PAIR
 
 #  include "rxx/utility/pair.h" // IWYU pragma: keep
 
@@ -202,4 +226,8 @@ struct std::common_type<std::pair<T1, T2>, std::pair<U1, U2>> {
         std::pair<std::common_type_t<T1, U1>, std::common_type_t<T2, U2>>;
 };
 
+#endif
+
+#ifdef __RXX_DEFINES_COMMON_PAIR
+#  undef __RXX_DEFINES_COMMON_PAIR
 #endif
