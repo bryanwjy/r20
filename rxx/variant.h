@@ -5,6 +5,7 @@
 #include "rxx/utility/monostate.h"
 #include "rxx/variant/bad_variant_access.h"
 #include "rxx/variant/get.h"
+#include "rxx/variant/hash.h"
 #include "rxx/variant/helpers.h"
 #include "rxx/variant/variant.h"
 #include "rxx/variant/visit.h"
