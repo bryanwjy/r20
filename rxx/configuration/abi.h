@@ -10,16 +10,11 @@
 #include "rxx/preprocessor/concatenation.h" // IWYU pragma: keep
 #include "rxx/preprocessor/to_string.h"
 
-#define RXX_ABI_MAJOR 0
-#define RXX_ABI_MINOR 1
-
-#ifndef RXX_DEFAULT_ABI_TAG
-#  define RXX_DEFAULT_ABI_TAG \
-      RXX_TO_STRING(RXX)      \
-      RXX_TO_STRING(RXX_ABI_MAJOR) RXX_TO_STRING(_) RXX_TO_STRING(RXX_ABI_MINOR)
+#ifndef RXX_DEFAULT_ABI_PREFIX
+#  define RXX_DEFAULT_ABI_PREFIX RXX_TO_STRING(RXX)
 #  if RXX_CXX
 /* Ensure that the default tag is a string */
-static_assert(true, RXX_DEFAULT_ABI_TAG);
+static_assert(true, RXX_DEFAULT_ABI_PREFIX);
 #  endif
 #endif
 
@@ -84,8 +79,8 @@ static_assert(true, RXX_DEFAULT_ABI_TAG);
 #define __RXX_ABI_TAG_DELIMITER "_"
 #define __RXX_ODR_SIGNATURE_1(_0, _1, _2) _0##_1##_2
 #define __RXX_ODR_SIGNATURE_0(_0, _1, _2) _0 _1 _2
-#define __RXX_ODR_SIGNATURE                                     \
-    RXX_DEFAULT_ABI_TAG "_" RXX_TO_STRING(__RXX_HARDENING_MODE) \
+#define __RXX_ODR_SIGNATURE                                        \
+    RXX_DEFAULT_ABI_PREFIX "_" RXX_TO_STRING(__RXX_HARDENING_MODE) \
         RXX_TO_STRING(__RXX_ABI_EXCEPTION_TAG)
 
 #if RXX_HAS_GNU_ATTRIBUTE(__exclude_from_explicit_instantiation__)
@@ -131,7 +126,7 @@ static_assert(true, RXX_DEFAULT_ABI_TAG);
 #  error Undefined exception tag
 #endif
 
-/* TODO */
+/* Currently no other hardening mode */
 #define __RXX_HARDENING_MODE n
 
 #if RXX_CXX

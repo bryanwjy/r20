@@ -6,6 +6,7 @@
 
 #include "rxx/variant/fwd.h"
 
+#include "rxx/concepts/generatable.h"
 #include "rxx/concepts/swap.h"
 #include "rxx/functional/invoke_r.h"
 #include "rxx/memory/construct_at.h"
@@ -46,16 +47,16 @@ using size_constant = std::integral_constant<size_t, I>;
 template <typename...>
 union multi_union;
 
-struct valueless_t {
-    __RXX_HIDE_FROM_ABI explicit constexpr valueless_t() noexcept = default;
+struct valueless_var_t {
+    __RXX_HIDE_FROM_ABI explicit constexpr valueless_var_t() noexcept = default;
 };
 
-struct dispatch_t {
-    __RXX_HIDE_FROM_ABI explicit constexpr dispatch_t() noexcept = default;
+struct dispatch_var_t {
+    __RXX_HIDE_FROM_ABI explicit constexpr dispatch_var_t() noexcept = default;
 };
 
-inline constexpr valueless_t valueless{};
-inline constexpr dispatch_t dispatch{};
+inline constexpr valueless_var_t valueless_var{};
+inline constexpr dispatch_var_t dispatch_var{};
 
 template <typename Head, typename... Tail>
 union multi_union<Head, Tail...> {
@@ -385,22 +386,6 @@ inline constexpr bool is_tag_v<__RXX generating_type_t<T>> = true;
 template <size_t I>
 inline constexpr bool is_tag_v<__RXX generating_index_t<I>> = true;
 
-template <typename T, typename F, typename... Args>
-concept generatable_from =
-    std::invocable<F> && requires(T* ptr, F&& func, Args&&... args) {
-        ::new (ptr) T(std::invoke(
-            __RXX forward<F>(func), __RXX forward<Args>(args)...));
-    };
-
-template <typename T, typename F, typename... Args>
-concept nothrow_generatable_from = generatable_from<T, F, Args...> &&
-    requires(T* ptr, F&& func, Args&&... args) {
-        {
-            ::new (ptr) T(std::invoke(
-                __RXX forward<F>(func), __RXX forward<Args>(args)...))
-        } noexcept;
-    };
-
 template <typename... Ts>
 class variant_base;
 
@@ -416,7 +401,7 @@ class variant_base {
     static_assert((... && !std::is_reference_v<Ts>), "Invalid type");
     static_assert((... && !std::is_function_v<Ts>), "Invalid type");
     static_assert((... && !is_tag_v<Ts>), "Invalid type");
-    using union_type = multi_union<Ts..., valueless_t>;
+    using union_type = multi_union<Ts..., valueless_var_t>;
     using index_type = unsigned char;
 
     static_assert(
@@ -458,7 +443,7 @@ class variant_base {
             , index_(I) {}
 
         template <typename U>
-        __RXX_HIDE_FROM_ABI constexpr container(dispatch_t, size_t index,
+        __RXX_HIDE_FROM_ABI constexpr container(dispatch_var_t, size_t index,
             U&& arg) noexcept(noexcept(make_from_multi_union<union_type>(index,
             std::declval<U>())))
         requires (allow_external_overlap)
@@ -605,7 +590,7 @@ public:
         std::is_nothrow_copy_constructible_v<Ts>))
     requires ((... && std::is_copy_constructible_v<Ts>) &&
         !(... && std::is_trivially_copy_constructible_v<Ts>))
-        : variant_base(dispatch, other.base_index(), other.union_ref()) {}
+        : variant_base(dispatch_var, other.base_index(), other.union_ref()) {}
 
     __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) = delete;
     __RXX_HIDE_FROM_ABI constexpr variant_base(variant_base&&) noexcept
@@ -616,8 +601,8 @@ public:
         (... && std::is_nothrow_move_constructible_v<Ts>))
     requires ((... && std::is_move_constructible_v<Ts>) &&
         !(... && std::is_trivially_move_constructible_v<Ts>))
-        : variant_base(
-              dispatch, other.base_index(), __RXX move(other.union_ref())) {}
+        : variant_base(dispatch_var, other.base_index(),
+              __RXX move(other.union_ref())) {}
 
     __RXX_HIDE_FROM_ABI constexpr variant_base& operator=(
         variant_base const&) = delete;
@@ -642,7 +627,7 @@ public:
             iota_table_for<union_type>(
                 [&]<size_t I>(size_constant<I>) {
                     using i_type = template_element_t<I, union_type>;
-                    if constexpr (std::same_as<i_type, valueless_t>) {
+                    if constexpr (std::same_as<i_type, valueless_var_t>) {
                         this->reinitialize_value<I>();
                     } else if constexpr (std::is_nothrow_copy_constructible_v<
                                              i_type> ||
@@ -747,7 +732,7 @@ protected:
 
         destroy();
         if constexpr (std::is_nothrow_constructible_v<target_type,
-                          std::initializer_list<U>, Args...>) {
+                          std::initializer_list<U>&, Args...>) {
             return construct_value<I>(ilist, __RXX forward<Args>(args)...);
         } else RXX_TRY {
             return construct_value<I>(ilist, __RXX forward<Args>(args)...);
@@ -843,14 +828,14 @@ protected:
     }
 
     template <typename U>
-    __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_t tag, size_t index,
-        U&& arg) noexcept(std::is_nothrow_constructible_v<container, dispatch_t,
-        size_t, U>)
+    __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_var_t tag, size_t index,
+        U&& arg) noexcept(std::is_nothrow_constructible_v<container,
+        dispatch_var_t, size_t, U>)
     requires (allow_external_overlap)
         : container_{std::in_place, tag, index, __RXX forward<U>(arg)} {}
 
     template <typename U>
-    __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_t, size_t index,
+    __RXX_HIDE_FROM_ABI constexpr variant_base(dispatch_var_t, size_t index,
         U&& arg) noexcept(noexcept(make_container(index, std::declval<U>())))
     requires (place_index_in_tail)
         : container_{generating,
@@ -1035,14 +1020,14 @@ public:
 
     template <typename U, typename... Args>
     requires (template_count_v<U, variant> == 1) &&
-        std::constructible_from<U, Args...>
+        std::is_constructible_v<U, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit variant(std::in_place_type_t<U> tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<U, Args...>)
         : base_type(tag, __RXX forward<Args>(args)...) {}
 
     template <typename U, typename V, typename... Args>
     requires (template_count_v<U, variant> == 1) &&
-        std::constructible_from<U, std::initializer_list<V>, Args...>
+        std::is_constructible_v<U, std::initializer_list<V>, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit variant(std::in_place_type_t<U> tag,
         std::initializer_list<V> ilist,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<U,
@@ -1051,7 +1036,7 @@ public:
 
     template <size_t I, typename... Args>
     requires (I < sizeof...(Ts)) &&
-        std::constructible_from<template_element_t<I, variant>, Args...>
+        std::is_constructible_v<template_element_t<I, variant>, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit variant(
         std::in_place_index_t<I> tag, Args&&... args) noexcept(std::
             is_nothrow_constructible_v<template_element_t<I, variant>, Args...>)
@@ -1059,12 +1044,12 @@ public:
 
     template <size_t I, typename U, typename... Args>
     requires (I < sizeof...(Ts)) &&
-        std::constructible_from<template_element_t<I, variant>,
-            std::initializer_list<U>, Args...>
+        std::is_constructible_v<template_element_t<I, variant>,
+            std::initializer_list<U>&, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit variant(std::in_place_index_t<I> tag,
         std::initializer_list<U> ilist, Args&&... args) noexcept(std::
             is_nothrow_constructible_v<template_element_t<I, variant>,
-                std::initializer_list<U>, Args...>)
+                std::initializer_list<U>&, Args...>)
         : base_type(tag, ilist, __RXX forward<Args>(args)...) {}
 
     template <typename U, typename F, typename... Args>
@@ -1141,7 +1126,7 @@ public:
     }
 
     template <typename T, typename... Args>
-    requires std::constructible_from<T, Args...> &&
+    requires std::is_constructible_v<T, Args...> &&
         (template_count_v<T, variant> == 1)
     __RXX_HIDE_FROM_ABI constexpr T& emplace(Args&&... args) noexcept(
         std::is_nothrow_constructible_v<T, Args...>) {
@@ -1150,7 +1135,7 @@ public:
     }
 
     template <typename T, typename U, typename... Args>
-    requires std::constructible_from<T, std::initializer_list<U>, Args...> &&
+    requires std::is_constructible_v<T, std::initializer_list<U>&, Args...> &&
         (template_count_v<T, variant> == 1)
     __RXX_HIDE_FROM_ABI constexpr T& emplace(std::initializer_list<U> ilist,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
@@ -1160,7 +1145,7 @@ public:
 
     template <size_t I, typename... Args>
     requires (I < sizeof...(Ts)) &&
-        std::constructible_from<template_element_t<I, variant>, Args...>
+        std::is_constructible_v<template_element_t<I, variant>, Args...>
     __RXX_HIDE_FROM_ABI constexpr template_element_t<I, variant>&
     emplace(Args&&... args) noexcept(
         std::is_nothrow_constructible_v<template_element_t<I, variant>,
@@ -1171,8 +1156,8 @@ public:
 
     template <size_t I, typename U, typename... Args>
     requires (I < sizeof...(Ts)) &&
-        std::constructible_from<template_element_t<I, variant>,
-            std::initializer_list<U>, Args...>
+        std::is_constructible_v<template_element_t<I, variant>,
+            std::initializer_list<U>&, Args...>
     __RXX_HIDE_FROM_ABI constexpr template_element_t<I, variant>&
     emplace(std::initializer_list<U> ilist, Args&&... args) noexcept(
         std::is_nothrow_constructible_v<template_element_t<I, variant>,

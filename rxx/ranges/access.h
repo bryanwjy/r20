@@ -108,16 +108,16 @@ public:
 
     template <typename T>
     requires member_begin<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(__RXX_AUTOCAST(arg.begin()))) {
         return __RXX_AUTOCAST(arg.begin());
     }
 
     template <typename T>
     requires unqualified_begin<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(__RXX_AUTOCAST(begin(arg)))) {
         return __RXX_AUTOCAST(begin(arg));
     }
@@ -253,8 +253,8 @@ struct cbegin_t {
     } || requires(T&& arg) {
         __RXX make_const_iterator(ranges::begin(possibly_const_range(arg)));
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL noexcept(
         std::same_as<decltype(ranges::begin(possibly_const_range(arg))),
             const_iterator<iterator_t<decltype(possibly_const_range(arg))>>>
             ? noexcept(ranges::begin(possibly_const_range(arg)))
@@ -285,8 +285,8 @@ struct cend_t {
     } || requires(T&& arg) {
         __RXX make_const_sentinel(ranges::end(possibly_const_range(arg)));
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL noexcept(
         std::same_as<decltype(ranges::end(possibly_const_range(arg))),
             const_sentinel<sentinel_t<decltype(possibly_const_range(arg))>>>
             ? noexcept(ranges::end(possibly_const_range(arg)))
@@ -393,8 +393,9 @@ namespace details {
 struct ssize_t {
     template <typename T>
     requires requires(T&& arg) { ranges::size(arg); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(noexcept(ranges::size(arg))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
+        noexcept(noexcept(ranges::size(arg))) {
         using signed_type = std::make_signed_t<decltype(ranges::size(arg))>;
         if constexpr (sizeof(ptrdiff_t) > sizeof(signed_type)) {
             return static_cast<ptrdiff_t>(ranges::size(arg));
@@ -570,8 +571,8 @@ struct crbegin_t {
     } || requires(T&& arg) {
         __RXX make_const_iterator(ranges::rbegin(possibly_const_range(arg)));
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL noexcept(
         std::same_as<decltype(ranges::rbegin(possibly_const_range(arg))),
             const_iterator<riterator_t<decltype(possibly_const_range(arg))>>>
             ? noexcept(ranges::rbegin(possibly_const_range(arg)))
@@ -606,8 +607,8 @@ struct crend_t {
     } || requires(T&& arg) {
         __RXX make_const_sentinel(ranges::rend(possibly_const_range(arg)));
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL noexcept(
         std::same_as<decltype(ranges::rend(possibly_const_range(arg))),
             const_sentinel<rsentinel_t<decltype(possibly_const_range(arg))>>>
             ? noexcept(ranges::rend(possibly_const_range(arg)))
@@ -633,8 +634,8 @@ constexpr auto as_const_pointer(T const* ptr) noexcept {
 struct cdata_t {
     template <borrowable T>
     requires range<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL
         noexcept(noexcept(ranges::data(possibly_const_range(arg))))
     requires requires {
         as_const_pointer(ranges::data(possibly_const_range(arg)));
@@ -662,8 +663,8 @@ concept unqualified_reserve_hint =
 struct reserve_hint_t {
     template <borrowable T>
     requires size_invocable_only<T>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(T&& arg) RXX_CONST_CALL noexcept {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(T&& arg) RXX_CONST_CALL noexcept {
         return ranges::size(arg);
     }
 
