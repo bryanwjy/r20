@@ -4,35 +4,10 @@
 
 #include "rxx/config.h"
 
+#include "rxx/functional/hash.h"
 #include "rxx/type_traits/template_access.h"
 #include "rxx/utility/jump_table.h"
 #include "rxx/variant/variant.h"
-
-#if RXX_LIBSTDCXX
-#  if __has_include(<bits/functional_hash.h>)
-#    include <bits/functional_hash.h>
-#  else
-RXX_STD_NAMESPACE_BEGIN
-template <typename>
-struct hash;
-RXX_STD_NAMESPACE_END
-#  endif
-#elif RXX_LIBCXX
-
-#  if __has_include(<__functional/hash.h>)
-#    include <__functional/hash.h>
-#  else
-RXX_STD_NAMESPACE_BEGIN
-template <typename>
-struct hash;
-RXX_STD_NAMESPACE_END
-#  endif
-#else
-RXX_STD_NAMESPACE_BEGIN
-template <typename>
-struct hash;
-RXX_STD_NAMESPACE_END
-#endif
 
 template <typename... Ts>
 requires (... && std::semiregular<std::hash<std::remove_cv_t<Ts>>>) &&

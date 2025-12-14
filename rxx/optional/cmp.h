@@ -5,6 +5,7 @@
 
 #include "rxx/concepts/comparable.h"
 #include "rxx/optional/nullopt.h"
+#include "rxx/optional/optional.h"
 
 #include <compare>
 
@@ -172,7 +173,10 @@ constexpr bool operator>=(L const& lhs, optional<R> const& rhs) noexcept(
     return !rhs.has_value() || lhs >= *rhs;
 }
 
-template <typename L, std::three_way_comparable_with<L> R>
+template <typename L, typename R>
+requires (!requires(R const& arg) {
+    []<typename T>(optional<T> const&) {}(arg);
+}) && std::three_way_comparable_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr std::compare_three_way_result_t<L, R> operator<=>(
     optional<L> const& lhs, R const& rhs) noexcept(noexcept(*lhs <=> rhs)) {
@@ -251,10 +255,9 @@ constexpr bool operator>=(__RXX nullopt_t, optional<T> const& opt) noexcept {
     return !opt.has_value();
 }
 
-template <typename L, std::three_way_comparable_with<L> R>
+template <typename L>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr std::compare_three_way_result_t<L, R> operator<=>(
-    optional<L> const& opt, __RXX nullopt_t) noexcept {
+constexpr auto operator<=>(optional<L> const& opt, __RXX nullopt_t) noexcept {
     return opt.has_value() <=> false;
 }
 
