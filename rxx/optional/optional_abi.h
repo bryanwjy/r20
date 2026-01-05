@@ -6,7 +6,7 @@
 // IWYU pragma: always_keep
 
 #ifndef RXX_OPTIONAL_ABI_INTEROP
-#  define RXX_OPTIONAL_ABI_INTEROP 1
+#  define RXX_OPTIONAL_ABI_INTEROP 0
 #endif
 
 #ifndef RXX_OPTIONAL_NUA_ABI

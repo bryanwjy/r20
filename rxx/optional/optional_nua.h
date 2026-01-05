@@ -103,6 +103,11 @@ using optional_base = optional_storage<T, opt_union>;
 
 __RXX_INLINE_IF_NUA_ABI
 namespace nua {
+/**
+ * Warning: the no_unique_address implementation may be compiler dependent. It
+ * is NOT recommended to interoperate nua::optional between MSVC and any other
+ * compilers.
+ */
 template <typename T>
 class RXX_ATTRIBUTE(EMPTY_BASES) optional :
     private details::nua::optional_base<T>,

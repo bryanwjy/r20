@@ -1052,6 +1052,10 @@ public:
                 std::initializer_list<U>&, Args...>)
         : base_type(tag, ilist, __RXX forward<Args>(args)...) {}
 
+    // Unfortunately, GCC does not perform RVO on these generating constructors
+    // due to a compiler limitation; RVO is disabled for members declared with
+    // no_unique_address. As a result, non-copyable-movable types cannot be
+    // generated.
     template <typename U, typename F, typename... Args>
     requires (template_count_v<U, variant> == 1) &&
         details::generatable_from<U, F, Args...>
