@@ -5,13 +5,13 @@
 
 #include "rxx/algorithm/return_types.h"
 #include "rxx/iterator.h"
+#include "rxx/optional.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/borrow_traits.h"
 #include "rxx/utility.h"
 
 #include <concepts>
 #include <functional>
-#include <optional>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
@@ -104,12 +104,12 @@ protected:
         using SecondType = decltype(fold_left_t{}(
             __RXX move(first), last, iter_value_t<I>(*first), func));
         using Result = ranges::fold_left_first_with_iter_result<O,
-            std::optional<SecondType>>;
+            __RXX optional<SecondType>>;
         if (first == last) {
-            return Result{__RXX move(first), std::optional<SecondType>()};
+            return Result{__RXX move(first), __RXX optional<SecondType>()};
         }
 
-        std::optional<SecondType> init(std::in_place, *first);
+        __RXX optional<SecondType> init(std::in_place, *first);
         for (++first; first != last; ++first) {
             *init = std::invoke(func, __RXX move(*init), *first);
         }
@@ -219,11 +219,11 @@ private:
             first, last, iter_value_t<I>(*first), __RXX move(func)));
 
         if (first == last) {
-            return std::optional<Result>();
+            return __RXX optional<Result>();
         }
 
         I tail = ranges::prev(ranges::next(first, __RXX move(last)));
-        return std::optional<Result>(std::in_place,
+        return __RXX optional<Result>(std::in_place,
             fold_right_t::impl(__RXX move(first), tail,
                 iter_value_t<I>(*tail), __RXX move(func)));
     }
