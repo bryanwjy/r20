@@ -3,6 +3,7 @@
 
 #include "rxx/config.h"
 
+#include "rxx/concepts/generatable.h"
 #include "rxx/utility.h"
 
 #include <concepts>
@@ -32,17 +33,17 @@ struct overlappable_if {
     __RXX_HIDE_FROM_ABI explicit(details::explicit_default_constructible<
         T>) constexpr overlappable_if() noexcept(std::
             is_nothrow_default_constructible_v<T>)
-    requires std::default_initializable<T>
+    requires std::is_default_constructible_v<T>
     = default;
 
     template <typename... Args>
-    requires std::constructible_from<T, Args...>
+    requires std::is_constructible_v<T, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         std::in_place_t, Args&&... args)
         : data(__RXX forward<Args>(args)...) {}
 
     template <typename F, typename... Args>
-    requires std::regular_invocable<F, Args...>
+    requires details::generatable_from<T, F, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         generating_t, F&& f, Args&&... args)
         : data(std::invoke(
@@ -67,7 +68,7 @@ struct overlappable_if<false, T> {
         : data(__RXX forward<Args>(args)...) {}
 
     template <typename F, typename... Args>
-    requires std::regular_invocable<F, Args...>
+    requires details::generatable_from<T, F, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         generating_t, F&& f, Args&&... args)
         : data(std::invoke(

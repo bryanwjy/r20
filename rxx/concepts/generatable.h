@@ -6,6 +6,7 @@
 #include "rxx/utility/forward.h"
 
 #include <concepts>
+#include <new> // IWYU pragma: keep
 
 #if RXX_HAS_BUILTIN(__builtin_invoke)
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -13,7 +14,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace details {
 template <typename T, typename F, typename... Args>
 concept generatable_from =
-    std::invocable<F> && requires(T* ptr, F&& func, Args&&... args) {
+    std::invocable<F, Args...> && requires(T* ptr, F&& func, Args&&... args) {
         ::new (ptr) T(__builtin_invoke(
             __RXX forward<F>(func), __RXX forward<Args>(args)...));
     };
@@ -50,7 +51,7 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 namespace details {
 template <typename T, typename F, typename... Args>
 concept generatable_from =
-    std::invocable<F> && requires(T* ptr, F&& func, Args&&... args) {
+    std::invocable<F, Args...> && requires(T* ptr, F&& func, Args&&... args) {
         ::new (ptr) T(std::invoke(
             __RXX forward<F>(func), __RXX forward<Args>(args)...));
     };

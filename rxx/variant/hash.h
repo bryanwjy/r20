@@ -12,7 +12,7 @@
 template <typename... Ts>
 requires (... && std::semiregular<std::hash<std::remove_cv_t<Ts>>>) &&
     (... &&
-        requires(Ts const& val, std::hash<std::remove_cv_t<Ts>> const hasher) {
+        requires(Ts const& val, std::hash<std::remove_cv_t<Ts>> hasher) {
             { hasher(val) } -> std::same_as<size_t>;
         })
 struct std::hash<__RXX variant<Ts...>> {
