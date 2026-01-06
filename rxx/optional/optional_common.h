@@ -574,6 +574,22 @@ protected:
         }
     }
 
+    __RXX_HIDE_FROM_ABI constexpr void swap(optional_storage& other) noexcept(
+        std::is_nothrow_swappable_v<T> &&
+        std::is_nothrow_move_constructible_v<T>) {
+        if (other.engaged() != this->engaged()) {
+            if (other.engaged()) {
+                this->construct(__RXX move(other.data_ref()));
+                other.disengage();
+            } else {
+                other.construct(__RXX move(this->data_ref()));
+                this->disengage();
+            }
+        } else if (this->engaged()) {
+            __RXX ranges::swap(other.data_ref(), this->data_ref());
+        }
+    }
+
     template <typename... Args>
     requires std::is_constructible_v<T, Args...>
     __RXX_HIDE_FROM_ABI constexpr T& construct(Args&&... args) noexcept(
@@ -722,6 +738,18 @@ protected:
     constexpr bool engaged() const noexcept { return data_ != nullptr; }
 
     __RXX_HIDE_FROM_ABI constexpr void disengage() noexcept { data_ = nullptr; }
+
+    __RXX_HIDE_FROM_ABI constexpr void swap(optional_storage& other) noexcept {
+        if (other.engaged() != this->engaged()) {
+            if (other.engaged()) {
+                this->data_ = __RXX exchange(other.data_, nullptr);
+            } else {
+                other.data_ = __RXX exchange(this->data_, nullptr);
+            }
+        } else if (this->engaged()) {
+            this->data_ = __RXX exchange(other.data_, this->data_);
+        }
+    }
 
     template <typename U>
     __RXX_HIDE_FROM_ABI constexpr T& construct(U&& arg) noexcept {

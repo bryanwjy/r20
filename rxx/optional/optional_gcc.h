@@ -537,24 +537,21 @@ public:
     __RXX_HIDE_FROM_ABI constexpr void swap(optional& other) noexcept(
         std::is_nothrow_swappable_v<T> &&
         std::is_nothrow_move_constructible_v<T>)
-    requires std::is_swappable_v<T> && std::is_move_constructible_v<T>
+    requires (!std::is_lvalue_reference_v<T>) && std::is_swappable_v<T> &&
+        std::is_move_constructible_v<T>
     {
-        if (other.has_value() != this->has_value()) {
-            if (other.has_value()) {
-                this->emplace(__RXX move(*other));
-                other.reset();
-            } else {
-                other.emplace(__RXX move(**this));
-                this->reset();
-            }
-        } else if (this->has_value()) {
-            __RXX ranges::swap(*other, **this);
-        }
+        base_type::swap(other);
     }
+
+    __RXX_HIDE_FROM_ABI constexpr void swap(optional& other) noexcept
+    requires std::is_lvalue_reference_v<T>
+    {
+        base_type::swap(other);
+    }
+
     __RXX_HIDE_FROM_ABI friend constexpr void swap(
-        optional& lhs, optional& rhs) noexcept(std::is_nothrow_swappable_v<T> &&
-        std::is_nothrow_move_constructible_v<T>)
-    requires std::is_swappable_v<T> && std::is_move_constructible_v<T>
+        optional& lhs, optional& rhs) noexcept(noexcept(lhs.swap(rhs)))
+    requires requires(optional& opt) { opt.swap(opt); }
     {
         lhs.swap(rhs);
     }
