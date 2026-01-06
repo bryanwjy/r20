@@ -3,11 +3,14 @@
 
 #include "rxx/config.h"
 
+#include "rxx/concepts/generatable.h"
+#include "rxx/configuration/builtins.h"
 #include "rxx/details/const_if.h"
 #include "rxx/functional/invoke_r.h"
 #include "rxx/iterator.h"
 #include "rxx/memory/construct_at.h"
 #include "rxx/memory/destroy_at.h"
+#include "rxx/optional/bad_optional_access.h"
 #include "rxx/optional/nullopt.h"
 #include "rxx/optional/optional_abi.h" // IWYU pragma: always_keep
 #include "rxx/type_traits/reference_constructs_from_temporary.h"
@@ -53,19 +56,21 @@ struct opt_arg<Opt<T>> {
     using type = T;
 };
 
-template <typename T>
-struct optional_iteration;
+template <template <typename> class Opt, typename T>
+struct optional_iteration {
+    void begin() const noexcept = delete;
+    void end() const noexcept = delete;
+};
 
-template <typename T, bool Const>
+template <template <typename> class Opt, typename T, bool Const>
 class optional_iterator {};
 
-template <typename Opt, bool Const>
-requires (!std::is_lvalue_reference_v<opt_arg_t<Opt>> ||
-    (std::is_object_v<std::remove_reference_t<opt_arg_t<Opt>>> &&
-        !std::is_unbounded_array_v<std::remove_reference_t<opt_arg_t<Opt>>>))
-class optional_iterator<Opt, Const> {
-    friend optional_iteration<Opt>;
-    using T = opt_arg_t<Opt>;
+template <template <typename> class Opt, typename T, bool Const>
+requires (!std::is_lvalue_reference_v<T> ||
+    (std::is_object_v<std::remove_reference_t<T>> &&
+        !std::is_unbounded_array_v<std::remove_reference_t<T>>))
+class optional_iterator<Opt, T, Const> {
+    friend optional_iteration<Opt, T>;
 
 private:
     __RXX_HIDE_FROM_ABI constexpr optional_iterator(
@@ -94,7 +99,7 @@ public:
     template <bool Other>
     requires (!Other && Const)
     __RXX_HIDE_FROM_ABI constexpr optional_iterator(
-        optional_iterator<T, Other> other) noexcept
+        optional_iterator<Opt, T, Other> other) noexcept
         : ptr_(other.ptr_) {}
 
     RXX_ATTRIBUTES(NODISCARD, ALWAYS_INLINE, _HIDE_FROM_ABI)
@@ -182,43 +187,33 @@ private:
     pointer ptr_;
 };
 
-template <typename T>
-struct optional_iteration {
-    void begin() const = delete;
-    void end() const = delete;
-};
-
-template <typename Opt>
-requires is_optional_v<Opt> && (!std::is_lvalue_reference_v<opt_arg_t<Opt>>)
-struct optional_iteration<Opt> {
-private:
-    using T = opt_arg_t<Opt>;
-
-public:
-    using iterator = optional_iterator<Opt, false>;
-    using const_iterator = optional_iterator<Opt, true>;
+template <template <typename> class Opt, typename T>
+requires is_optional_v<Opt<T>>
+struct optional_iteration<Opt, T> {
+    using iterator = optional_iterator<Opt, T, false>;
+    using const_iterator = optional_iterator<Opt, T, true>;
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() noexcept {
-        auto* self = static_cast<Opt*>(this);
+        auto* self = static_cast<Opt<T>*>(this);
         return iterator(RXX_BUILTIN_addressof(**self));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const noexcept {
-        auto* self = static_cast<Opt const*>(this);
+        auto* self = static_cast<Opt<T> const*>(this);
         return const_iterator(RXX_BUILTIN_addressof(**self));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() noexcept {
-        auto* self = static_cast<Opt*>(this);
+        auto* self = static_cast<Opt<T>*>(this);
         return begin() + static_cast<int>(self->has_value());
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const noexcept {
-        auto* self = static_cast<Opt const*>(this);
+        auto* self = static_cast<Opt<T> const*>(this);
         return begin() + static_cast<int>(self->has_value());
     }
 
@@ -227,27 +222,22 @@ protected:
     __RXX_HIDE_FROM_ABI constexpr ~optional_iteration() noexcept = default;
 };
 
-template <typename Opt>
-requires is_optional_v<Opt> && std::is_lvalue_reference_v<opt_arg_t<Opt>> &&
-    (std::is_object_v<std::remove_reference_t<opt_arg_t<Opt>>> &&
-        !std::is_unbounded_array_v<std::remove_reference_t<opt_arg_t<Opt>>>)
-struct optional_iteration<Opt> {
-private:
-    using T = std::remove_reference_t<opt_arg_t<Opt>>;
-
-public:
-    using iterator = optional_iterator<Opt, std::is_const_v<T>>;
+template <template <typename> class Opt, typename T>
+requires is_optional_v<Opt<T>> &&
+    (std::is_object_v<T> && !std::is_unbounded_array_v<T>)
+struct optional_iteration<Opt, T&> {
+    using iterator = optional_iterator<Opt, T, std::is_const_v<T>>;
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const noexcept {
-        auto* self = static_cast<Opt const*>(this);
+        auto* self = static_cast<Opt<T&> const*>(this);
         return iterator(
             self->has_value() ? RXX_BUILTIN_addressof(**self) : nullptr);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto end() const noexcept {
-        auto* self = static_cast<Opt const*>(this);
+        auto* self = static_cast<Opt<T&> const*>(this);
         return begin() + static_cast<int>(self->has_value());
     }
 
@@ -258,6 +248,10 @@ protected:
 
 template <typename T, template <typename> class Union>
 class optional_storage {
+    static_assert(!std::is_same_v<std::remove_cv_t<T>, std::in_place_t> &&
+        !std::is_same_v<std::remove_cv_t<T>, __RXX nullopt_t>);
+    static_assert(std::is_destructible_v<T> && !std::is_rvalue_reference_v<T> &&
+        !std::is_array_v<T>);
     template <typename, template <typename> class>
     friend class optional_storage;
     using union_type = Union<T>;
@@ -517,24 +511,90 @@ public:
         return *this;
     }
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() const& noexcept -> decltype(auto) {
-        return (container_.data.union_.data);
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T const& value() const& {
+        if (!engaged()) {
+            RXX_THROW(bad_optional_access());
+        }
+
+        return data_ref();
     }
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() & noexcept -> decltype(auto) {
-        return (container_.data.union_.data);
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T& value() &
+    requires (!std::is_reference_v<T>)
+    {
+        if (!engaged()) {
+            RXX_THROW(bad_optional_access());
+        }
+
+        return data_ref();
     }
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() const&& noexcept -> decltype(auto) {
-        return __RXX move(container_.data.union_.data);
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) value() const&& {
+        if (!engaged()) {
+            RXX_THROW(bad_optional_access());
+        }
+
+        if constexpr (std::is_reference_v<T>) {
+            return __RXX forward<T>(data_ref());
+        } else {
+            return __RXX move(data_ref());
+        }
     }
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto union_ref() && noexcept -> decltype(auto) {
-        return __RXX move(container_.data.union_.data);
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T&& value() && {
+        if (!engaged()) {
+            RXX_THROW(bad_optional_access());
+        }
+
+        return __RXX move(data_ref());
+    }
+
+    template <typename U = std::remove_cv_t<T>>
+    requires (!std::is_function_v<T> && !std::is_array_v<T>)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T value_or(U&& default_value) const& noexcept {
+        static_assert(
+            std::is_copy_constructible_v<T> && std::is_convertible_v<U&&, T>);
+        return engaged() ? data_ref()
+                         : static_cast<T>(__RXX forward<U>(default_value));
+    }
+
+    template <typename U = std::remove_cv_t<T>>
+    requires (!std::is_function_v<T> && !std::is_array_v<T>)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T value_or(U&& default_value) && noexcept {
+        static_assert(
+            std::is_move_constructible_v<T> && std::is_convertible_v<U&&, T>);
+        return engaged() ? __RXX move(data_ref())
+                         : static_cast<T>(__RXX forward<U>(default_value));
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T const& operator*() const& noexcept { return data_ref(); }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T& operator*() & noexcept { return data_ref(); }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr decltype(auto) operator*() const&& noexcept {
+        return __RXX move(data_ref());
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T&& operator*() && noexcept { return __RXX move(data_ref()); }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr std::add_pointer_t<T const> operator->() const noexcept {
+        return RXX_BUILTIN_addressof(data_ref());
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr std::add_pointer_t<T> operator->() noexcept {
+        return RXX_BUILTIN_addressof(data_ref());
     }
 
 protected:
@@ -561,6 +621,13 @@ protected:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
     constexpr bool engaged() const noexcept {
         return container_.data.has_value_;
+    }
+
+    template <typename U>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE)
+    constexpr void assign_value(U&& data) noexcept(
+        std::is_nothrow_assignable_v<T&, U>) {
+        data_ref() = __RXX forward<U>(data);
     }
 
     __RXX_HIDE_FROM_ABI constexpr void disengage() noexcept {
@@ -597,12 +664,30 @@ protected:
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
             __RXX destroy_at(ptr);
-            __RXX construct_at(
-                ptr, std::in_place, __RXX forward<Args>(args)...);
+            RXX_TRY {
+                __RXX construct_at(
+                    ptr, std::in_place, __RXX forward<Args>(args)...);
+            } RXX_CATCH(...) {
+                if constexpr (std::is_nothrow_constructible_v<T, Args...>) {
+                    RXX_BUILTIN_unreachable();
+                } else {
+                    __RXX construct_at(ptr, __RXX nullopt);
+                    RXX_RETHROW();
+                }
+            }
         } else {
             container_.data.destroy_union();
-            container_.data.construct_union(
-                std::in_place, __RXX forward<Args>(args)...);
+            RXX_TRY {
+                container_.data.construct_union(
+                    std::in_place, __RXX forward<Args>(args)...);
+            } RXX_CATCH(...) {
+                if constexpr (std::is_nothrow_constructible_v<T, Args...>) {
+                    RXX_BUILTIN_unreachable();
+                } else {
+                    container_.data.construct_union(__RXX nullopt);
+                    RXX_RETHROW();
+                }
+            }
         }
         return data_ref();
     }
@@ -615,31 +700,67 @@ protected:
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
             __RXX destroy_at(ptr);
-            __RXX construct_at(
-                ptr, std::in_place, list, __RXX forward<Args>(args)...);
+            RXX_TRY {
+                __RXX construct_at(
+                    ptr, std::in_place, list, __RXX forward<Args>(args)...);
+            } RXX_CATCH(...) {
+                if constexpr (std::is_nothrow_constructible_v<T,
+                                  std::initializer_list<U>&, Args...>) {
+                    RXX_BUILTIN_unreachable();
+                } else {
+                    __RXX construct_at(ptr, __RXX nullopt);
+                    RXX_RETHROW();
+                }
+            }
         } else {
             container_.data.destroy_union();
-            container_.data.construct_union(
-                std::in_place, list, __RXX forward<Args>(args)...);
+            RXX_TRY {
+                container_.data.construct_union(
+                    std::in_place, list, __RXX forward<Args>(args)...);
+            } RXX_CATCH(...) {
+                if constexpr (std::is_nothrow_constructible_v<T,
+                                  std::initializer_list<U>&, Args...>) {
+                    RXX_BUILTIN_unreachable();
+                } else {
+                    container_.data.construct_union(__RXX nullopt);
+                    RXX_RETHROW();
+                }
+            }
         }
         return data_ref();
     }
 
     template <typename F, typename... Args>
-    requires std::is_invocable_v<F, Args...> &&
-        requires { T{std::invoke(std::declval<F>(), std::declval<Args>()...)}; }
+    requires generatable_from<T, F, Args...>
     __RXX_HIDE_FROM_ABI constexpr T& dispatch_construct(F&& func,
-        Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...> &&
-        noexcept(T{static_cast<std::invoke_result_t<F, Args...> (*)()>(0)()})) {
+        Args&&... args) noexcept(nothrow_generatable_from<T, F, Args...>) {
         if constexpr (place_flag_in_tail) {
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
             __RXX destroy_at(ptr);
-            __RXX construct_at(ptr, std::in_place, generating,
-                __RXX forward<F>(func), __RXX forward<Args>(args)...);
+            RXX_TRY {
+                __RXX construct_at(ptr, std::in_place, generating,
+                    __RXX forward<F>(func), __RXX forward<Args>(args)...);
+            } RXX_CATCH(...) {
+                if constexpr (nothrow_generatable_from<T, F, Args...>) {
+                    RXX_BUILTIN_unreachable();
+                } else {
+                    __RXX construct_at(ptr, __RXX nullopt);
+                    RXX_RETHROW();
+                }
+            }
         } else {
             container_.data.destroy_union();
-            container_.data.construct_union(generating, __RXX forward<F>(func),
-                __RXX forward<Args>(args)...);
+            RXX_TRY {
+                container_.data.construct_union(generating,
+                    __RXX forward<F>(func), __RXX forward<Args>(args)...);
+            } RXX_CATCH(...) {
+                if constexpr (nothrow_generatable_from<T, F, Args...>) {
+                    RXX_BUILTIN_unreachable();
+                } else {
+                    container_.data.construct_union(__RXX nullopt);
+                    RXX_RETHROW();
+                }
+            }
         }
         return data_ref();
     }
@@ -681,6 +802,27 @@ protected:
         : container_(generating, [&]() {
             return make_container(other.engaged(), other.union_ref());
         }) {}
+
+private:
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() const& noexcept -> decltype(auto) {
+        return (container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() & noexcept -> decltype(auto) {
+        return (container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() const&& noexcept -> decltype(auto) {
+        return __RXX move(container_.data.union_.data);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto union_ref() && noexcept -> decltype(auto) {
+        return __RXX move(container_.data.union_.data);
+    }
 
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)
     overlappable_if<allow_external_overlap, container> container_;
@@ -725,6 +867,35 @@ public:
     __RXX_HIDE_FROM_ABI constexpr optional_storage& operator=(
         optional_storage&&) noexcept = default;
 
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T& value() const {
+        if (!engaged()) {
+            RXX_THROW(bad_optional_access());
+        }
+
+        return data_ref();
+    }
+
+    template <typename U = std::remove_cv_t<T>>
+    requires (!std::is_array_v<T> && !std::is_function_v<T>)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto value_or(U&& default_value) const {
+        static_assert(std::is_move_constructible_v<T>,
+            "optional<T>::value_or: T must be move constructible");
+        static_assert(std::is_convertible_v<U, T>,
+            "optional<T>::value_or: U must be convertible to T");
+        return engaged() ? data_ref()
+                         : static_cast<T>(__RXX forward<U>(default_value));
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T& operator*() const noexcept { return data_ref(); }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T* operator->() const noexcept {
+        return RXX_BUILTIN_addressof(data_ref());
+    }
+
 protected:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
     constexpr T& data_ref() const& noexcept { return *data_; }
@@ -732,6 +903,12 @@ protected:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
     constexpr T&& data_ref() const&& noexcept {
         return __RXX forward<T>(*data_);
+    }
+
+    template <typename U>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE)
+    constexpr void assign_value(U&& data) noexcept {
+        data_ = RXX_BUILTIN_addressof(data);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
@@ -770,22 +947,273 @@ protected:
     }
 
     template <typename U>
+    requires std::is_lvalue_reference_v<U>
     __RXX_HIDE_FROM_ABI constexpr optional_storage(
         dispatch_opt_t, optional_storage<U, Unused> const& u) noexcept
         : data_(u.data_) {}
 
     template <typename U>
+    requires (!std::is_lvalue_reference_v<U>) &&
+        requires(U* src, T* dst) { dst = src; }
     __RXX_HIDE_FROM_ABI constexpr optional_storage(
-        dispatch_opt_t, optional_storage<U, Unused>&& u) noexcept
-        : data_(u.data_) {
-        u.disengage();
-    }
+        dispatch_opt_t, optional_storage<U, Unused>& u) noexcept
+        : data_(RXX_BUILTIN_addressof(u.data_ref())) {}
+
+    template <typename U>
+    requires (!std::is_lvalue_reference_v<U>) &&
+        requires(U const* src, T* dst) { dst = src; }
+    __RXX_HIDE_FROM_ABI constexpr optional_storage(
+        dispatch_opt_t, optional_storage<U, Unused> const& u) noexcept
+        : data_(RXX_BUILTIN_addressof(u.data_ref())) {}
+
+    template <typename U>
+    requires (!std::is_lvalue_reference_v<U>) &&
+        requires(U* src, T* dst) { dst = src; } &&
+        __RXX reference_constructs_from_temporary_v<T&, U&>
+    __RXX_HIDE_FROM_ABI constexpr optional_storage(
+        dispatch_opt_t, optional_storage<U, Unused>& u) noexcept = delete;
+
+    template <typename U>
+    requires (!std::is_lvalue_reference_v<U>) &&
+        requires(U const* src, T* dst) { dst = src; } &&
+        __RXX reference_constructs_from_temporary_v<T&, U const&>
+    __RXX_HIDE_FROM_ABI constexpr optional_storage(
+        dispatch_opt_t, optional_storage<U, Unused> const& u) noexcept = delete;
 
     T* data_;
 #else
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr T& value() const = delete;
+
+    template <typename U = std::remove_cv_t<T>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr std::remove_cv_t<T> value_or(U&& default_value) const = delete;
     static_assert(!std::is_reference_v<std::add_lvalue_reference_t<T>>);
 #endif
 };
+
+template <template <typename> class Opt, typename T>
+struct optional_monads {
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto and_then(F&& func) & {
+        using result_type = std::remove_cvref_t<std::invoke_result_t<F, T&>>;
+        static_assert(is_optional_v<result_type>);
+        if (static_cast<Opt<T>*>(this)->has_value()) {
+            return std::invoke(
+                __RXX forward<F>(func), **static_cast<Opt<T>*>(this));
+        } else {
+            return result_type{};
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto and_then(F&& func) const& {
+        using result_type =
+            std::remove_cvref_t<std::invoke_result_t<F, T const&>>;
+        static_assert(details::is_optional_v<result_type>);
+        if (static_cast<Opt<T> const*>(this)->has_value()) {
+            return std::invoke(
+                __RXX forward<F>(func), **static_cast<Opt<T> const*>(this));
+        } else {
+            return result_type{};
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto and_then(F&& func) && {
+        using result_type = std::remove_cvref_t<std::invoke_result_t<F, T>>;
+        static_assert(details::is_optional_v<result_type>);
+        if (static_cast<Opt<T>*>(this)->has_value()) {
+            return std::invoke(__RXX forward<F>(func),
+                __RXX move(**static_cast<Opt<T>*>(this)));
+        } else {
+            return result_type{};
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto and_then(F&& func) const&& {
+        using result_type =
+            std::remove_cvref_t<std::invoke_result_t<F, T const>>;
+        static_assert(details::is_optional_v<result_type>);
+        if (static_cast<Opt<T> const*>(this)->has_value()) {
+            return std::invoke(__RXX forward<F>(func),
+                __RXX move(**static_cast<Opt<T> const*>(this)));
+        } else {
+            return result_type{};
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto transform(F&& func) & {
+        using result_type = std::remove_cv_t<std::invoke_result_t<F, T&>>;
+        using result_opt = Opt<result_type>;
+        if (static_cast<Opt<T>*>(this)->has_value()) {
+            return result_opt(generating, __RXX forward<F>(func),
+                **static_cast<Opt<T>*>(this));
+        } else {
+            return result_opt();
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto transform(F&& func) const& {
+        using result_type = std::remove_cv_t<std::invoke_result_t<F, T const&>>;
+        using result_opt = Opt<result_type>;
+        if (static_cast<Opt<T> const*>(this)->has_value()) {
+            return result_opt(generating, __RXX forward<F>(func),
+                **static_cast<Opt<T> const*>(this));
+        } else {
+            return result_opt();
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto transform(F&& func) && {
+        using result_type = std::remove_cv_t<std::invoke_result_t<F, T>>;
+        using result_opt = Opt<result_type>;
+        if (static_cast<Opt<T>*>(this)->has_value()) {
+            return result_opt(generating, __RXX forward<F>(func),
+                __RXX move(**static_cast<Opt<T>*>(this)));
+        } else {
+            return result_opt();
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto transform(F&& func) const&& {
+        using result_type = std::remove_cv_t<std::invoke_result_t<F, T const>>;
+        using result_opt = Opt<result_type>;
+        if (static_cast<Opt<T> const*>(this)->has_value()) {
+            return result_opt(generating, __RXX forward<F>(func),
+                __RXX move(**static_cast<Opt<T> const*>(this)));
+        } else {
+            return result_opt();
+        }
+    }
+
+    template <std::invocable F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr Opt<T> or_else(F&& func) &&
+    requires std::is_move_constructible_v<T>
+    {
+        using result_type = std::remove_cvref_t<std::invoke_result_t<F>>;
+        static_assert(std::same_as<Opt<T>, result_type>);
+        if (static_cast<Opt<T>*>(this)->has_value()) {
+            return __RXX move(*static_cast<Opt<T>*>(this));
+        } else {
+            return std::invoke(__RXX forward<F>(func));
+        }
+    }
+
+    template <std::invocable F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr Opt<T> or_else(F&& func) const&
+    requires std::is_copy_constructible_v<T>
+    {
+        using result_type = std::remove_cvref_t<std::invoke_result_t<F>>;
+        static_assert(std::same_as<Opt<T>, result_type>);
+        if (static_cast<Opt<T> const*>(this)->has_value()) {
+            return *static_cast<Opt<T> const*>(this);
+        } else {
+            return std::invoke(__RXX forward<F>(func));
+        }
+    }
+};
+
+template <template <typename> class Opt, typename T>
+struct optional_monads<Opt, T&> {
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto and_then(F&& func) const {
+        using result_type = std::remove_cvref_t<std::invoke_result_t<F, T&>>;
+        static_assert(is_optional_v<result_type>);
+        if (static_cast<Opt<T&> const*>(this)->has_value()) {
+            return std::invoke(
+                __RXX forward<F>(func), **static_cast<Opt<T&> const*>(this));
+        } else {
+            return result_type{};
+        }
+    }
+
+    template <typename F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr auto transform(F&& func) const {
+        using result_type = std::remove_cv_t<std::invoke_result_t<F, T&>>;
+        using result_opt = Opt<result_type>;
+        if (static_cast<Opt<T&> const*>(this)->has_value()) {
+            return result_opt(generating, __RXX forward<F>(func),
+                **static_cast<Opt<T&> const*>(this));
+        } else {
+            return result_opt();
+        }
+    }
+
+    template <std::invocable F>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    constexpr Opt<T&> or_else(F&& func) const {
+        using result_type = std::remove_cvref_t<std::invoke_result_t<F>>;
+        static_assert(std::same_as<Opt<T&>, result_type>);
+        if (static_cast<Opt<T&> const*>(this)->has_value()) {
+            return **static_cast<Opt<T&> const*>(this);
+        } else {
+            return std::invoke(__RXX forward<F>(func));
+        }
+    }
+};
+
+template <typename U, typename T>
+concept optional_constructible_as =
+    !std::same_as<T, std::remove_cvref_t<U>> && std::is_constructible_v<T, U>;
+
+template <typename U, template <typename> class Opt, typename T>
+concept allow_optional_conversion = is_optional_v<Opt<T>> && requires {
+    requires !std::is_constructible_v<T, Opt<U>&>;
+    requires !std::is_constructible_v<T, Opt<U> const&>;
+    requires !std::is_constructible_v<T, Opt<U>&&>;
+    requires !std::is_constructible_v<T, Opt<U> const&&>;
+    requires !std::is_convertible_v<Opt<U>&, T>;
+    requires !std::is_convertible_v<Opt<U> const&, T>;
+    requires !std::is_convertible_v<Opt<U>&&, T>;
+    requires !std::is_convertible_v<Opt<U> const&&, T>;
+};
+
+template <typename U, template <typename> class Opt, typename T>
+concept convertible_from_optional_of = is_optional_v<Opt<T>> &&
+    (std::same_as<std::remove_cv_t<T>, bool> ||
+        allow_optional_conversion<U, Opt, T>);
+
+template <typename U, template <typename> class Opt, typename T>
+concept assignable_from_optional_of = is_optional_v<Opt<T>> && requires {
+    requires allow_optional_conversion<U, Opt, T>;
+    requires !std::is_assignable_v<T&, Opt<U>&>;
+    requires !std::is_assignable_v<T&, Opt<U> const&>;
+    requires !std::is_assignable_v<T&, Opt<U>&&>;
+    requires !std::is_assignable_v<T&, Opt<U> const&&>;
+};
+
+template <typename U, template <typename> class Opt, typename T>
+concept value_convertible_to_optional = is_optional_v<Opt<T>> &&
+    (!std::same_as<std::remove_cvref_t<U>, std::in_place_t> &&
+        !std::same_as<std::remove_cvref_t<U>, Opt<T>> &&
+        (!std::same_as<std::remove_cv_t<T>, bool> ||
+            !details::is_optional_v<std::remove_cvref_t<U>>)) &&
+    std::is_constructible_v<T, U>;
+
+#if RXX_SUPPORTS_reference_constructs_from_temporary
+template <typename U, template <typename> class Opt, typename T>
+concept delete_optional_reference_specialization =
+    std::is_lvalue_reference_v<T> &&
+    __RXX reference_constructs_from_temporary_v<T, U>;
+#endif
 } // namespace details
 
 RXX_DEFAULT_NAMESPACE_END
