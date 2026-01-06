@@ -133,7 +133,7 @@ class RXX_ATTRIBUTE(EMPTY_BASES) optional :
     }
 
 public:
-    using value_type = T;
+    using value_type = std::remove_reference_t<T>;
 
     __RXX_HIDE_FROM_ABI constexpr optional() noexcept = default;
     __RXX_HIDE_FROM_ABI constexpr optional(optional const&) noexcept(

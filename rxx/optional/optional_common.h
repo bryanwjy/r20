@@ -188,7 +188,7 @@ private:
 };
 
 template <template <typename> class Opt, typename T>
-requires is_optional_v<Opt<T>>
+requires is_optional_v<Opt<T>> && (!std::is_reference_v<T>)
 struct optional_iteration<Opt, T> {
     using iterator = optional_iterator<Opt, T, false>;
     using const_iterator = optional_iterator<Opt, T, true>;
@@ -226,7 +226,7 @@ template <template <typename> class Opt, typename T>
 requires is_optional_v<Opt<T>> &&
     (std::is_object_v<T> && !std::is_unbounded_array_v<T>)
 struct optional_iteration<Opt, T&> {
-    using iterator = optional_iterator<Opt, T, std::is_const_v<T>>;
+    using iterator = optional_iterator<Opt, T&, std::is_const_v<T>>;
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin() const noexcept {
@@ -451,7 +451,8 @@ public:
         optional_storage const&) = delete;
     __RXX_HIDE_FROM_ABI constexpr optional_storage& operator=(
         optional_storage const&) noexcept
-    requires std::is_trivially_copy_constructible_v<T> &&
+    requires std::is_copy_assignable_v<T> &&
+        std::is_trivially_copy_constructible_v<T> &&
         std::is_trivially_copy_assignable_v<T> &&
         std::is_trivially_destructible_v<T>
     = default;
@@ -487,6 +488,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr optional_storage& operator=(
         optional_storage&&) noexcept
     requires std::is_move_assignable_v<T> &&
+        std::is_trivially_move_constructible_v<T> &&
         std::is_trivially_move_assignable_v<T> &&
         std::is_trivially_destructible_v<T>
     = default;
@@ -494,9 +496,10 @@ public:
     operator=(optional_storage&& other) noexcept(
         std::is_nothrow_move_assignable_v<T> &&
         std::is_nothrow_move_constructible_v<T>)
-    requires std::is_move_assignable_v<T> &&
-        (!std::is_trivially_move_assignable_v<T> ||
-            !std::is_trivially_destructible_v<T>)
+    requires std::is_move_assignable_v<T> && std::is_move_constructible_v<T> &&
+        (!(std::is_trivially_move_constructible_v<T> &&
+            std::is_trivially_move_assignable_v<T> &&
+            std::is_trivially_destructible_v<T>))
     {
         if (this->engaged() != other.engaged()) {
             if (other.engaged()) {

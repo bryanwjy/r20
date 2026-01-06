@@ -137,7 +137,7 @@ class RXX_ATTRIBUTE(EMPTY_BASES) optional :
     }
 
 public:
-    using value_type = T;
+    using value_type = std::remove_reference_t<T>;
 
     __RXX_HIDE_FROM_ABI constexpr optional() noexcept = default;
     __RXX_HIDE_FROM_ABI constexpr optional(optional const&) noexcept(
@@ -357,11 +357,11 @@ public:
     requires std::is_invocable_v<F, Args...> &&
         (!details::generatable_from<T, F, Args...>) &&
         (std::is_lvalue_reference_v<T> &&
+            std::is_invocable_r_v<T, F, Args...> &&
             !__RXX reference_constructs_from_temporary_v<T,
                 std::invoke_result_t<F, Args...>>)
-    __RXX_HIDE_FROM_ABI constexpr T&
-    generate(F&& func, Args&&... args) noexcept(
-        details::nothrow_generatable_from<T, F, Args...>) {
+    __RXX_HIDE_FROM_ABI constexpr T& generate(F&& func,
+        Args&&... args) noexcept(std::is_nothrow_invocable_r_v<T, F, Args...>) {
         return this->dispatch_construct(
             __RXX forward<F>(func), __RXX forward<Args>(args)...);
     }
