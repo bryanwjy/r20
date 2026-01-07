@@ -68,7 +68,7 @@ struct reverse_t : __RXX ranges::details::adaptor_closure<reverse_t> {
 
 #if RXX_SUPPORTS_OPTIONAL_REFERENCES
     template <typename R>
-    requires __RXX details::is_optional_v<std::remove_cvref_t<R>> &&
+    requires __RXX details::is_optional_like_v<std::remove_cvref_t<R>> &&
         ranges::view<std::remove_cvref_t<R>>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()(R&& arg) RXX_CONST_CALL
@@ -99,7 +99,7 @@ struct reverse_t : __RXX ranges::details::adaptor_closure<reverse_t> {
     requires (!is_reverse_view<std::remove_cvref_t<R>> &&
         !is_sized_reverse_subrange<std::remove_cvref_t<R>> &&
         !is_unsized_reverse_subrange<std::remove_cvref_t<R>> &&
-        !(__RXX details::is_optional_v<std::remove_cvref_t<R>> &&
+        !(__RXX details::is_optional_like_v<std::remove_cvref_t<R>> &&
             ranges::view<std::remove_cvref_t<R>>))
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr auto operator()(R&& arg) RXX_CONST_CALL

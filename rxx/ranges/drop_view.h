@@ -36,7 +36,7 @@ concept droping_empty =
 
 template <typename V, typename N>
 concept droping_optional = dropable<V, N> && !droping_empty<V, N> &&
-    __RXX details::is_optional_v<std::remove_cvref_t<V>> &&
+    __RXX details::is_optional_like_v<std::remove_cvref_t<V>> &&
     view<std::remove_cvref_t<V>>;
 
 template <typename V, typename N>
@@ -61,14 +61,19 @@ void drop(...) noexcept = delete;
 
 template <typename V, typename N = range_difference_t<V>>
 requires (!__RXX ranges::details::is_repeat_view<std::remove_cvref_t<V>>) &&
-    __RXX ranges::details::is_repeat_view_like<std::remove_cvref_t<V>>
+    __RXX ranges::details::is_repeat_view_like<std::remove_cvref_t<V>> &&
+    (!sized_range<std::remove_cvref_t<V>> ||
+        std::is_constructible_v<std::remove_cvref_t<V>,
+            decltype(__RXX forward_like<V>(
+                std::declval<range_reference_t<V>>())),
+            N>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto drop(V&& view, std::type_identity_t<N> num) {
     // For std::ranges::repeat_view
     using Type = std::remove_cvref_t<V>;
     if constexpr (sized_range<Type>) {
         auto const dist = ranges::distance(view);
-        return repeat_view(__RXX forward_like<V>(*ranges::begin(view)),
+        return Type(__RXX forward_like<V>(*ranges::begin(view)),
             dist - std::min<N>(dist, num));
     } else {
         return __RXX_AUTOCAST(__RXX forward<V>(view));

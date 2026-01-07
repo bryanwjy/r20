@@ -34,7 +34,7 @@ concept taking_empty =
 
 template <typename V, typename N>
 concept taking_optional = takeable<V, N> && !taking_empty<V, N> &&
-    __RXX details::is_optional_v<std::remove_cvref_t<V>> &&
+    __RXX details::is_optional_like_v<std::remove_cvref_t<V>> &&
     view<std::remove_cvref_t<V>>;
 
 template <typename V, typename N>
@@ -50,7 +50,10 @@ void take(...) noexcept = delete;
 
 template <typename V, typename N = range_difference_t<V>>
 requires (!__RXX ranges::details::is_repeat_view<std::remove_cvref_t<V>>) &&
-    __RXX ranges::details::is_repeat_view_like<std::remove_cvref_t<V>>
+    __RXX ranges::details::is_repeat_view_like<std::remove_cvref_t<V>> &&
+    std::is_constructible_v<std::remove_cvref_t<V>,
+        decltype(__RXX forward_like<V>(std::declval<range_reference_t<V>>())),
+        N>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto take(V&& view, std::type_identity_t<N> num) {
     // For std::ranges::repeat_view

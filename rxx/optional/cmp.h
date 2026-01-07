@@ -5,65 +5,94 @@
 
 #include "rxx/optional/fwd.h"
 
-#include "rxx/concepts/comparable.h"
+#include "rxx/concepts/core_convertible_to.h"
 #include "rxx/optional/nullopt.h"
 
 #include <compare>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
+
+namespace details {
+template <core_convertible_to<bool> T>
+using optional_cmp_result_t = bool;
+template <typename L, typename R>
+using optional_eq_result_t =
+    optional_cmp_result_t<decltype(std::declval<L const&>() ==
+        std::declval<R const&>())>;
+template <typename L, typename R>
+using optional_ne_result_t =
+    optional_cmp_result_t<decltype(std::declval<L const&>() !=
+        std::declval<R const&>())>;
+template <typename L, typename R>
+using optional_lt_result_t =
+    optional_cmp_result_t<decltype(std::declval<L const&>() <
+        std::declval<R const&>())>;
+template <typename L, typename R>
+using optional_gt_result_t =
+    optional_cmp_result_t<decltype(std::declval<L const&>() >
+        std::declval<R const&>())>;
+template <typename L, typename R>
+using optional_le_result_t =
+    optional_cmp_result_t<decltype(std::declval<L const&>() <=
+        std::declval<R const&>())>;
+template <typename L, typename R>
+using optional_ge_result_t =
+    optional_cmp_result_t<decltype(std::declval<L const&>() >=
+        std::declval<R const&>())>;
+} // namespace details
 __RXX_INLINE_IF_NUA_ABI
 namespace nua {
 template <typename L, typename R>
-requires details::supports_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs == *rhs)) {
+constexpr auto operator==(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs == *rhs))
+    -> details::optional_eq_result_t<L, R> {
     return lhs.has_value() == rhs.has_value() &&
         (!lhs.has_value() || *lhs == *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_inequality_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator!=(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs != *rhs)) {
+constexpr auto operator!=(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs != *rhs))
+    -> details::optional_ne_result_t<L, R> {
     return lhs.has_value() != rhs.has_value() ||
         (lhs.has_value() && *lhs != *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_less_than_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs < *rhs)) {
+constexpr auto operator<(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs < *rhs))
+    -> details::optional_lt_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
         (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs < *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_greater_than_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs > *rhs)) {
+constexpr auto operator>(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs > *rhs))
+    -> details::optional_gt_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
         (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs > *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_less_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<=(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs <= *rhs)) {
+constexpr auto operator<=(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs <= *rhs))
+    -> details::optional_le_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
         (!lhs.has_value() || *lhs <= *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_greater_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>=(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs >= *rhs)) {
+constexpr auto operator>=(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs >= *rhs))
+    -> details::optional_ge_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
         (!lhs.has_value() || *lhs >= *rhs);
@@ -78,105 +107,103 @@ constexpr std::compare_three_way_result_t<L, R> operator<=>(
 }
 
 template <typename L, typename R>
-requires details::supports_equal_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs == rhs)) {
+constexpr auto operator==(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs == rhs)) -> details::optional_eq_result_t<L, R> {
     return lhs.has_value() && *lhs == rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_inequality_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator!=(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs != rhs)) {
+constexpr auto operator!=(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs != rhs)) -> details::optional_ne_result_t<L, R> {
     return !lhs.has_value() || *lhs != rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_than_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs < rhs)) {
+constexpr auto operator<(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs < rhs)) -> details::optional_lt_result_t<L, R> {
     return !lhs.has_value() || *lhs < rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_than_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs > rhs)) {
+constexpr auto operator>(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs > rhs)) -> details::optional_gt_result_t<L, R> {
     return lhs.has_value() && *lhs > rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_equal_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<=(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs <= rhs)) {
+constexpr auto operator<=(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs <= rhs)) -> details::optional_le_result_t<L, R> {
     return !lhs.has_value() || *lhs <= rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_equal_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>=(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs >= rhs)) {
+constexpr auto operator>=(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs >= rhs)) -> details::optional_ge_result_t<L, R> {
     return lhs.has_value() && *lhs >= rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_equal_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs == *rhs)) {
+constexpr auto operator==(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs == *rhs)) -> details::optional_eq_result_t<L, R> {
     return rhs.has_value() && lhs == *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_inequality_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator!=(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs != *rhs)) {
+constexpr auto operator!=(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs != *rhs)) -> details::optional_ne_result_t<L, R> {
     return !rhs.has_value() || lhs != *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_than_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs < *rhs)) {
+constexpr auto operator<(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs < *rhs)) -> details::optional_lt_result_t<L, R> {
     return rhs.has_value() && lhs < *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_than_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs > *rhs)) {
+constexpr auto operator>(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs > *rhs)) -> details::optional_gt_result_t<L, R> {
     return !rhs.has_value() || lhs > *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_equal_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<=(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs <= *rhs)) {
+constexpr auto operator<=(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs <= *rhs)) -> details::optional_le_result_t<L, R> {
     return rhs.has_value() && lhs <= *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_equal_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>=(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs >= *rhs)) {
+constexpr auto operator>=(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs >= *rhs)) -> details::optional_ge_result_t<L, R> {
     return !rhs.has_value() || lhs >= *rhs;
 }
 
 template <typename L, typename R>
-requires (!requires(R const& arg) {
-    []<typename T>(optional<T> const&) {}(arg);
-}) && std::three_way_comparable_with<L, R>
+requires (!details::is_optional_v<R>) && std::three_way_comparable_with<R, L>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr std::compare_three_way_result_t<L, R> operator<=>(
     optional<L> const& lhs, R const& rhs) noexcept(noexcept(*lhs <=> rhs)) {
@@ -265,56 +292,56 @@ constexpr auto operator<=>(optional<L> const& opt, __RXX nullopt_t) noexcept {
 __RXX_INLINE_IF_GCC_ABI
 namespace gcc {
 template <typename L, typename R>
-requires details::supports_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs == *rhs)) {
+constexpr auto operator==(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs == *rhs))
+    -> details::optional_eq_result_t<L, R> {
     return lhs.has_value() == rhs.has_value() &&
         (!lhs.has_value() || *lhs == *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_inequality_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator!=(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs != *rhs)) {
+constexpr auto operator!=(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs != *rhs))
+    -> details::optional_ne_result_t<L, R> {
     return lhs.has_value() != rhs.has_value() ||
         (lhs.has_value() && *lhs != *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_less_than_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs < *rhs)) {
+constexpr auto operator<(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs < *rhs))
+    -> details::optional_lt_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
         (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs < *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_greater_than_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs > *rhs)) {
+constexpr auto operator>(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs > *rhs))
+    -> details::optional_gt_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
         (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs > *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_less_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<=(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs <= *rhs)) {
+constexpr auto operator<=(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs <= *rhs))
+    -> details::optional_le_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
         (!lhs.has_value() || *lhs <= *rhs);
 }
 
 template <typename L, typename R>
-requires details::supports_greater_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>=(optional<L> const& lhs,
-    optional<R> const& rhs) noexcept(noexcept(*lhs >= *rhs)) {
+constexpr auto operator>=(optional<L> const& lhs,
+    optional<R> const& rhs) noexcept(noexcept(*lhs >= *rhs))
+    -> details::optional_ge_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
         (!lhs.has_value() || *lhs >= *rhs);
@@ -329,105 +356,103 @@ constexpr std::compare_three_way_result_t<L, R> operator<=>(
 }
 
 template <typename L, typename R>
-requires details::supports_equal_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs == rhs)) {
+constexpr auto operator==(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs == rhs)) -> details::optional_eq_result_t<L, R> {
     return lhs.has_value() && *lhs == rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_inequality_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator!=(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs != rhs)) {
+constexpr auto operator!=(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs != rhs)) -> details::optional_ne_result_t<L, R> {
     return !lhs.has_value() || *lhs != rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_than_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs < rhs)) {
+constexpr auto operator<(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs < rhs)) -> details::optional_lt_result_t<L, R> {
     return !lhs.has_value() || *lhs < rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_than_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs > rhs)) {
+constexpr auto operator>(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs > rhs)) -> details::optional_gt_result_t<L, R> {
     return lhs.has_value() && *lhs > rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_equal_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<=(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs <= rhs)) {
+constexpr auto operator<=(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs <= rhs)) -> details::optional_le_result_t<L, R> {
     return !lhs.has_value() || *lhs <= rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_equal_with<L, R>
+requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>=(optional<L> const& lhs, R const& rhs) noexcept(
-    noexcept(*lhs >= rhs)) {
+constexpr auto operator>=(optional<L> const& lhs, R const& rhs) noexcept(
+    noexcept(*lhs >= rhs)) -> details::optional_ge_result_t<L, R> {
     return lhs.has_value() && *lhs >= rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_equal_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs == *rhs)) {
+constexpr auto operator==(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs == *rhs)) -> details::optional_eq_result_t<L, R> {
     return rhs.has_value() && lhs == *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_inequality_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator!=(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs != *rhs)) {
+constexpr auto operator!=(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs != *rhs)) -> details::optional_ne_result_t<L, R> {
     return !rhs.has_value() || lhs != *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_than_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs < *rhs)) {
+constexpr auto operator<(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs < *rhs)) -> details::optional_lt_result_t<L, R> {
     return rhs.has_value() && lhs < *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_than_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs > *rhs)) {
+constexpr auto operator>(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs > *rhs)) -> details::optional_gt_result_t<L, R> {
     return !rhs.has_value() || lhs > *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_less_equal_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<=(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs <= *rhs)) {
+constexpr auto operator<=(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs <= *rhs)) -> details::optional_le_result_t<L, R> {
     return rhs.has_value() && lhs <= *rhs;
 }
 
 template <typename L, typename R>
-requires details::supports_greater_equal_with<L, R>
+requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>=(L const& lhs, optional<R> const& rhs) noexcept(
-    noexcept(lhs >= *rhs)) {
+constexpr auto operator>=(L const& lhs, optional<R> const& rhs) noexcept(
+    noexcept(lhs >= *rhs)) -> details::optional_ge_result_t<L, R> {
     return !rhs.has_value() || lhs >= *rhs;
 }
 
 template <typename L, typename R>
-requires (!requires(R const& arg) {
-    []<typename T>(optional<T> const&) {}(arg);
-}) && std::three_way_comparable_with<L, R>
+requires (!details::is_optional_v<R>) && std::three_way_comparable_with<R, L>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr std::compare_three_way_result_t<L, R> operator<=>(
     optional<L> const& lhs, R const& rhs) noexcept(noexcept(*lhs <=> rhs)) {

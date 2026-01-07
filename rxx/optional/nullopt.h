@@ -6,9 +6,7 @@
 
 #include "rxx/optional/fwd.h"
 
-#if RXX_ENABLE_STD_INTEROP
-#  include <concepts>
-#endif
+#include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -19,10 +17,10 @@ struct nullopt_t {
     __RXX_HIDE_FROM_ABI explicit constexpr nullopt_t(
         ctor_tag, ctor_tag) noexcept {}
 
-#if RXX_ENABLE_STD_INTEROP
-    __RXX_HIDE_FROM_ABI constexpr nullopt_t(
-        std::same_as<std::nullopt_t> auto) noexcept {}
-#endif
+    template <typename T>
+    requires std::is_same_v<T, std::nullopt_t> &&
+        std::is_same_v<std::nullopt_t, T>
+    __RXX_HIDE_FROM_ABI constexpr nullopt_t(T) noexcept {}
 };
 
 inline constexpr nullopt_t nullopt{

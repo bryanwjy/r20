@@ -39,6 +39,8 @@ namespace details {
 template <typename T>
 inline constexpr bool is_optional_v = false;
 template <typename T>
+inline constexpr bool is_optional_like_v = false;
+template <typename T>
 inline constexpr bool is_optional_v<T const> = is_optional_v<T>;
 template <typename T>
 inline constexpr bool is_optional_v<T volatile> = is_optional_v<T>;
@@ -48,8 +50,10 @@ template <typename T>
 inline constexpr bool is_optional_v<gcc::optional<T>> = true;
 template <typename T>
 inline constexpr bool is_optional_v<nua::optional<T>> = true;
-template <typename T>
-inline constexpr bool is_optional_v<std::optional<T>> = true;
+template <template <typename T> class Opt, typename T>
+inline constexpr bool is_optional_like_v<Opt<T>> =
+    requires(Opt<T>* ptr) { ptr->~optional(); };
+
 } // namespace details
 
 RXX_DEFAULT_NAMESPACE_END
