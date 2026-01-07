@@ -388,19 +388,24 @@ public:
         base_type::swap(other);
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr void swap(
-        optional& lhs, optional& rhs) noexcept(noexcept(lhs.swap(rhs)))
-    requires requires(optional& opt) { opt.swap(opt); }
-    {
-        lhs.swap(rhs);
-    }
-
     using details::optional_iteration<optional, T>::begin;
     using details::optional_iteration<optional, T>::end;
     using details::optional_monads<optional, T>::and_then;
     using details::optional_monads<optional, T>::transform;
     using details::optional_monads<optional, T>::or_else;
 };
+
+template <typename T>
+__RXX_HIDE_FROM_ABI constexpr void swap(
+    optional<T>& lhs, optional<T>& rhs) = delete;
+
+template <typename T>
+__RXX_HIDE_FROM_ABI constexpr void swap(
+    optional<T>& lhs, optional<T>& rhs) noexcept(noexcept(lhs.swap(rhs)))
+requires requires { lhs.swap(rhs); }
+{
+    lhs.swap(rhs);
+}
 
 template <typename T>
 optional(T) -> optional<T>;

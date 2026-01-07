@@ -39,6 +39,9 @@ template <typename L, typename R>
 using optional_ge_result_t =
     optional_cmp_result_t<decltype(std::declval<L const&>() >=
         std::declval<R const&>())>;
+template <typename T>
+concept not_derived_from_optional =
+    !requires(T const& arg) { []<typename U>(optional<U> const&) {}(arg); };
 } // namespace details
 __RXX_INLINE_IF_NUA_ABI
 namespace nua {
@@ -48,7 +51,7 @@ constexpr auto operator==(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs == *rhs))
     -> details::optional_eq_result_t<L, R> {
     return lhs.has_value() == rhs.has_value() &&
-        (!lhs.has_value() || *lhs == *rhs);
+        (!lhs.has_value() || static_cast<bool>(*lhs == *rhs));
 }
 
 template <typename L, typename R>
@@ -57,7 +60,7 @@ constexpr auto operator!=(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs != *rhs))
     -> details::optional_ne_result_t<L, R> {
     return lhs.has_value() != rhs.has_value() ||
-        (lhs.has_value() && *lhs != *rhs);
+        (lhs.has_value() && static_cast<bool>(*lhs != *rhs));
 }
 
 template <typename L, typename R>
@@ -66,7 +69,8 @@ constexpr auto operator<(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs < *rhs))
     -> details::optional_lt_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
-        (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs < *rhs);
+        (lhs.has_value() == rhs.has_value() && lhs.has_value() &&
+            static_cast<bool>(*lhs < *rhs));
 }
 
 template <typename L, typename R>
@@ -75,7 +79,8 @@ constexpr auto operator>(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs > *rhs))
     -> details::optional_gt_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
-        (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs > *rhs);
+        (lhs.has_value() == rhs.has_value() && lhs.has_value() &&
+            static_cast<bool>(*lhs > *rhs));
 }
 
 template <typename L, typename R>
@@ -85,7 +90,7 @@ constexpr auto operator<=(optional<L> const& lhs,
     -> details::optional_le_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
-        (!lhs.has_value() || *lhs <= *rhs);
+        (!lhs.has_value() || static_cast<bool>(*lhs <= *rhs));
 }
 
 template <typename L, typename R>
@@ -95,7 +100,7 @@ constexpr auto operator>=(optional<L> const& lhs,
     -> details::optional_ge_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
-        (!lhs.has_value() || *lhs >= *rhs);
+        (!lhs.has_value() || static_cast<bool>(*lhs >= *rhs));
 }
 
 template <typename L, std::three_way_comparable_with<L> R>
@@ -111,7 +116,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator==(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs == rhs)) -> details::optional_eq_result_t<L, R> {
-    return lhs.has_value() && *lhs == rhs;
+    return lhs.has_value() && static_cast<bool>(*lhs == rhs);
 }
 
 template <typename L, typename R>
@@ -119,7 +124,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator!=(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs != rhs)) -> details::optional_ne_result_t<L, R> {
-    return !lhs.has_value() || *lhs != rhs;
+    return !lhs.has_value() || static_cast<bool>(*lhs != rhs);
 }
 
 template <typename L, typename R>
@@ -127,7 +132,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs < rhs)) -> details::optional_lt_result_t<L, R> {
-    return !lhs.has_value() || *lhs < rhs;
+    return !lhs.has_value() || static_cast<bool>(*lhs < rhs);
 }
 
 template <typename L, typename R>
@@ -135,7 +140,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs > rhs)) -> details::optional_gt_result_t<L, R> {
-    return lhs.has_value() && *lhs > rhs;
+    return lhs.has_value() && static_cast<bool>(*lhs > rhs);
 }
 
 template <typename L, typename R>
@@ -143,7 +148,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<=(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs <= rhs)) -> details::optional_le_result_t<L, R> {
-    return !lhs.has_value() || *lhs <= rhs;
+    return !lhs.has_value() || static_cast<bool>(*lhs <= rhs);
 }
 
 template <typename L, typename R>
@@ -151,7 +156,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>=(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs >= rhs)) -> details::optional_ge_result_t<L, R> {
-    return lhs.has_value() && *lhs >= rhs;
+    return lhs.has_value() && static_cast<bool>(*lhs >= rhs);
 }
 
 template <typename L, typename R>
@@ -159,7 +164,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator==(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs == *rhs)) -> details::optional_eq_result_t<L, R> {
-    return rhs.has_value() && lhs == *rhs;
+    return rhs.has_value() && static_cast<bool>(lhs == *rhs);
 }
 
 template <typename L, typename R>
@@ -167,7 +172,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator!=(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs != *rhs)) -> details::optional_ne_result_t<L, R> {
-    return !rhs.has_value() || lhs != *rhs;
+    return !rhs.has_value() || static_cast<bool>(lhs != *rhs);
 }
 
 template <typename L, typename R>
@@ -175,7 +180,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs < *rhs)) -> details::optional_lt_result_t<L, R> {
-    return rhs.has_value() && lhs < *rhs;
+    return rhs.has_value() && static_cast<bool>(lhs < *rhs);
 }
 
 template <typename L, typename R>
@@ -183,7 +188,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs > *rhs)) -> details::optional_gt_result_t<L, R> {
-    return !rhs.has_value() || lhs > *rhs;
+    return !rhs.has_value() || static_cast<bool>(lhs > *rhs);
 }
 
 template <typename L, typename R>
@@ -191,7 +196,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<=(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs <= *rhs)) -> details::optional_le_result_t<L, R> {
-    return rhs.has_value() && lhs <= *rhs;
+    return rhs.has_value() && static_cast<bool>(lhs <= *rhs);
 }
 
 template <typename L, typename R>
@@ -199,11 +204,11 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>=(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs >= *rhs)) -> details::optional_ge_result_t<L, R> {
-    return !rhs.has_value() || lhs >= *rhs;
+    return !rhs.has_value() || static_cast<bool>(lhs >= *rhs);
 }
 
-template <typename L, typename R>
-requires (!details::is_optional_v<R>) && std::three_way_comparable_with<R, L>
+template <typename L, details::not_derived_from_optional R>
+requires std::three_way_comparable_with<R, L>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr std::compare_three_way_result_t<L, R> operator<=>(
     optional<L> const& lhs, R const& rhs) noexcept(noexcept(*lhs <=> rhs)) {
@@ -297,7 +302,7 @@ constexpr auto operator==(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs == *rhs))
     -> details::optional_eq_result_t<L, R> {
     return lhs.has_value() == rhs.has_value() &&
-        (!lhs.has_value() || *lhs == *rhs);
+        (!lhs.has_value() || static_cast<bool>(*lhs == *rhs));
 }
 
 template <typename L, typename R>
@@ -306,7 +311,7 @@ constexpr auto operator!=(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs != *rhs))
     -> details::optional_ne_result_t<L, R> {
     return lhs.has_value() != rhs.has_value() ||
-        (lhs.has_value() && *lhs != *rhs);
+        (lhs.has_value() && static_cast<bool>(*lhs != *rhs));
 }
 
 template <typename L, typename R>
@@ -315,7 +320,8 @@ constexpr auto operator<(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs < *rhs))
     -> details::optional_lt_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
-        (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs < *rhs);
+        (lhs.has_value() == rhs.has_value() && lhs.has_value() &&
+            static_cast<bool>(*lhs < *rhs));
 }
 
 template <typename L, typename R>
@@ -324,7 +330,8 @@ constexpr auto operator>(optional<L> const& lhs,
     optional<R> const& rhs) noexcept(noexcept(*lhs > *rhs))
     -> details::optional_gt_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
-        (lhs.has_value() == rhs.has_value() && lhs.has_value() && *lhs > *rhs);
+        (lhs.has_value() == rhs.has_value() && lhs.has_value() &&
+            static_cast<bool>(*lhs > *rhs));
 }
 
 template <typename L, typename R>
@@ -334,7 +341,7 @@ constexpr auto operator<=(optional<L> const& lhs,
     -> details::optional_le_result_t<L, R> {
     return lhs.has_value() < rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
-        (!lhs.has_value() || *lhs <= *rhs);
+        (!lhs.has_value() || static_cast<bool>(*lhs <= *rhs));
 }
 
 template <typename L, typename R>
@@ -344,7 +351,7 @@ constexpr auto operator>=(optional<L> const& lhs,
     -> details::optional_ge_result_t<L, R> {
     return lhs.has_value() > rhs.has_value() ||
         lhs.has_value() == rhs.has_value() &&
-        (!lhs.has_value() || *lhs >= *rhs);
+        (!lhs.has_value() || static_cast<bool>(*lhs >= *rhs));
 }
 
 template <typename L, std::three_way_comparable_with<L> R>
@@ -360,7 +367,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator==(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs == rhs)) -> details::optional_eq_result_t<L, R> {
-    return lhs.has_value() && *lhs == rhs;
+    return lhs.has_value() && static_cast<bool>(*lhs == rhs);
 }
 
 template <typename L, typename R>
@@ -368,7 +375,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator!=(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs != rhs)) -> details::optional_ne_result_t<L, R> {
-    return !lhs.has_value() || *lhs != rhs;
+    return !lhs.has_value() || static_cast<bool>(*lhs != rhs);
 }
 
 template <typename L, typename R>
@@ -376,7 +383,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs < rhs)) -> details::optional_lt_result_t<L, R> {
-    return !lhs.has_value() || *lhs < rhs;
+    return !lhs.has_value() || static_cast<bool>(*lhs < rhs);
 }
 
 template <typename L, typename R>
@@ -384,7 +391,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs > rhs)) -> details::optional_gt_result_t<L, R> {
-    return lhs.has_value() && *lhs > rhs;
+    return lhs.has_value() && static_cast<bool>(*lhs > rhs);
 }
 
 template <typename L, typename R>
@@ -392,7 +399,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<=(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs <= rhs)) -> details::optional_le_result_t<L, R> {
-    return !lhs.has_value() || *lhs <= rhs;
+    return !lhs.has_value() || static_cast<bool>(*lhs <= rhs);
 }
 
 template <typename L, typename R>
@@ -400,7 +407,7 @@ requires (!details::is_optional_v<R>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>=(optional<L> const& lhs, R const& rhs) noexcept(
     noexcept(*lhs >= rhs)) -> details::optional_ge_result_t<L, R> {
-    return lhs.has_value() && *lhs >= rhs;
+    return lhs.has_value() && static_cast<bool>(*lhs >= rhs);
 }
 
 template <typename L, typename R>
@@ -408,7 +415,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator==(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs == *rhs)) -> details::optional_eq_result_t<L, R> {
-    return rhs.has_value() && lhs == *rhs;
+    return rhs.has_value() && static_cast<bool>(lhs == *rhs);
 }
 
 template <typename L, typename R>
@@ -416,7 +423,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator!=(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs != *rhs)) -> details::optional_ne_result_t<L, R> {
-    return !rhs.has_value() || lhs != *rhs;
+    return !rhs.has_value() || static_cast<bool>(lhs != *rhs);
 }
 
 template <typename L, typename R>
@@ -424,7 +431,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs < *rhs)) -> details::optional_lt_result_t<L, R> {
-    return rhs.has_value() && lhs < *rhs;
+    return rhs.has_value() && static_cast<bool>(lhs < *rhs);
 }
 
 template <typename L, typename R>
@@ -432,7 +439,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs > *rhs)) -> details::optional_gt_result_t<L, R> {
-    return !rhs.has_value() || lhs > *rhs;
+    return !rhs.has_value() || static_cast<bool>(lhs > *rhs);
 }
 
 template <typename L, typename R>
@@ -440,7 +447,7 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator<=(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs <= *rhs)) -> details::optional_le_result_t<L, R> {
-    return rhs.has_value() && lhs <= *rhs;
+    return rhs.has_value() && static_cast<bool>(lhs <= *rhs);
 }
 
 template <typename L, typename R>
@@ -448,11 +455,11 @@ requires (!details::is_optional_v<L>)
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr auto operator>=(L const& lhs, optional<R> const& rhs) noexcept(
     noexcept(lhs >= *rhs)) -> details::optional_ge_result_t<L, R> {
-    return !rhs.has_value() || lhs >= *rhs;
+    return !rhs.has_value() || static_cast<bool>(lhs >= *rhs);
 }
 
-template <typename L, typename R>
-requires (!details::is_optional_v<R>) && std::three_way_comparable_with<R, L>
+template <typename L, details::not_derived_from_optional R>
+requires std::three_way_comparable_with<R, L>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr std::compare_three_way_result_t<L, R> operator<=>(
     optional<L> const& lhs, R const& rhs) noexcept(noexcept(*lhs <=> rhs)) {
