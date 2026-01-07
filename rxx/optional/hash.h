@@ -4,25 +4,12 @@
 
 #include "rxx/config.h"
 
+#include "rxx/optional/fwd.h"
+
 #include "rxx/functional/hash.h"
-#include "rxx/optional/optional_abi.h"
 
 #include <concepts>
 #include <type_traits>
-
-RXX_DEFAULT_NAMESPACE_BEGIN
-__RXX_INLINE_IF_NUA_ABI
-namespace nua {
-template <typename>
-class optional;
-}
-
-__RXX_INLINE_IF_GCC_ABI
-namespace gcc {
-template <typename>
-class optional;
-}
-RXX_DEFAULT_NAMESPACE_END
 
 template <typename T>
 requires std::semiregular<std::hash<std::remove_cvref_t<T>>> &&

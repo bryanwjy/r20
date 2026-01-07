@@ -4,6 +4,12 @@
 
 #include "rxx/config.h"
 
+#include "rxx/optional/fwd.h"
+
+#if RXX_ENABLE_STD_INTEROP
+#  include <concepts>
+#endif
+
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 struct nullopt_t {
@@ -12,6 +18,11 @@ struct nullopt_t {
     };
     __RXX_HIDE_FROM_ABI explicit constexpr nullopt_t(
         ctor_tag, ctor_tag) noexcept {}
+
+#if RXX_ENABLE_STD_INTEROP
+    __RXX_HIDE_FROM_ABI constexpr nullopt_t(
+        std::same_as<std::nullopt_t> auto) noexcept {}
+#endif
 };
 
 inline constexpr nullopt_t nullopt{

@@ -10,6 +10,8 @@
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/iterator.h"
+#include "rxx/optional/cmp.h" // IWYU pragma: keep
+#include "rxx/optional/optional_nua.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"
@@ -387,7 +389,7 @@ public:
 
 private:
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) OuterType outer_ {};
-    details::optional_base<InnerIter> inner_{};
+    nua::optional<InnerIter> inner_{};
     Parent* parent_ = nullptr;
 };
 

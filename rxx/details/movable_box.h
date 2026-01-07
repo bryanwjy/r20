@@ -3,7 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "rxx/details/optional_base.h"
+#include "rxx/optional/optional_nua.h"
+
+#include <concepts>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -11,9 +13,9 @@ namespace ranges::details {
 
 template <typename T>
 requires std::move_constructible<T> && std::is_object_v<T>
-class movable_box : private optional_base<T> {
+class movable_box : private nua::optional<T> {
 
-    using base_type = optional_base<T>;
+    using base_type = nua::optional<T>;
 
 public:
     __RXX_HIDE_FROM_ABI constexpr ~movable_box() noexcept = default;
@@ -30,22 +32,22 @@ public:
         std::is_nothrow_move_constructible_v<base_type>) = default;
 
     template <typename U>
-    requires std::constructible_from<base_type, optional_base<U> const&> &&
-        std::is_base_of_v<optional_base<U>, movable_box<U>>
+    requires std::constructible_from<base_type, nua::optional<U> const&> &&
+        std::is_base_of_v<nua::optional<U>, movable_box<U>>
     __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U const&,
         T>) constexpr movable_box(movable_box<U> const&
             other) noexcept(std::is_nothrow_constructible_v<base_type,
-        optional_base<U> const&>)
-        : base_type((optional_base<U> const&)other) {}
+        nua::optional<U> const&>)
+        : base_type((nua::optional<U> const&)other) {}
 
     template <typename U>
-    requires std::constructible_from<base_type, optional_base<U>> &&
-        std::is_base_of_v<optional_base<U>, movable_box<U>>
+    requires std::constructible_from<base_type, nua::optional<U>> &&
+        std::is_base_of_v<nua::optional<U>, movable_box<U>>
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr movable_box(movable_box<U>&&
             other) noexcept(std::is_nothrow_constructible_v<base_type,
-        optional_base<U>>)
-        : base_type((optional_base<U>&&)__RXX move(other)) {}
+        nua::optional<U>>)
+        : base_type((nua::optional<U>&&)__RXX move(other)) {}
 
     template <typename... Args>
     requires std::constructible_from<T, Args...>
@@ -102,22 +104,22 @@ public:
     }
 
     template <typename U>
-    requires std::assignable_from<base_type&, optional_base<U> const&> &&
-        std::is_base_of_v<optional_base<U>, movable_box<U>>
+    requires std::assignable_from<base_type&, nua::optional<U> const&> &&
+        std::is_base_of_v<nua::optional<U>, movable_box<U>>
     __RXX_HIDE_FROM_ABI constexpr movable_box&
     operator=(movable_box<U> const& other) noexcept(
-        std::is_nothrow_assignable_v<base_type&, optional_base<U> const&>) {
-        base_type::operator=((optional_base<U> const&)other);
+        std::is_nothrow_assignable_v<base_type&, nua::optional<U> const&>) {
+        base_type::operator=((nua::optional<U> const&)other);
         return *this;
     }
 
     template <typename U>
-    requires std::assignable_from<base_type&, optional_base<U>> &&
-        std::is_base_of_v<optional_base<U>, movable_box<U>>
+    requires std::assignable_from<base_type&, nua::optional<U>> &&
+        std::is_base_of_v<nua::optional<U>, movable_box<U>>
     __RXX_HIDE_FROM_ABI constexpr movable_box&
     operator=(movable_box<U>&& other) noexcept(
-        std::is_nothrow_assignable_v<base_type&, optional_base<U>>) {
-        base_type::operator=((optional_base<U>&&)__RXX move(other));
+        std::is_nothrow_assignable_v<base_type&, nua::optional<U>>) {
+        base_type::operator=((nua::optional<U>&&)__RXX move(other));
         return *this;
     }
 

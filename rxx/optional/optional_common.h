@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "rxx/optional/fwd.h" // IWYU pragma: always_keep
+
 #include "rxx/concepts/generatable.h"
 #include "rxx/configuration/builtins.h"
 #include "rxx/details/const_if.h"
@@ -12,7 +14,6 @@
 #include "rxx/memory/destroy_at.h"
 #include "rxx/optional/bad_optional_access.h"
 #include "rxx/optional/nullopt.h"
-#include "rxx/optional/optional_abi.h" // IWYU pragma: always_keep
 #include "rxx/type_traits/reference_constructs_from_temporary.h"
 #include "rxx/utility.h"
 
@@ -21,14 +22,6 @@
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace details {
-template <typename T>
-inline constexpr bool is_optional_v = false;
-template <typename T>
-inline constexpr bool is_optional_v<T const> = is_optional_v<T>;
-template <typename T>
-inline constexpr bool is_optional_v<T volatile> = is_optional_v<T>;
-template <typename T>
-inline constexpr bool is_optional_v<T const volatile> = is_optional_v<T>;
 
 template <typename T, typename U>
 __RXX_HIDE_FROM_ABI constexpr T make_from_union(
@@ -352,9 +345,8 @@ class optional_storage {
         }
 
         template <typename... Args>
-        __RXX_HIDE_FROM_ABI constexpr void
-        construct_union(generating_t tag, Args&&... args) noexcept(
-            std::is_nothrow_constructible_v<T, Args...>)
+        __RXX_HIDE_FROM_ABI constexpr void construct_union(generating_t tag,
+            Args&&... args) noexcept(std::is_nothrow_invocable_r_v<T, Args...>)
         requires (allow_external_overlap)
         {
             __RXX construct_at(RXX_BUILTIN_addressof(union_.data), tag,
@@ -741,8 +733,8 @@ protected:
             auto* ptr = RXX_BUILTIN_addressof(container_.data);
             __RXX destroy_at(ptr);
             RXX_TRY {
-                __RXX construct_at(ptr, std::in_place, generating,
-                    __RXX forward<F>(func), __RXX forward<Args>(args)...);
+                __RXX construct_at(ptr, generating, __RXX forward<F>(func),
+                    __RXX forward<Args>(args)...);
             } RXX_CATCH(...) {
                 if constexpr (nothrow_generatable_from<T, F, Args...>) {
                     RXX_BUILTIN_unreachable();
@@ -1220,6 +1212,3 @@ concept delete_optional_reference_specialization =
 } // namespace details
 
 RXX_DEFAULT_NAMESPACE_END
-
-#define RXX_SUPPORTS_OPTIONAL_REFERENCES \
-    RXX_SUPPORTS_reference_constructs_from_temporary

@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "rxx/optional/fwd.h"
+
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/view_traits.h"
@@ -103,6 +105,28 @@ inline constexpr bool is_constable_ref_view = false;
 template <typename R>
 inline constexpr bool is_constable_ref_view<ref_view<R>> =
     constant_range<R const>;
+#if RXX_SUPPORTS_OPTIONAL_REFERENCES
+template <typename T>
+inline constexpr bool is_optional_ref = false;
+template <typename T>
+inline constexpr bool is_optional_ref<__RXX nua::optional<T&>> = true;
+template <typename T>
+inline constexpr bool is_optional_ref<__RXX gcc::optional<T&>> = true;
+template <typename>
+struct as_const_ref_optional;
+
+template <typename T>
+using as_const_ref_optional_t = typename as_const_ref_optional<T>::type;
+
+template <typename T>
+struct as_const_ref_optional<__RXX gcc::optional<T&>> {
+    using type = __RXX gcc::optional<T const&>;
+};
+template <typename T>
+struct as_const_ref_optional<__RXX nua::optional<T&>> {
+    using type = __RXX nua::optional<T const&>;
+};
+#endif
 
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
     template <viewable_range R>
@@ -116,7 +140,13 @@ struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
             return views::all(__RXX forward<R>(arg));
         } else if constexpr (__RXX ranges::details::is_empty_view<Type>) {
             return views::empty<Element const>;
-        } else if constexpr (__RXX ranges::details::is_span<Type>) {
+        }
+#if RXX_SUPPORTS_OPTIONAL_REFERENCES
+        else if constexpr (is_optional_ref<Type>) {
+            return as_const_ref_optional_t<Type>(arg);
+        }
+#endif
+        else if constexpr (__RXX ranges::details::is_span<Type>) {
             return std::span<Element const, Type::extent>(
                 __RXX forward<R>(arg));
         } else if constexpr (is_constable_ref_view<R>) {

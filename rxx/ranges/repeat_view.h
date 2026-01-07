@@ -1,6 +1,8 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/config.h"
+
 #include "rxx/details/integer_like.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/to_unsigned_like.h"
@@ -423,9 +425,17 @@ private:
 };
 
 namespace details {
-template <typename T, typename Bound>
+template <std::move_constructible T, std::semiregular Bound>
 inline constexpr bool is_repeat_view<repeat_view<T, Bound>> = true;
-}
+
+template <template <typename, typename> class R, std::move_constructible T,
+    std::semiregular Bound>
+requires std::is_object_v<T> && std::same_as<T, std::remove_cv_t<T>> &&
+    (details::integer_like_with_usable_difference_type<Bound> ||
+        std::same_as<Bound, std::unreachable_sentinel_t>)
+inline constexpr bool is_repeat_view_like<R<T, Bound>> =
+    requires(R<T, Bound>* ptr) { ptr->~repeat_view(); };
+} // namespace details
 
 namespace views {
 namespace details {

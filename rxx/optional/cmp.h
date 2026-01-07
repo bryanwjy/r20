@@ -3,20 +3,16 @@
 
 #include "rxx/config.h"
 
+#include "rxx/optional/fwd.h"
+
 #include "rxx/concepts/comparable.h"
 #include "rxx/optional/nullopt.h"
-#include "rxx/optional/optional_abi.h"
 
 #include <compare>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 __RXX_INLINE_IF_NUA_ABI
 namespace nua {
-// nua: no_unique_address
-
-template <typename>
-class optional;
-
 template <typename L, typename R>
 requires details::supports_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -268,9 +264,6 @@ constexpr auto operator<=>(optional<L> const& opt, __RXX nullopt_t) noexcept {
 
 __RXX_INLINE_IF_GCC_ABI
 namespace gcc {
-template <typename>
-class optional;
-
 template <typename L, typename R>
 requires details::supports_equal_with<L, R>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

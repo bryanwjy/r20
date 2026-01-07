@@ -4,10 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/concepts/generatable.h"
-#include "rxx/configuration/abi.h"
-#include "rxx/configuration/builtins.h"
 #include "rxx/format/range_format.h" // IWYU pragma: keep
-#include "rxx/optional/bad_optional_access.h"
 #include "rxx/optional/optional_common.h"
 #include "rxx/ranges/access.h" // IWYU pragma: keep
 #include "rxx/type_traits/reference_constructs_from_temporary.h"
@@ -21,17 +18,7 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-__RXX_INLINE_IF_NUA_ABI
-namespace nua {
-template <typename>
-class optional;
-}
-
-namespace details {
-template <typename T>
-inline constexpr bool is_optional_v<nua::optional<T>> = true;
-
-namespace nua {
+namespace details::nua {
 template <typename T>
 union opt_union {
     __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union const&) = delete;
@@ -100,8 +87,7 @@ union opt_union {
 
 template <typename T>
 using optional_base = optional_storage<T, opt_union>;
-} // namespace nua
-} // namespace details
+} // namespace details::nua
 
 __RXX_INLINE_IF_NUA_ABI
 namespace nua {
@@ -421,13 +407,15 @@ optional(T) -> optional<T>;
 
 template <details::make_optional_barrier = details::make_optional_barrier{},
     typename T>
+requires std::is_constructible_v<std::decay_t<T>, T>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr optional<std::decay_t<T>> make_optional(T&& value) noexcept(
-    std::is_nothrow_move_constructible_v<std::decay_t<T>>) {
+    std::is_nothrow_constructible_v<std::decay_t<T>, T>) {
     return optional<std::decay_t<T>>(std::in_place, __RXX forward<T>(value));
 }
 
 template <typename T, typename... Args>
+requires std::is_constructible_v<T, Args...>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr optional<T> make_optional(Args&&... args) noexcept(
     std::is_nothrow_constructible_v<T, Args...>) {
@@ -435,6 +423,7 @@ constexpr optional<T> make_optional(Args&&... args) noexcept(
 }
 
 template <typename T, typename U, typename... Args>
+requires std::is_constructible_v<T, std::initializer_list<U>&, Args...>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr optional<T> make_optional(std::initializer_list<U> ilist,
     Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
@@ -448,7 +437,7 @@ template <typename T>
 inline constexpr bool std::ranges::enable_view<__RXX nua::optional<T>> = true;
 
 #if RXX_SUPPORTS_OPTIONAL_REFERENCES
-template <class T>
+template <typename T>
 inline constexpr bool
     std::ranges::enable_borrowed_range<__RXX nua::optional<T&>> = true;
 #endif

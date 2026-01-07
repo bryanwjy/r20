@@ -3,23 +3,31 @@
 
 #include "rxx/config.h"
 
-#include "rxx/ranges/empty_view.h"
-#include "rxx/ranges/iota_view.h"
-
 #if RXX_LIBCXX
 #  if __has_include(<__fwd/span.h>)
 #    include <__fwd/span.h>
 #  else
-#    include <span>
+RXX_STD_NAMESPACE_BEGIN
+template <typename, size_t>
+class span;
+RXX_STD_NAMESPACE_END
 #  endif
 #  if __has_include(<__fwd/string_view.h>)
 #    include <__fwd/string_view.h>
 #  else
-#    include <string_view>
+RXX_STD_NAMESPACE_BEGIN
+template <typename, typename>
+class basic_string_view;
+RXX_STD_NAMESPACE_END
 #  endif
 #else
 
-#  include <string_view>
+RXX_STD_NAMESPACE_BEGIN
+template <typename, typename>
+class basic_string_view;
+template <typename, size_t>
+class span;
+RXX_STD_NAMESPACE_END
 #endif
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -30,8 +38,8 @@ namespace details {
 template <typename R>
 inline constexpr bool is_empty_view = false;
 
-template <typename T>
-inline constexpr bool is_empty_view<ranges::empty_view<T>> = true;
+template <typename R>
+inline constexpr bool is_ext_empty_view = false;
 
 template <typename R>
 inline constexpr bool is_basic_string_view = false;
@@ -49,11 +57,20 @@ inline constexpr bool is_span<std::span<T, N>> = true;
 template <typename R>
 inline constexpr bool is_iota_view = false;
 
-template <typename W, typename Bound>
-inline constexpr bool is_iota_view<ranges::iota_view<W, Bound>> = true;
+template <typename R>
+inline constexpr bool is_iota_view_like = false;
 
 template <typename R>
 inline constexpr bool is_repeat_view = false;
+
+template <typename R>
+inline constexpr bool is_repeat_view_like = false;
+
+template <typename R>
+inline constexpr bool is_subrange = false;
+
+template <typename R>
+inline constexpr bool is_subrange_like = false;
 
 } // namespace details
 } // namespace ranges
