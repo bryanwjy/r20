@@ -265,18 +265,17 @@ class optional_storage {
     static constexpr bool allow_external_overlap = !place_flag_in_tail;
 
     struct container {
-        template <typename... Args>
+        template <std::same_as<std::in_place_t> Tag, typename... Args>
         requires std::is_constructible_v<T, Args...>
-        __RXX_HIDE_FROM_ABI explicit constexpr container(std::in_place_t tag,
-            Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
+        __RXX_HIDE_FROM_ABI explicit constexpr container(
+            Tag tag, Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
             Args...>)
-            : union_(tag, tag, __RXX forward<Args>(args)...)
+            : union_(std::in_place, tag, __RXX forward<Args>(args)...)
             , has_value_(true) {}
 
-        template <typename F, typename... Args>
+        template <std::same_as<generating_t> Tag, typename F, typename... Args>
         requires std::is_constructible_v<union_type, generating_t, F, Args...>
-        __RXX_HIDE_FROM_ABI explicit constexpr container(generating_t gen,
-            F&& func,
+        __RXX_HIDE_FROM_ABI explicit constexpr container(Tag gen, F&& func,
             Args&&... args) noexcept(std::is_nothrow_constructible_v<union_type,
             generating_t, F, Args...>)
             : union_(std::in_place, gen, __RXX forward<F>(func),
@@ -287,9 +286,8 @@ class optional_storage {
             : union_(std::in_place, opt)
             , has_value_(false) {}
 
-        template <typename U>
-        __RXX_HIDE_FROM_ABI explicit constexpr container(dispatch_opt_t,
-            bool has_value,
+        template <std::same_as<dispatch_opt_t> Tag, typename U>
+        __RXX_HIDE_FROM_ABI explicit constexpr container(Tag, bool has_value,
             U&& u) noexcept(noexcept(make_from_union<union_type>(has_value,
             std::declval<U>())))
         requires (allow_external_overlap)
@@ -345,9 +343,9 @@ class optional_storage {
             __RXX destroy_at(RXX_BUILTIN_addressof(union_.data));
         }
 
-        template <typename... Args>
+        template <std::same_as<std::in_place_t> Tag, typename... Args>
         __RXX_HIDE_FROM_ABI constexpr void
-        construct_union(std::in_place_t tag, Args&&... args) noexcept(
+        construct_union(Tag tag, Args&&... args) noexcept(
             std::is_nothrow_constructible_v<T, Args...>)
         requires (allow_external_overlap)
         {
@@ -356,13 +354,14 @@ class optional_storage {
             has_value_ = true;
         }
 
-        template <typename... Args>
-        __RXX_HIDE_FROM_ABI constexpr void construct_union(generating_t tag,
-            Args&&... args) noexcept(std::is_nothrow_invocable_r_v<T, Args...>)
+        template <std::same_as<generating_t> Tag, typename F, typename... Args>
+        __RXX_HIDE_FROM_ABI constexpr void
+        construct_union(Tag tag, F&& func, Args&&... args) noexcept(
+            std::is_nothrow_invocable_r_v<T, F, Args...>)
         requires (allow_external_overlap)
         {
             __RXX construct_at(RXX_BUILTIN_addressof(union_.data), tag,
-                __RXX forward<Args>(args)...);
+                __RXX forward<F>(func), __RXX forward<Args>(args)...);
             has_value_ = true;
         }
 
@@ -429,24 +428,15 @@ public:
         !std::is_trivially_move_constructible_v<T>)
         : optional_storage(dispatch_opt, __RXX move(other)) {}
 
-    template <typename... Args>
+    template <std::same_as<std::in_place_t> Tag, typename... Args>
     requires std::is_constructible_v<T, Args...>
-    __RXX_HIDE_FROM_ABI explicit constexpr optional_storage(std::in_place_t tag,
+    __RXX_HIDE_FROM_ABI explicit constexpr optional_storage(Tag tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
         : container_(tag, tag, __RXX forward<Args>(args)...) {}
 
-    template <typename U, typename... Args>
-    requires std::is_constructible_v<T, std::initializer_list<U>&, Args...>
-    __RXX_HIDE_FROM_ABI explicit constexpr optional_storage(std::in_place_t tag,
-        std::initializer_list<U> list,
-        Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
-        std::initializer_list<U>&, Args...>)
-        : container_(tag, tag, list, __RXX forward<Args>(args)...) {}
-
-    template <typename F, typename... Args>
+    template <std::same_as<generating_t> Tag, typename F, typename... Args>
     requires generatable_from<T, F, Args...>
-    __RXX_HIDE_FROM_ABI explicit constexpr optional_storage(generating_t tag,
-        F&& func,
+    __RXX_HIDE_FROM_ABI explicit constexpr optional_storage(Tag tag, F&& func,
         Args&&... args) noexcept(nothrow_generatable_from<T, F, Args...>)
         : container_(std::in_place, tag, __RXX forward<F>(func),
               __RXX forward<Args>(args)...) {}

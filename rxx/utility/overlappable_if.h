@@ -6,7 +6,6 @@
 #include "rxx/concepts/generatable.h"
 #include "rxx/utility.h"
 
-#include <concepts>
 #include <functional>
 #include <type_traits>
 
@@ -23,8 +22,8 @@ __RXX_HIDE_FROM_ABI inline constexpr bool fits_in_tail_padding_v = []() {
 }();
 
 template <typename T>
-concept explicit_default_constructible =
-    std::default_initializable<T> && !requires(void (*func)(T)) { func({}); };
+concept explicit_default_constructible = std::is_default_constructible_v<T> &&
+    !requires(void (*func)(T)) { func({}); };
 } // namespace details
 
 template <bool NoUniqueAdress, typename T>
@@ -44,8 +43,9 @@ struct overlappable_if {
 
     template <typename F, typename... Args>
     requires details::generatable_from<T, F, Args...>
-    __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
-        generating_t, F&& f, Args&&... args)
+    __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(generating_t, F&& f,
+        Args&&... args) noexcept(details::nothrow_generatable_from<T, F,
+        Args...>)
         : data(std::invoke(
               __RXX forward<F>(f), __RXX forward<Args>(args)...)) {}
 
@@ -62,15 +62,16 @@ struct overlappable_if<false, T> {
     = default;
 
     template <typename... Args>
-    requires std::constructible_from<T, Args...>
+    requires std::is_constructible_v<T, Args...>
     __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
         std::in_place_t, Args&&... args)
         : data(__RXX forward<Args>(args)...) {}
 
     template <typename F, typename... Args>
     requires details::generatable_from<T, F, Args...>
-    __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(
-        generating_t, F&& f, Args&&... args)
+    __RXX_HIDE_FROM_ABI constexpr explicit overlappable_if(generating_t, F&& f,
+        Args&&... args) noexcept(details::nothrow_generatable_from<T, F,
+        Args...>)
         : data(std::invoke(
               __RXX forward<F>(f), __RXX forward<Args>(args)...)) {}
 

@@ -126,6 +126,13 @@ private:
         current_;
 };
 
+template <typename R, typename P>
+lazy_split_view(R&&, P&&) -> lazy_split_view<views::all_t<R>, views::all_t<P>>;
+
+template <input_range R>
+lazy_split_view(R&&, range_value_t<R>)
+    -> lazy_split_view<views::all_t<R>, single_view<range_value_t<R>>>;
+
 namespace details {
 template <bool, typename>
 struct lazy_split_view_outer_iterator_category {};
@@ -459,13 +466,6 @@ private:
     outer_iterator<Const> iter_{};
     bool incremented_ = false;
 };
-
-template <typename R, typename P>
-lazy_split_view(R&&, P&&) -> lazy_split_view<views::all_t<R>, views::all_t<P>>;
-
-template <input_range R>
-lazy_split_view(R&&, range_value_t<R>)
-    -> lazy_split_view<views::all_t<R>, single_view<range_value_t<R>>>;
 
 namespace views {
 namespace details {

@@ -11,7 +11,7 @@
 #include "rxx/details/simple_view.h"
 #include "rxx/iterator.h"
 #include "rxx/optional/cmp.h" // IWYU pragma: keep
-#include "rxx/optional/optional_nua.h"
+#include "rxx/optional/optional.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
 #include "rxx/ranges/concepts.h"

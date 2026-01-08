@@ -17,8 +17,6 @@
 #include "rxx/ranges/view_interface.h"
 #include "rxx/utility.h"
 
-#include <span>
-
 RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges {
@@ -112,6 +110,10 @@ template <typename T>
 inline constexpr bool is_optional_ref<__RXX nua::optional<T&>> = true;
 template <typename T>
 inline constexpr bool is_optional_ref<__RXX gcc::optional<T&>> = true;
+template <template <typename> class Opt, typename T>
+inline constexpr bool is_optional_ref<Opt<T&>> =
+    requires(Opt<T&>* ptr) { ptr->~optional(); };
+
 template <typename>
 struct as_const_ref_optional;
 
@@ -125,6 +127,10 @@ struct as_const_ref_optional<__RXX gcc::optional<T&>> {
 template <typename T>
 struct as_const_ref_optional<__RXX nua::optional<T&>> {
     using type = __RXX nua::optional<T const&>;
+};
+template <template <typename> class Opt, typename T>
+struct as_const_ref_optional<Opt<T&>> {
+    using type = Opt<T const&>;
 };
 #endif
 

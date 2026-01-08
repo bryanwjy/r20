@@ -3,7 +3,7 @@
 
 #include "rxx/config.h"
 
-#include "rxx/optional/optional_nua.h"
+#include "rxx/optional/optional.h"
 
 #include <type_traits>
 

@@ -20,27 +20,24 @@ namespace details::gcc {
 template <typename T>
 union opt_union {
     __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union const&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union const&) noexcept(
-        std::is_nothrow_copy_constructible_v<T>)
+    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union const&) noexcept
     requires std::is_copy_constructible_v<T> &&
         std::is_trivially_copy_constructible_v<T>
     = default;
     __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union&&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union&&) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
+    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union&&) noexcept
     requires std::is_move_constructible_v<T> &&
         std::is_trivially_move_constructible_v<T>
     = default;
     __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(
         opt_union const&) = delete;
     __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(
-        opt_union const&) noexcept(std::is_nothrow_copy_assignable_v<T>)
+        opt_union const&) noexcept
     requires std::is_copy_assignable_v<T> &&
         std::is_trivially_copy_assignable_v<T>
     = default;
     __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(opt_union&&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(opt_union&&) noexcept(
-        std::is_nothrow_move_assignable_v<T>)
+    __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(opt_union&&) noexcept
     requires std::is_move_assignable_v<T> &&
         std::is_trivially_move_assignable_v<T>
     = default;

@@ -22,39 +22,45 @@ namespace details::nua {
 template <typename T>
 union opt_union {
     __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union const&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union const&) noexcept(
-        std::is_nothrow_copy_constructible_v<T>)
+    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union const&) noexcept
     requires std::is_copy_constructible_v<T> &&
         std::is_trivially_copy_constructible_v<T>
     = default;
     __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union&&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union&&) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
+    __RXX_HIDE_FROM_ABI constexpr opt_union(opt_union&&) noexcept
     requires std::is_move_constructible_v<T> &&
         std::is_trivially_move_constructible_v<T>
     = default;
     __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(
         opt_union const&) = delete;
     __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(
-        opt_union const&) noexcept(std::is_nothrow_copy_assignable_v<T>)
+        opt_union const&) noexcept
     requires std::is_copy_assignable_v<T> &&
         std::is_trivially_copy_assignable_v<T>
     = default;
     __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(opt_union&&) = delete;
-    __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(opt_union&&) noexcept(
-        std::is_nothrow_move_assignable_v<T>)
+    __RXX_HIDE_FROM_ABI constexpr opt_union& operator=(opt_union&&) noexcept
     requires std::is_move_assignable_v<T> &&
         std::is_trivially_move_assignable_v<T>
     = default;
 
-    template <typename... Args>
+    template <std::same_as<std::in_place_t> Tag, typename... Args>
     requires std::is_constructible_v<T, Args...>
-    __RXX_HIDE_FROM_ABI explicit constexpr opt_union(std::in_place_t,
+    __RXX_HIDE_FROM_ABI explicit constexpr opt_union(Tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
         : value(__RXX forward<Args>(args)...) {}
 
-    template <typename F, typename... Args>
-    __RXX_HIDE_FROM_ABI explicit constexpr opt_union(generating_t, F&& func,
+    // Workaround strange bug in GCC to pass `ranges` unit tests
+    template <std::same_as<generating_t> Tag, typename F, typename... Args>
+    __RXX_HIDE_FROM_ABI explicit constexpr opt_union(Tag, F&& func,
+        Args&&... args) noexcept(nothrow_generatable_from<T, F, Args...>)
+        : value{std::invoke(
+              __RXX forward<F>(func), __RXX forward<Args>(args)...)} {}
+
+    template <std::same_as<generating_t> Tag, typename F, typename... Args>
+    requires std::is_constructible_v<T,
+        std::initializer_list<std::invoke_result_t<F, Args...>>>
+    __RXX_HIDE_FROM_ABI explicit constexpr opt_union(Tag, F&& func,
         Args&&... args) noexcept(nothrow_generatable_from<T, F, Args...>)
         : value(std::invoke(
               __RXX forward<F>(func), __RXX forward<Args>(args)...)) {}
