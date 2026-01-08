@@ -366,25 +366,26 @@ template <typename T, typename V>
 using conversion_type = template_element_t<conversion_index<T, V>, V>;
 
 template <typename T>
-inline constexpr bool is_tag_v = false;
+inline constexpr bool is_variant_ctor_tag = false;
 template <typename T>
-inline constexpr bool is_tag_v<T const> = is_tag_v<T>;
+inline constexpr bool is_variant_ctor_tag<T const> = is_variant_ctor_tag<T>;
 template <typename T>
-inline constexpr bool is_tag_v<T const volatile> = is_tag_v<T>;
+inline constexpr bool is_variant_ctor_tag<T const volatile> =
+    is_variant_ctor_tag<T>;
 template <typename T>
-inline constexpr bool is_tag_v<T volatile> = is_tag_v<T>;
+inline constexpr bool is_variant_ctor_tag<T volatile> = is_variant_ctor_tag<T>;
 template <>
-inline constexpr bool is_tag_v<std::in_place_t> = true;
+inline constexpr bool is_variant_ctor_tag<std::in_place_t> = true;
 template <typename T>
-inline constexpr bool is_tag_v<std::in_place_type_t<T>> = true;
+inline constexpr bool is_variant_ctor_tag<std::in_place_type_t<T>> = true;
 template <size_t I>
-inline constexpr bool is_tag_v<std::in_place_index_t<I>> = true;
+inline constexpr bool is_variant_ctor_tag<std::in_place_index_t<I>> = true;
 template <>
-inline constexpr bool is_tag_v<__RXX generating_t> = true;
+inline constexpr bool is_variant_ctor_tag<__RXX generating_t> = true;
 template <typename T>
-inline constexpr bool is_tag_v<__RXX generating_type_t<T>> = true;
+inline constexpr bool is_variant_ctor_tag<__RXX generating_type_t<T>> = true;
 template <size_t I>
-inline constexpr bool is_tag_v<__RXX generating_index_t<I>> = true;
+inline constexpr bool is_variant_ctor_tag<__RXX generating_index_t<I>> = true;
 
 template <typename... Ts>
 class variant_base;
@@ -392,7 +393,7 @@ class variant_base;
 template <typename U, typename... Ts>
 concept conversion_argument_for =
     !std::same_as<__RXX variant<Ts...>, std::remove_cvref_t<U>> &&
-    !is_tag_v<std::remove_cvref_t<U>>;
+    !is_variant_ctor_tag<std::remove_cvref_t<U>>;
 
 template <typename... Ts>
 class variant_base {
@@ -400,7 +401,7 @@ class variant_base {
     static_assert((... && std::is_destructible_v<Ts>), "Invalid type");
     static_assert((... && !std::is_reference_v<Ts>), "Invalid type");
     static_assert((... && !std::is_function_v<Ts>), "Invalid type");
-    static_assert((... && !is_tag_v<Ts>), "Invalid type");
+    static_assert((... && !is_variant_ctor_tag<Ts>), "Invalid type");
     using union_type = multi_union<Ts..., valueless_var_t>;
     using index_type = unsigned char;
 
