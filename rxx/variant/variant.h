@@ -16,21 +16,14 @@
 #include "rxx/type_traits/template_access.h"
 #include "rxx/utility.h"
 #include "rxx/variant/bad_variant_access.h"
-#include "rxx/variant/get.h"
+#include "rxx/variant/visit.h"
 
 #include <cassert>
-#include <compare>
 #include <concepts>
 #include <initializer_list>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
-
-template <typename T>
-__RXX_HIDE_FROM_ABI inline constexpr auto visit_table_for =
-    []<size_t... Is>(__RXX index_sequence<Is...>) {
-        return jump_table<size_t, Is..., variant_npos>{};
-    }(__RXX make_index_sequence<variant_size_v<T>>{});
 
 template <typename T, typename... Ts>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -41,8 +34,6 @@ constexpr bool holds_alternative(variant<Ts...> const& var) noexcept {
 }
 
 namespace details {
-template <size_t I>
-using size_constant = std::integral_constant<size_t, I>;
 
 template <typename...>
 union multi_union;
@@ -900,89 +891,6 @@ protected:
     overlappable_if<allow_external_overlap, container> container_;
 };
 
-template <typename... Ts>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE)
-constexpr auto&& as_variant(variant<Ts...>& value) noexcept {
-    return value;
-}
-
-template <typename... Ts>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE)
-constexpr auto&& as_variant(variant<Ts...> const& value) noexcept {
-    return value;
-}
-
-template <typename... Ts>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE)
-constexpr auto&& as_variant(variant<Ts...>&& value) noexcept {
-    return __RXX move(value);
-}
-
-template <typename... Ts>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE)
-constexpr auto&& as_variant(variant<Ts...> const&& value) noexcept {
-    return __RXX move(value);
-}
-
-template <typename F, typename V, typename... Vs>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN)
-constexpr decltype(auto)
-    variant_visitor(F&& callable, V&& value, Vs&&... values) {
-    assert((!value.valueless_by_exception() && ... &&
-        !values.valueless_by_exception()));
-    using variant_type = std::remove_cvref_t<V>;
-    if constexpr (sizeof...(Vs) == 0) {
-        return iota_table_for<variant_type>(
-            [&]<size_t I>(size_constant<I>) -> decltype(auto) {
-                return std::invoke(__RXX forward<F>(callable),
-                    __RXX get<I>(__RXX forward<V>(value)));
-            },
-            value.index());
-    } else {
-        return iota_table_for<variant_type>(
-            [&callable, &value]<size_t I>(
-                size_constant<I>, Vs&&... tail) -> decltype(auto) {
-                return variant_visitor(
-                    [&callable, &value]<typename... T>(
-                        T&&... others) -> decltype(auto) {
-                        return std::invoke(__RXX forward<F>(callable),
-                            __RXX get<I>(__RXX forward<V>(value)),
-                            __RXX forward<T>(others)...);
-                    },
-                    __RXX forward<Vs>(tail)...);
-            },
-            value.index(), __RXX forward<Vs>(values)...);
-    }
-}
-
-template <typename R, typename F, typename V, typename... Vs>
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, FLATTEN)
-constexpr R variant_visitor(F&& callable, V&& value, Vs&&... values) {
-    assert((!value.valueless_by_exception() && ... &&
-        !values.valueless_by_exception()));
-    using variant_type = std::remove_cvref_t<V>;
-    if constexpr (sizeof...(Vs) == 0) {
-        return iota_table_for<variant_type>(
-            [&]<size_t I>(size_constant<I>) -> R {
-                return __RXX invoke_r<R>(__RXX forward<F>(callable),
-                    __RXX get<I>(__RXX forward<V>(value)));
-            },
-            value.index());
-    } else {
-        using variant_type = std::remove_cvref_t<V>;
-        return iota_table_for<variant_type>(
-            [&callable, &value]<size_t I>(size_constant<I>, Vs&&... tail) -> R {
-                return variant_visitor<R>(
-                    [&callable, &value]<typename... T>(T&&... others) -> R {
-                        return __RXX invoke_r<R>(__RXX forward<F>(callable),
-                            __RXX get<I>(__RXX forward<V>(value)),
-                            __RXX forward<T>(others)...);
-                    },
-                    __RXX forward<Vs>(tail)...);
-            },
-            value.index(), __RXX forward<Vs>(values)...);
-    }
-}
 } // namespace details
 
 template <typename... Ts>
@@ -1199,7 +1107,7 @@ public:
         (... && std::is_move_constructible_v<Ts>)
     {
         if (index() == other.index()) {
-            visit_table_for<variant>(
+            details::visit_table_for<variant>(
                 [&]<size_t I>(details::size_constant<I>) {
                     if constexpr (I != variant_npos) {
                         ranges::swap(this->template value_ref<I>(),
@@ -1384,154 +1292,5 @@ public:
 
 #endif
 };
-
-template <typename... Ts>
-requires (... && requires(Ts const& val) { val == val; })
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator==(
-    variant<Ts...> const& left, variant<Ts...> const& right) noexcept((... &&
-    noexcept(std::declval<Ts const&>() == std::declval<Ts const&>()))) {
-    return left.index() == right.index() &&
-        visit_table_for<variant<Ts...>>(
-            [&]<size_t I>(details::size_constant<I>) -> bool {
-                if constexpr (I == variant_npos) {
-                    return true;
-                } else {
-                    return *get_if<I>(RXX_BUILTIN_addressof(left)) ==
-                        *get_if<I>(RXX_BUILTIN_addressof(right));
-                }
-            },
-            left.index());
-}
-
-template <typename... Ts>
-requires (... && requires(Ts const& val) { val != val; })
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator!=(
-    variant<Ts...> const& left, variant<Ts...> const& right) noexcept((... &&
-    noexcept(std::declval<Ts const&>() != std::declval<Ts const&>()))) {
-    return left.index() != right.index() ||
-        visit_table_for<variant<Ts...>>(
-            [&]<size_t I>(details::size_constant<I>) -> bool {
-                if constexpr (I == variant_npos) {
-                    return false;
-                } else {
-                    return *get_if<I>(RXX_BUILTIN_addressof(left)) !=
-                        *get_if<I>(RXX_BUILTIN_addressof(right));
-                }
-            },
-            left.index());
-}
-
-template <typename... Ts>
-requires (... && requires(Ts const& val) { val < val; })
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<(
-    variant<Ts...> const& left, variant<Ts...> const& right) noexcept((... &&
-    noexcept(std::declval<Ts const&>() < std::declval<Ts const&>()))) {
-    using ssize_t = std::make_signed_t<size_t>;
-    return ((ssize_t)left.index()) < ((ssize_t)right.index()) ||
-        (left.index() == right.index() &&
-            visit_table_for<variant<Ts...>>(
-                [&]<size_t I>(details::size_constant<I>) -> bool {
-                    if constexpr (I == variant_npos) {
-                        return false;
-                    } else {
-                        return *get_if<I>(RXX_BUILTIN_addressof(left)) <
-                            *get_if<I>(RXX_BUILTIN_addressof(right));
-                    }
-                },
-                left.index()));
-}
-
-template <typename... Ts>
-requires (... && requires(Ts const& val) { val > val; })
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>(
-    variant<Ts...> const& left, variant<Ts...> const& right) noexcept((... &&
-    noexcept(std::declval<Ts const&>() > std::declval<Ts const&>()))) {
-    using ssize_t = std::make_signed_t<size_t>;
-    return ((ssize_t)left.index()) > ((ssize_t)right.index()) ||
-        (left.index() == right.index() &&
-            visit_table_for<variant<Ts...>>(
-                [&]<size_t I>(details::size_constant<I>) -> bool {
-                    if constexpr (I == variant_npos) {
-                        return false;
-                    } else {
-                        return *get_if<I>(RXX_BUILTIN_addressof(left)) >
-                            *get_if<I>(RXX_BUILTIN_addressof(right));
-                    }
-                },
-                left.index()));
-}
-
-template <typename... Ts>
-requires (... && requires(Ts const& val) { val <= val; })
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator<=(
-    variant<Ts...> const& left, variant<Ts...> const& right) noexcept((... &&
-    noexcept(std::declval<Ts const&>() < std::declval<Ts const&>()))) {
-    using ssize_t = std::make_signed_t<size_t>;
-    return ((ssize_t)left.index()) < ((ssize_t)right.index()) ||
-        (left.index() == right.index() &&
-            visit_table_for<variant<Ts...>>(
-                [&]<size_t I>(details::size_constant<I>) -> bool {
-                    if constexpr (I == variant_npos) {
-                        return true;
-                    } else {
-                        return *get_if<I>(RXX_BUILTIN_addressof(left)) <=
-                            *get_if<I>(RXX_BUILTIN_addressof(right));
-                    }
-                },
-                left.index()));
-}
-
-template <typename... Ts>
-requires (... && requires(Ts const& val) { val >= val; })
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr bool operator>=(
-    variant<Ts...> const& left, variant<Ts...> const& right) noexcept((... &&
-    noexcept(std::declval<Ts const&>() >= std::declval<Ts const&>()))) {
-    using ssize_t = std::make_signed_t<size_t>;
-    return ((ssize_t)left.index()) > ((ssize_t)right.index()) ||
-        (left.index() == right.index() &&
-            visit_table_for<variant<Ts...>>(
-                [&]<size_t I>(details::size_constant<I>) -> bool {
-                    if constexpr (I == variant_npos) {
-                        return true;
-                    } else {
-                        return *get_if<I>(RXX_BUILTIN_addressof(left)) >=
-                            *get_if<I>(RXX_BUILTIN_addressof(right));
-                    }
-                },
-                left.index()));
-}
-
-template <typename... Ts>
-requires (... && std::three_way_comparable<Ts>)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr auto operator<=>(
-    variant<Ts...> const& left, variant<Ts...> const& right) noexcept((... &&
-    noexcept(std::declval<Ts const&>() <=> std::declval<Ts const&>()))) {
-    using ssize_t = std::make_signed_t<size_t>;
-    using result = std::common_comparison_category_t<std::strong_ordering,
-        std::compare_three_way_result_t<ssize_t>,
-        std::compare_three_way_result_t<Ts>...>;
-
-    if (auto cmp = (ssize_t)left.index() <=> (ssize_t)right.index(); cmp != 0) {
-        return [&]() -> result { return cmp; }();
-    }
-
-    return visit_table_for<variant<Ts...>>(
-        [&]<size_t I>(details::size_constant<I>) -> result {
-            if constexpr (I == variant_npos) {
-                return 0 <=> 0;
-            } else {
-                return *get_if<I>(RXX_BUILTIN_addressof(left)) <=>
-                    *get_if<I>(RXX_BUILTIN_addressof(right));
-            }
-        },
-        left.index());
-}
 
 RXX_DEFAULT_NAMESPACE_END

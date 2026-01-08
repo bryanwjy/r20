@@ -4,15 +4,17 @@
 
 #include "rxx/config.h"
 
+#include "rxx/variant/fwd.h"
+
 #include "rxx/functional/hash.h"
 #include "rxx/type_traits/template_access.h"
 #include "rxx/utility/jump_table.h"
-#include "rxx/variant/variant.h"
+#include "rxx/variant/get.h"
 
 template <typename... Ts>
-requires (... && std::semiregular<std::hash<std::remove_cv_t<Ts>>>) &&
+requires (... && std::semiregular<std::hash<std::remove_const_t<Ts>>>) &&
     (... &&
-        requires(Ts const& val, std::hash<std::remove_cv_t<Ts>> hasher) {
+        requires(Ts const& val, std::hash<std::remove_const_t<Ts>> hasher) {
             { hasher(val) } -> std::same_as<size_t>;
         })
 struct std::hash<__RXX variant<Ts...>> {

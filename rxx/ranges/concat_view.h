@@ -392,7 +392,7 @@ public:
     {
         return left.it_.index() < right.it_.index() ||
             (left.it_.index() == right.it_.index() &&
-                __RXX visit_table_for<base_iter>(
+                __RXX details::visit_table_for<base_iter>(
                     [&]<size_t I>(__RXX details::size_constant<I>) {
                         if constexpr (I == variant_npos) {
                             return false;
