@@ -100,14 +100,24 @@ class RXX_ATTRIBUTE(EMPTY_BASES) optional :
     friend details::optional_iteration<optional, T>;
     friend details::optional_monads<optional, T>;
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
+    constexpr decltype(auto) as_base() & noexcept {
+        return static_cast<base_type&>(*this);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
     constexpr decltype(auto) as_base() const& noexcept {
         return static_cast<base_type const&>(*this);
     }
 
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
     constexpr decltype(auto) as_base() && noexcept {
         return static_cast<base_type&&>(*this);
+    }
+
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, ALWAYS_INLINE, NODISCARD)
+    constexpr decltype(auto) as_base() const&& noexcept {
+        return static_cast<base_type const&&>(*this);
     }
 
 public:
@@ -132,33 +142,47 @@ public:
     }
 
     template <typename U>
-    requires details::optional_constructible_as<U const&, T> &&
-        details::convertible_from_optional_of<U, optional, T>
+    requires details::valid_optional_ctor<T, optional<U> const&>
     __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U const&,
         T>) constexpr optional(optional<U> const&
             other) noexcept(std::is_nothrow_constructible_v<T, U const&>)
         : base_type(details::dispatch_opt, other.as_base()) {}
 
-    template <details::optional_constructible_as<T> U>
-    requires details::convertible_from_optional_of<U, optional, T>
+    template <typename U>
+    requires details::valid_optional_ctor<T, optional<U>>
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr optional(optional<U>&&
             other) noexcept(std::is_nothrow_constructible_v<T, U>)
         : base_type(details::dispatch_opt, __RXX move(other).as_base()) {}
 
     template <typename U>
-    requires details::optional_constructible_as<U const, T> &&
-        details::convertible_from_optional_of<U, optional, T>
+    requires std::is_lvalue_reference_v<T> &&
+        details::valid_optional_ctor<T, optional<U>&>
     __RXX_HIDE_FROM_ABI explicit(
-        !std::is_convertible_v<U, T>) constexpr optional(optional<U> const&&
+        !std::is_convertible_v<U&, T>) constexpr optional(optional<U>&
+            other) noexcept(std::is_nothrow_constructible_v<T, U&>)
+        : base_type(details::dispatch_opt, other.as_base()) {}
+
+    template <typename U>
+    requires std::is_lvalue_reference_v<T> &&
+        details::valid_optional_ctor<T, optional<U> const>
+    __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U const,
+        T>) constexpr optional(optional<U> const&&
             other) noexcept(std::is_nothrow_constructible_v<T, U const>)
         : base_type(details::dispatch_opt, __RXX move(other).as_base()) {}
 
     template <std::same_as<std::in_place_t> Tag, typename... Args>
-    requires std::is_constructible_v<T, Args...>
+    requires (!std::is_lvalue_reference_v<T>) &&
+        std::is_constructible_v<T, Args...>
     __RXX_HIDE_FROM_ABI explicit constexpr optional(Tag tag,
         Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>)
         : base_type(tag, __RXX forward<Args>(args)...) {}
+
+    template <std::same_as<std::in_place_t> Tag, typename U>
+    requires std::is_lvalue_reference_v<T> && std::is_constructible_v<T, U>
+    __RXX_HIDE_FROM_ABI explicit constexpr optional(Tag tag, U&& arg) noexcept(
+        std::is_nothrow_constructible_v<T, U>)
+        : base_type(tag, __RXX forward<U>(arg)) {}
 
     template <std::same_as<generating_t> Tag, typename F, typename... Args>
     requires std::is_invocable_v<F, Args...> &&
@@ -183,37 +207,47 @@ public:
             other) noexcept(std::is_nothrow_constructible_v<T, U>)
         : base_type(std::in_place, __RXX forward<U>(other)) {}
 
-#if RXX_SUPPORTS_reference_constructs_from_temporary
+    template <std::same_as<generating_t> Tag, typename F, typename... Args>
+    requires std::is_lvalue_reference_v<T> && std::is_invocable_v<F, Args...> &&
+        (!details::generatable_from<T, F, Args...>) &&
+        std::is_invocable_r_v<T, F, Args...>
+    __RXX_HIDE_FROM_ABI explicit constexpr optional(Tag tag, F&& func,
+        Args&&... args) noexcept(std::is_nothrow_invocable_r_v<T, F, Args...>)
+        : base_type(
+              tag, __RXX forward<F>(func), __RXX forward<Args>(args)...) {}
 
-    template <typename U = std::remove_cv_t<T>>
-    requires details::value_convertible_to_optional<U, optional, T> &&
-        details::delete_optional_reference_specialization<U, optional, T>
-    explicit(!std::is_convertible_v<U, T>) constexpr optional(U&&) noexcept(
-        std::is_nothrow_constructible_v<T, U>) = delete;
+#if RXX_SUPPORTS_reference_constructs_from_temporary
+    template <typename U>
+    requires std::is_lvalue_reference_v<T> &&
+        details::valid_optional_ctor<T, optional<U>&> &&
+        __RXX reference_constructs_from_temporary_v<T, U&>
+    __RXX_HIDE_FROM_ABI explicit(
+        !std::is_convertible_v<U&, T>) constexpr optional(optional<U>&
+            other) noexcept(std::is_nothrow_constructible_v<T, U&>) = delete;
 
     template <typename U>
-    requires details::optional_constructible_as<U const&, T> &&
-        details::convertible_from_optional_of<U, optional, T> &&
-        details::delete_optional_reference_specialization<U const&, optional, T>
+    requires details::valid_optional_ctor<T, optional<U> const&> &&
+        __RXX reference_constructs_from_temporary_v<T, U const&>
     __RXX_HIDE_FROM_ABI explicit(!std::is_convertible_v<U const&,
         T>) constexpr optional(optional<U> const&
             other) noexcept(std::is_nothrow_constructible_v<T, U const&>) =
         delete;
 
-    template <details::optional_constructible_as<T> U>
-    requires details::convertible_from_optional_of<U, optional, T> &&
-        details::delete_optional_reference_specialization<U, optional, T>
+    template <typename U>
+    requires details::valid_optional_ctor<T, optional<U>> &&
+        __RXX reference_constructs_from_temporary_v<T, U>
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr optional(optional<U>&&
             other) noexcept(std::is_nothrow_constructible_v<T, U>) = delete;
 
     template <typename U>
-    requires details::optional_constructible_as<U const, T> &&
-        details::convertible_from_optional_of<U, optional, T> &&
-        details::delete_optional_reference_specialization<U const, optional, T>
+    requires std::is_lvalue_reference_v<T> &&
+        details::valid_optional_ctor<T, optional<U> const> &&
+        __RXX reference_constructs_from_temporary_v<T, U const>
     __RXX_HIDE_FROM_ABI explicit(
         !std::is_convertible_v<U, T>) constexpr optional(optional<U> const&&
-            other) noexcept(std::is_nothrow_constructible_v<T, U>) = delete;
+            other) noexcept(std::is_nothrow_constructible_v<T, U const>) =
+        delete;
 
     template <typename U, typename... Args>
     requires std::is_constructible_v<T, std::initializer_list<U>&, Args...> &&
@@ -221,25 +255,60 @@ public:
     explicit optional(
         std::in_place_t, std::initializer_list<U>, Args&&...) = delete;
 
-    template <std::same_as<generating_t> Tag, typename F, typename... Args>
-    requires std::is_invocable_v<F, Args...> &&
-        (!details::generatable_from<T, F, Args...>) &&
-        std::is_lvalue_reference_v<T> && std::is_invocable_r_v<T, F, Args...>
-    __RXX_HIDE_FROM_ABI explicit constexpr optional(Tag tag, F&& func,
-        Args&&... args) noexcept(std::is_nothrow_invocable_r_v<T, F, Args...>)
-        : base_type(
-              tag, __RXX forward<F>(func), __RXX forward<Args>(args)...) {}
+    template <std::same_as<std::in_place_t> Tag, typename U>
+    requires std::is_lvalue_reference_v<T> && std::is_constructible_v<T, U> &&
+        __RXX reference_constructs_from_temporary_v<T, U>
+    __RXX_HIDE_FROM_ABI explicit constexpr optional(Tag tag, U&& arg) noexcept(
+        std::is_nothrow_constructible_v<T, U>) = delete;
 
     template <std::same_as<generating_t> Tag, typename F, typename... Args>
     requires std::is_invocable_v<F, Args...> &&
+        details::generatable_from<T, F, Args...> &&
+        __RXX reference_constructs_from_temporary_v<T,
+            std::invoke_result_t<F, Args...>>
+    __RXX_HIDE_FROM_ABI explicit constexpr optional(Tag tag, F&& func,
+        Args&&... args) noexcept(details::nothrow_generatable_from<T, F,
+        Args...>) = delete;
+
+    template <std::same_as<generating_t> Tag, typename F, typename... Args>
+    requires std::is_lvalue_reference_v<T> && std::is_invocable_v<F, Args...> &&
         (!details::generatable_from<T, F, Args...>) &&
-        std::is_lvalue_reference_v<T> && std::is_invocable_r_v<T, F, Args...> &&
+        std::is_invocable_r_v<T, F, Args...> &&
         details::delete_optional_reference_specialization<
             std::invoke_result_t<F, Args...>, optional, T>
     __RXX_HIDE_FROM_ABI explicit constexpr optional(Tag tag, F&& func,
         Args&&... args) noexcept(std::is_nothrow_invocable_r_v<T, F, Args...>) =
         delete;
+
+    template <typename U = std::remove_cv_t<T>>
+    requires details::value_convertible_to_optional<U, optional, T> &&
+        details::delete_optional_reference_specialization<U, optional, T>
+    explicit(!std::is_convertible_v<U, T>) constexpr optional(U&&) noexcept(
+        std::is_nothrow_constructible_v<T, U>) = delete;
 #endif // if RXX_SUPPORTS_reference_constructs_from_temporary
+
+    template <typename U>
+    requires requires {
+        requires !std::same_as<U, T>;
+        requires std::is_constructible_v<T, U&>;
+        requires std::is_assignable_v<T&, U&>;
+        requires details::assignable_from_optional_of<U, optional, T>;
+    }
+    __RXX_HIDE_FROM_ABI constexpr optional& operator=(
+        optional<U>& other) noexcept(std::is_nothrow_constructible_v<T, U&> &&
+        std::is_nothrow_assignable_v<T&, U&>) {
+        if (this->has_value() != other.has_value()) {
+            if (other.has_value()) {
+                this->emplace(*other);
+            } else {
+                this->reset();
+            }
+        } else if (other.has_value()) {
+            base_type::assign_value(*other);
+        }
+
+        return *this;
+    }
 
     template <typename U>
     requires requires {
@@ -277,12 +346,36 @@ public:
         std::is_nothrow_assignable_v<T&, U>) {
         if (this->has_value() != other.has_value()) {
             if (other.has_value()) {
-                this->emplace(__RXX move(*other));
+                this->emplace(static_cast<U&&>(*other));
             } else {
                 this->reset();
             }
         } else if (other.has_value()) {
-            base_type::assign_value(__RXX move(*other));
+            base_type::assign_value(static_cast<U&&>(*other));
+        }
+
+        return *this;
+    }
+
+    template <typename U>
+    requires requires {
+        requires !std::same_as<U, T>;
+        requires std::is_constructible_v<T, U const>;
+        requires std::is_assignable_v<T&, U const>;
+        requires details::assignable_from_optional_of<U, optional, T>;
+    }
+    __RXX_HIDE_FROM_ABI constexpr optional&
+    operator=(optional<U> const&& other) noexcept(
+        std::is_nothrow_constructible_v<T, U const> &&
+        std::is_nothrow_assignable_v<T&, U const>) {
+        if (this->has_value() != other.has_value()) {
+            if (other.has_value()) {
+                this->emplace(static_cast<U const&&>(*other));
+            } else {
+                this->reset();
+            }
+        } else if (other.has_value()) {
+            base_type::assign_value(static_cast<U const&&>(*other));
         }
 
         return *this;
@@ -331,21 +424,32 @@ public:
     requires std::is_invocable_v<F, Args...> &&
         (!details::generatable_from<T, F, Args...>) &&
         (std::is_lvalue_reference_v<T> &&
+            std::is_invocable_r_v<T, F, Args...> &&
             !__RXX reference_constructs_from_temporary_v<T,
                 std::invoke_result_t<F, Args...>>)
-    __RXX_HIDE_FROM_ABI constexpr T&
-    generate(F&& func, Args&&... args) noexcept(
-        details::nothrow_generatable_from<T, F, Args...>) {
+    __RXX_HIDE_FROM_ABI constexpr T& generate(F&& func,
+        Args&&... args) noexcept(std::is_nothrow_invocable_r_v<T, F, Args...>) {
         return this->dispatch_construct(
             __RXX forward<F>(func), __RXX forward<Args>(args)...);
     }
 #endif
     template <typename... Args>
-    requires std::is_constructible_v<T, Args...>
+    requires (!std::is_lvalue_reference_v<T>) &&
+        std::is_constructible_v<T, Args...>
     __RXX_HIDE_FROM_ABI constexpr T& emplace(Args&&... args) noexcept(
         std::is_nothrow_constructible_v<T, Args...>) {
         return this->construct(__RXX forward<Args>(args)...);
     }
+
+#if RXX_SUPPORTS_reference_constructs_from_temporary
+    template <typename U>
+    requires std::is_lvalue_reference_v<T> && std::is_constructible_v<T, U> &&
+        (!__RXX reference_constructs_from_temporary_v<T&, U>)
+    __RXX_HIDE_FROM_ABI constexpr T& emplace(U&& arg) noexcept(
+        std::is_nothrow_constructible_v<T, U>) {
+        return this->construct(__RXX forward<U>(arg));
+    }
+#endif
 
     template <typename U, typename... Args>
     requires std::is_constructible_v<T, std::initializer_list<U>&, Args...>
@@ -376,13 +480,6 @@ public:
         base_type::swap(other);
     }
 
-    __RXX_HIDE_FROM_ABI friend constexpr void swap(
-        optional& lhs, optional& rhs) noexcept(noexcept(lhs.swap(rhs)))
-    requires requires(optional& opt) { opt.swap(opt); }
-    {
-        lhs.swap(rhs);
-    }
-
     using details::optional_iteration<optional, T>::begin;
     using details::optional_iteration<optional, T>::end;
     using details::optional_monads<optional, T>::and_then;
@@ -391,27 +488,40 @@ public:
 };
 
 template <typename T>
+__RXX_HIDE_FROM_ABI constexpr void swap(
+    optional<T>& lhs, optional<T>& rhs) = delete;
+
+template <typename T>
+__RXX_HIDE_FROM_ABI constexpr void swap(
+    optional<T>& lhs, optional<T>& rhs) noexcept(noexcept(lhs.swap(rhs)))
+requires requires { lhs.swap(rhs); }
+{
+    lhs.swap(rhs);
+}
+
+template <__RXX details::optional_value T>
 optional(T) -> optional<T>;
 
 template <details::make_optional_barrier = details::make_optional_barrier{},
-    typename T>
-requires std::is_constructible_v<std::decay_t<T>, T>
+    details::optional_value T>
+requires std::is_constructible_v<optional<std::decay_t<T>>, std::in_place_t, T>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr optional<std::decay_t<T>> make_optional(T&& value) noexcept(
     std::is_nothrow_constructible_v<std::decay_t<T>, T>) {
     return optional<std::decay_t<T>>(std::in_place, __RXX forward<T>(value));
 }
 
-template <typename T, typename... Args>
-requires std::is_constructible_v<T, Args...>
+template <details::optional_value T, typename... Args>
+requires std::is_constructible_v<optional<T>, std::in_place_t, Args...>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr optional<T> make_optional(Args&&... args) noexcept(
     std::is_nothrow_constructible_v<T, Args...>) {
     return optional<T>(std::in_place, __RXX forward<Args>(args)...);
 }
 
-template <typename T, typename U, typename... Args>
-requires std::is_constructible_v<T, std::initializer_list<U>&, Args...>
+template <details::optional_value T, typename U, typename... Args>
+requires std::is_constructible_v<optional<T>, std::in_place_t,
+    std::initializer_list<U>&, Args...>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr optional<T> make_optional(std::initializer_list<U> ilist,
     Args&&... args) noexcept(std::is_nothrow_constructible_v<T,
@@ -421,17 +531,17 @@ constexpr optional<T> make_optional(std::initializer_list<U> ilist,
 } // namespace gcc
 RXX_DEFAULT_NAMESPACE_END
 
-template <typename T>
+template <__RXX details::optional_value T>
 inline constexpr bool std::ranges::enable_view<__RXX gcc::optional<T>> = true;
 
 #if RXX_SUPPORTS_OPTIONAL_REFERENCES
-template <typename T>
+template <__RXX details::optional_value T>
 inline constexpr bool
     std::ranges::enable_borrowed_range<__RXX gcc::optional<T&>> = true;
 #endif
 
 #if RXX_SUPPORTS_RANGE_FORMAT
-template <typename T>
+template <__RXX details::optional_value T>
 constexpr auto std::format_kind<__RXX gcc::optional<T>> =
     std::range_format::disabled;
 #endif
