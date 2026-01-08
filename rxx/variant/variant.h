@@ -643,7 +643,7 @@ public:
                             other.template value_ref<I>());
                     } else {
                         i_type copy(other.template value_ref<I>());
-                        this->reinitialize_value<I>(copy);
+                        this->reinitialize_value<I>(__RXX move(copy));
                     }
                 },
                 other.base_index());
@@ -1306,11 +1306,21 @@ __RXX_HIDE_FROM_ABI constexpr void swap(
     variant<Ts...>& left, variant<Ts...>& right) = delete;
 
 template <typename... Ts>
-__RXX_HIDE_FROM_ABI constexpr void swap(variant<Ts...>& left,
-    variant<Ts...>& right) noexcept(noexcept(left.swap(right)))
 requires requires(variant<Ts...>& val) { val.swap(val); }
-{
-    return left.swap(right);
+__RXX_HIDE_FROM_ABI constexpr void swap(variant<Ts...>& left,
+    variant<Ts...>& right) noexcept(noexcept(left.swap(right))) {
+    left.swap(right);
+}
+
+template <typename... Ts>
+requires (!requires(variant<Ts...>& val) { val.swap(val); }) &&
+    std::is_move_constructible_v<variant<Ts...>> &&
+    std::is_move_assignable_v<variant<Ts...>>
+__RXX_HIDE_FROM_ABI constexpr void
+swap(variant<Ts...>& left, variant<Ts...>& right) noexcept(
+    std::is_nothrow_move_constructible_v<variant<Ts...>> &&
+    std::is_nothrow_move_assignable_v<variant<Ts...>>) {
+    right = __RXX exchange(left, __RXX move(right));
 }
 
 RXX_DEFAULT_NAMESPACE_END

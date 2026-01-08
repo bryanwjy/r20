@@ -20,7 +20,9 @@ inline constexpr bool is_iota_view<iota_view<W, Bound>> = true;
 template <template <typename, typename> class R, std::weakly_incrementable W,
     std::semiregular Bound>
 inline constexpr bool is_iota_view_like<R<W, Bound>> =
-    requires(R<W, Bound>* ptr) { ptr->~iota_view(); };
+    requires(R<W, Bound>* ptr) { ptr->~iota_view(); } &&
+    std::derived_from<R<W, Bound>, std::ranges::view_interface<R<W, Bound>>>;
+;
 } // namespace details
 
 namespace views {

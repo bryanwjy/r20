@@ -492,11 +492,21 @@ __RXX_HIDE_FROM_ABI constexpr void swap(
     optional<T>& lhs, optional<T>& rhs) = delete;
 
 template <typename T>
+requires requires(optional<T>& opt) { opt.swap(opt); }
 __RXX_HIDE_FROM_ABI constexpr void swap(
-    optional<T>& lhs, optional<T>& rhs) noexcept(noexcept(lhs.swap(rhs)))
-requires requires { lhs.swap(rhs); }
-{
+    optional<T>& lhs, optional<T>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
+}
+
+template <typename T>
+requires (!requires(optional<T>& opt) { opt.swap(opt); }) &&
+    std::is_move_constructible_v<optional<T>> &&
+    std::is_move_assignable_v<optional<T>>
+__RXX_HIDE_FROM_ABI constexpr void
+swap(optional<T>& lhs, optional<T>& rhs) noexcept(
+    std::is_nothrow_move_constructible_v<optional<T>> &&
+    std::is_nothrow_move_assignable_v<optional<T>>) {
+    rhs = __RXX exchange(lhs, __RXX move(rhs));
 }
 
 template <__RXX details::optional_value T>

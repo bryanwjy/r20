@@ -21,8 +21,9 @@ template <template <typename, typename, subrange_kind> class R,
     std::input_or_output_iterator I, std::sentinel_for<I> S,
     ranges::subrange_kind K>
 requires (K == ranges::subrange_kind::sized || !std::sized_sentinel_for<S, I>)
-inline constexpr bool is_subrange_like<R<I, S, K>> =
-    requires(R<I, S, K>* ptr) { ptr->~subrange(); };
+inline constexpr bool is_subrange_like<R<I, S, K>> = requires(R<I, S, K>* ptr) {
+    ptr->~subrange();
+} && std::derived_from<R<I, S, K>, std::ranges::view_interface<R<I, S, K>>>;
 
 } // namespace details
 

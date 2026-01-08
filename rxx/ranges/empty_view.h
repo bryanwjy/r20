@@ -18,8 +18,9 @@ inline constexpr bool is_empty_view<ranges::empty_view<T>> = true;
 
 template <template <typename> class R, typename T>
 requires std::is_object_v<T>
-inline constexpr bool is_repeat_view<R<T>> =
-    requires(R<T>* ptr) { ptr->~empty_view(); };
+inline constexpr bool is_empty_view_like<R<T>> = requires(R<T>* ptr) {
+    ptr->~empty_view();
+} && std::derived_from<R<T>, std::ranges::view_interface<R<T>>>;
 } // namespace details
 
 namespace views {

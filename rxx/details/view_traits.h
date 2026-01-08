@@ -39,7 +39,7 @@ template <typename R>
 inline constexpr bool is_empty_view = false;
 
 template <typename R>
-inline constexpr bool is_ext_empty_view = false;
+inline constexpr bool is_empty_view_like = false;
 
 template <typename R>
 inline constexpr bool is_basic_string_view = false;

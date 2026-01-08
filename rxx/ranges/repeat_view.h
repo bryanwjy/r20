@@ -434,7 +434,8 @@ requires std::is_object_v<T> && std::same_as<T, std::remove_cv_t<T>> &&
     (details::integer_like_with_usable_difference_type<Bound> ||
         std::same_as<Bound, std::unreachable_sentinel_t>)
 inline constexpr bool is_repeat_view_like<R<T, Bound>> =
-    requires(R<T, Bound>* ptr) { ptr->~repeat_view(); };
+    requires(R<T, Bound>* ptr) { ptr->~repeat_view(); } &&
+    std::derived_from<R<T, Bound>, std::ranges::view_interface<R<T, Bound>>>;
 } // namespace details
 
 namespace views {
