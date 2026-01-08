@@ -535,7 +535,7 @@ template <__RXX details::optional_value T>
 inline constexpr bool std::ranges::enable_view<__RXX gcc::optional<T>> = true;
 
 #if RXX_SUPPORTS_OPTIONAL_REFERENCES
-template <__RXX details::optional_value T>
+template <typename T>
 inline constexpr bool
     std::ranges::enable_borrowed_range<__RXX gcc::optional<T&>> = true;
 #endif
