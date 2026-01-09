@@ -9,6 +9,7 @@
 
 #  define RXX_SUPPORTS_GENERATOR 1
 
+#  include "rxx/concepts/common_reference_with.h"
 #  include "rxx/ranges/elements_of.h"
 #  include "rxx/ranges/primitives.h"
 #  include "rxx/ranges/view_interface.h"
@@ -570,9 +571,9 @@ class generator : public ranges::view_interface<generator<Ref, V, Allocator>> {
     static_assert(std::is_reference_v<reference> ||
         !std::is_const_v<reference> && !std::is_volatile_v<reference> &&
             std::is_object_v<reference> && std::copy_constructible<reference>);
-    static_assert(std::common_reference_with<reference&&, value&> &&
-        std::common_reference_with<reference&&, RRef&&> &&
-        std::common_reference_with<RRef&&, value const&>);
+    static_assert(__RXX common_reference_with<reference&&, value&> &&
+        __RXX common_reference_with<reference&&, RRef&&> &&
+        __RXX common_reference_with<RRef&&, value const&>);
 
     class iterator;
 

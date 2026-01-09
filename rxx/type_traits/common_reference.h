@@ -27,7 +27,6 @@
 #endif
 // IWYU pragma: end_exports
 
-#include <concepts>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -164,12 +163,6 @@ template <typename T, typename U, typename... Vs>
 requires requires { typename details::common_reference::impl<T, U>::type; }
 struct __RXX_PUBLIC_TEMPLATE common_reference<T, U, Vs...> :
     common_reference<common_reference_t<T, U>, Vs...> {};
-
-template <typename T, typename U>
-concept common_reference_with =
-    std::same_as<common_reference_t<T, U>, common_reference_t<U, T>> &&
-    std::convertible_to<T, common_reference_t<T, U>> &&
-    std::convertible_to<U, common_reference_t<T, U>>;
 
 RXX_DEFAULT_NAMESPACE_END
 

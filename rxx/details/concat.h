@@ -1,6 +1,7 @@
 // Copyright 2025 Bryan Wong
 #pragma once
 
+#include "rxx/concepts/common_reference_with.h"
 #include "rxx/iterator/iter_move.h"
 #include "rxx/ranges/primitives.h"
 #include "rxx/type_traits/common_reference.h"

@@ -3,11 +3,22 @@
 
 #include "rxx/config.h"
 
+#include "rxx/concepts/common_reference_with.h"
 #include "rxx/details/class_or_enum.h"
 #include "rxx/utility.h"
 
-#include <concepts>
 #include <type_traits>
+
+#if RXX_LIBCXX && __has_include(<__concepts/move_constructible.h>)
+#  include <__concepts/move_constructible.h>
+#else
+#  include <concepts>
+#endif
+#if RXX_LIBCXX && __has_include(<__concepts/assignable_from.h>)
+#  include <__concepts/assignable_from.h>
+#else
+#  include <concepts>
+#endif
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -73,5 +84,17 @@ inline constexpr details::swap_t swap{};
 } // namespace cpo
 
 } // namespace ranges
+
+template <typename T>
+concept swappable = requires(T& a, T& b) { ranges::swap(a, b); };
+
+template <typename T, typename U>
+concept swappable_with =
+    __RXX common_reference_with<T, U> && requires(T&& t, U&& u) {
+        ranges::swap(__RXX forward<T>(t), __RXX forward<T>(t));
+        ranges::swap(__RXX forward<U>(u), __RXX forward<U>(u));
+        ranges::swap(__RXX forward<T>(t), __RXX forward<U>(u));
+        ranges::swap(__RXX forward<U>(u), __RXX forward<T>(t));
+    };
 
 RXX_DEFAULT_NAMESPACE_END
