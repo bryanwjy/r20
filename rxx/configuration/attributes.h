@@ -35,10 +35,6 @@
 #  define RXX_NODISCARD __attribute__((__warn_unused_result__))
 #  define __RXX_ATTRIBUTE_NODISCARD __warn_unused_result__
 #  define __RXX_ATTRIBUTE_TYPE_GNU_NODISCARD
-#elif RXX_HAS_KEYWORD(_Check_return_)
-#  define RXX_NODISCARD _Check_return_
-#  define __RXX_ATTRIBUTE_NODISCARD _Check_return_
-#  define __RXX_ATTRIBUTE_TYPE_MSVC_EXT_NODISCARD
 #else
 #  define RXX_NODISCARD
 #endif /* RXX_HAS_CPP_ATTRIBUTE(nodiscard) */
@@ -132,9 +128,6 @@
 #elif RXX_HAS_GNU_ATTRIBUTE(__always_inline__)
 #  define __RXX_ATTRIBUTE_ALWAYS_INLINE __always_inline__
 #  define __RXX_ATTRIBUTE_TYPE_GNU_ALWAYS_INLINE
-#elif RXX_HAS_MSVC_KEYWORD(__forceinline)
-#  define __RXX_ATTRIBUTE_ALWAYS_INLINE __forceinline
-#  define __RXX_ATTRIBUTE_TYPE_MSVC_EXT_ALWAYS_INLINE
 #endif /* RXX_HAS_CPP_ATTRIBUTE(clang::always_inline) */
 
 #if RXX_HAS_CPP_ATTRIBUTE(msvc::noinline)
