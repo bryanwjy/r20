@@ -6,7 +6,6 @@
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/integer_like.h" // IWYU pragma: keep
 #include "rxx/details/view_traits.h"
-#include "rxx/functional/bind_back.h"
 #include "rxx/ranges/concepts.h"
 #include "rxx/ranges/empty_view.h" // IWYU pragma: keep
 #include "rxx/ranges/iota_view.h"  // IWYU pragma: keep
