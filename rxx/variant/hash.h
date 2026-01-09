@@ -11,12 +11,15 @@
 #include "rxx/utility/jump_table.h"
 #include "rxx/variant/get.h"
 
-template <typename... Ts>
-requires (... && std::semiregular<std::hash<std::remove_const_t<Ts>>>) &&
-    (... &&
-        requires(Ts const& val, std::hash<std::remove_const_t<Ts>> hasher) {
-            { hasher(val) } -> std::same_as<size_t>;
-        })
+namespace details {
+template <typename T>
+concept hashable_type = std::semiregular<std::hash<std::remove_const_t<T>>> &&
+    requires(T const& val, std::hash<std::remove_const_t<T>> hasher) {
+        { hasher(val) } -> std::same_as<size_t>;
+    };
+} // namespace details
+
+template <details::hashable_type... Ts>
 struct std::hash<__RXX variant<Ts...>> {
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL size_t operator()(
         __RXX variant<Ts...> const& var) RXX_CONST_CALL noexcept((... &&

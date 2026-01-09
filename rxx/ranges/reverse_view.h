@@ -66,7 +66,6 @@ struct reverse_t : __RXX ranges::details::adaptor_closure<reverse_t> {
         return __RXX forward<R>(arg).base();
     }
 
-#if RXX_SUPPORTS_OPTIONAL_REFERENCES
     template <typename R>
     requires __RXX details::is_optional_like_v<std::remove_cvref_t<R>> &&
         ranges::view<std::remove_cvref_t<R>>
@@ -76,7 +75,6 @@ struct reverse_t : __RXX ranges::details::adaptor_closure<reverse_t> {
             -> decltype(__RXX forward<R>(arg)) {
         return __RXX forward<R>(arg);
     }
-#endif
 
     template <typename R, typename S = unwrapped<std::remove_cvref_t<R>>>
     requires is_sized_reverse_subrange<std::remove_cvref_t<R>>

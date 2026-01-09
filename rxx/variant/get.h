@@ -12,13 +12,16 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
+template <size_t I>
+__RXX_HIDE_FROM_ABI void get_alternative(...) noexcept = delete;
+
 template <size_t I, typename... Us>
 requires requires { typename template_element_t<I, variant<Us...>>; }
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr template_element_t<I, variant<Us...>> const& get(
-    variant<Us...> const& val) {
+    variant<Us...> const& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return val.template value_ref<I>();
+        return get_alternative<I>(val);
     }
 
     RXX_THROW(bad_variant_access());
@@ -26,9 +29,10 @@ constexpr template_element_t<I, variant<Us...>> const& get(
 template <size_t I, typename... Us>
 requires requires { typename template_element_t<I, variant<Us...>>; }
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr template_element_t<I, variant<Us...>>& get(variant<Us...>& val) {
+constexpr template_element_t<I, variant<Us...>>& get(
+    variant<Us...>& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return val.template value_ref<I>();
+        return get_alternative<I>(val);
     }
 
     RXX_THROW(bad_variant_access());
@@ -37,9 +41,9 @@ template <size_t I, typename... Us>
 requires requires { typename template_element_t<I, variant<Us...>>; }
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr template_element_t<I, variant<Us...>> const&& get(
-    variant<Us...> const&& val) {
+    variant<Us...> const&& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return __RXX move(val.template value_ref<I>());
+        return get_alternative<I>(__RXX move(val));
     }
 
     RXX_THROW(bad_variant_access());
@@ -47,9 +51,10 @@ constexpr template_element_t<I, variant<Us...>> const&& get(
 template <size_t I, typename... Us>
 requires requires { typename template_element_t<I, variant<Us...>>; }
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
-constexpr template_element_t<I, variant<Us...>>&& get(variant<Us...>&& val) {
+constexpr template_element_t<I, variant<Us...>>&& get(
+    variant<Us...>&& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return __RXX move(val.template value_ref<I>());
+        return get_alternative<I>(__RXX move(val));
     }
 
     RXX_THROW(bad_variant_access());

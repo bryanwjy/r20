@@ -317,6 +317,11 @@ public:
 };
 template <size_t I, typename T>
 struct variant_typeid {};
+
+#if RXX_COMPILER_GCC
+RXX_DISABLE_WARNING_PUSH()
+RXX_DISABLE_WARNING("-Wattributes")
+#endif
 template <typename T, size_t I, typename T_i>
 requires std::is_arithmetic_v<T_i> &&
     requires(T val) { array_t<T_i>{{__RXX move(val)}}; }
@@ -331,6 +336,9 @@ struct variant_overload<T, variant_typeid<I, T_i>> {
     __RXX_HIDE_FROM_ABI static std::integral_constant<size_t, I> test(
         T_i) noexcept;
 };
+#if RXX_COMPILER_GCC
+RXX_DISABLE_WARNING_POP()
+#endif
 
 template <typename T, typename... Vs>
 struct variant_overload_for_t;
@@ -912,22 +920,30 @@ class variant : private details::variant_base<Ts...> {
     template <typename... Us>
     friend class variant;
 
-    template <size_t I, typename... Us>
-    requires requires { typename template_element_t<I, variant<Us...>>; }
-    friend constexpr template_element_t<I, variant<Us...>> const& get(
-        variant<Us...> const& val);
-    template <size_t I, typename... Us>
-    requires requires { typename template_element_t<I, variant<Us...>>; }
-    friend constexpr template_element_t<I, variant<Us...>>& get(
-        variant<Us...>& val);
-    template <size_t I, typename... Us>
-    requires requires { typename template_element_t<I, variant<Us...>>; }
-    friend constexpr template_element_t<I, variant<Us...>> const&& get(
-        variant<Us...> const&& val);
-    template <size_t I, typename... Us>
-    requires requires { typename template_element_t<I, variant<Us...>>; }
-    friend constexpr template_element_t<I, variant<Us...>>&& get(
-        variant<Us...>&& val);
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    friend constexpr decltype(auto)
+        get_alternative(variant const& val) noexcept {
+        return val.template value_ref<I>();
+    }
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    friend constexpr decltype(auto) get_alternative(variant& val) noexcept {
+        return val.template value_ref<I>();
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    friend constexpr decltype(auto)
+        get_alternative(variant const&& val) noexcept {
+        return __RXX move(val).template value_ref<I>();
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    friend constexpr decltype(auto) get_alternative(variant&& val) noexcept {
+        return __RXX move(val).template value_ref<I>();
+    }
 
 public:
     __RXX_HIDE_FROM_ABI constexpr variant() noexcept(
