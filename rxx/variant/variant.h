@@ -734,6 +734,34 @@ public:
         : container_(std::in_place, tag, __RXX forward<F>(callable),
               __RXX forward<Args>(args)...) {}
 
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() const& noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return union_ref().template get<I>();
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() & noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return union_ref().template get<I>();
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() const&& noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return __RXX move(union_ref().template get<I>());
+    }
+
+    template <size_t I>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
+    constexpr auto value_ref() && noexcept -> decltype(auto) {
+        static_assert(I < template_size_v<union_type>);
+        return __RXX move(union_ref().template get<I>());
+    }
+
 protected:
     __RXX_HIDE_FROM_ABI constexpr size_t base_index() const noexcept {
         return container_.data.index_;
@@ -806,33 +834,6 @@ protected:
         }
     }
 
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() const& noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return union_ref().template get<I>();
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() & noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return union_ref().template get<I>();
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() const&& noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return __RXX move(union_ref().template get<I>());
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    constexpr auto value_ref() && noexcept -> decltype(auto) {
-        static_assert(I < template_size_v<union_type>);
-        return __RXX move(union_ref().template get<I>());
-    }
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
     constexpr auto union_ref() const& noexcept -> decltype(auto) {
         return (container_.data.union_.data);
@@ -919,31 +920,6 @@ class variant : private details::variant_base<Ts...> {
     using base_type = details::variant_base<Ts...>;
     template <typename... Us>
     friend class variant;
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    friend constexpr decltype(auto)
-        get_alternative(variant const& val) noexcept {
-        return val.template value_ref<I>();
-    }
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    friend constexpr decltype(auto) get_alternative(variant& val) noexcept {
-        return val.template value_ref<I>();
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    friend constexpr decltype(auto)
-        get_alternative(variant const&& val) noexcept {
-        return __RXX move(val).template value_ref<I>();
-    }
-
-    template <size_t I>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD, ALWAYS_INLINE)
-    friend constexpr decltype(auto) get_alternative(variant&& val) noexcept {
-        return __RXX move(val).template value_ref<I>();
-    }
 
 public:
     __RXX_HIDE_FROM_ABI constexpr variant() noexcept(

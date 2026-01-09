@@ -10,10 +10,13 @@
 #include "rxx/utility/move.h"
 #include "rxx/variant/bad_variant_access.h"
 
-RXX_DEFAULT_NAMESPACE_BEGIN
+#include <type_traits>
 
-template <size_t I>
-__RXX_HIDE_FROM_ABI void get_alternative(...) noexcept = delete;
+RXX_DEFAULT_NAMESPACE_BEGIN
+namespace details {
+template <typename...>
+class variant_base;
+}
 
 template <size_t I, typename... Us>
 requires requires { typename template_element_t<I, variant<Us...>>; }
@@ -21,7 +24,10 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr template_element_t<I, variant<Us...>> const& get(
     variant<Us...> const& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return get_alternative<I>(val);
+        static_assert(
+            std::is_base_of_v<details::variant_base<Us...>, variant<Us...>>);
+        return ((details::variant_base<Us...> const&)val)
+            .template value_ref<I>();
     }
 
     RXX_THROW(bad_variant_access());
@@ -32,7 +38,9 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr template_element_t<I, variant<Us...>>& get(
     variant<Us...>& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return get_alternative<I>(val);
+        static_assert(
+            std::is_base_of_v<details::variant_base<Us...>, variant<Us...>>);
+        return ((details::variant_base<Us...>&)val).template value_ref<I>();
     }
 
     RXX_THROW(bad_variant_access());
@@ -43,7 +51,10 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr template_element_t<I, variant<Us...>> const&& get(
     variant<Us...> const&& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return get_alternative<I>(__RXX move(val));
+        static_assert(
+            std::is_base_of_v<details::variant_base<Us...>, variant<Us...>>);
+        return ((details::variant_base<Us...> const&&)val)
+            .template value_ref<I>();
     }
 
     RXX_THROW(bad_variant_access());
@@ -54,7 +65,9 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr template_element_t<I, variant<Us...>>&& get(
     variant<Us...>&& val RXX_LIFETIMEBOUND) {
     if (val.index() == I) [[likely]] {
-        return get_alternative<I>(__RXX move(val));
+        static_assert(
+            std::is_base_of_v<details::variant_base<Us...>, variant<Us...>>);
+        return ((details::variant_base<Us...>&&)val).template value_ref<I>();
     }
 
     RXX_THROW(bad_variant_access());
