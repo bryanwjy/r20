@@ -7,7 +7,6 @@
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/cached_position.h"
 #include "rxx/details/movable_box.h"
-#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
@@ -45,8 +44,8 @@ public:
     __RXX_HIDE_FROM_ABI explicit constexpr chunk_by_view(
         V base, Pred pred) noexcept(std::is_nothrow_move_constructible_v<V> &&
         std::is_nothrow_move_constructible_v<Pred>)
-        : base_(std::move(base))
-        , pred_(std::in_place, std::move(pred)) {}
+        : base_(__RXX move(base))
+        , pred_(std::in_place, __RXX move(pred)) {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -57,7 +56,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -69,7 +68,7 @@ public:
             cached_begin_.set(base_, find_next(first));
         }
 
-        return iterator{*this, std::move(first), cached_begin_.get(base_)};
+        return iterator{*this, __RXX move(first), cached_begin_.get(base_)};
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto end() {
@@ -86,7 +85,7 @@ private:
         auto const pred = [this]<typename T, typename U>(
                               T&& left, U&& right) -> bool {
             return !std::invoke(
-                *pred_, std::forward<T>(left), std::forward<U>(right));
+                *pred_, __RXX forward<T>(left), __RXX forward<U>(right));
         };
 
         return ranges::next(
@@ -106,14 +105,14 @@ private:
         auto const pred = [this]<typename T, typename U>(
                               T&& left, U&& right) -> bool {
             return !std::invoke(
-                *pred_, std::forward<U>(right), std::forward<T>(left));
+                *pred_, __RXX forward<U>(right), __RXX forward<T>(left));
         };
 
-        return ranges::prev(
-            ranges::adjacent_find(reversed, pred).base(), 1, std::move(first));
+        return ranges::prev(ranges::adjacent_find(reversed, pred).base(), 1,
+            __RXX move(first));
     }
 
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_ {};
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) details::movable_box<Pred> pred_;
     details::cached_position<V> cached_begin_;
 };
@@ -130,8 +129,8 @@ class chunk_by_view<V, Pred>::iterator {
         iterator_t<V>
             next) noexcept(std::is_nothrow_move_constructible_v<iterator_t<V>>)
         : parent_(RXX_BUILTIN_addressof(parent))
-        , current_(std::move(current))
-        , next_(std::move(next)) {}
+        , current_(__RXX move(current))
+        , next_(__RXX move(next)) {}
 
 public:
     using value_type = subrange<iterator_t<V>>;
@@ -191,8 +190,8 @@ public:
 
 private:
     chunk_by_view* parent_ = nullptr;
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) iterator_t<V> current_{};
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) iterator_t<V> next_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) iterator_t<V> current_ {};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) iterator_t<V> next_ {};
 };
 
 namespace views {
@@ -203,29 +202,22 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
     requires requires {
         chunk_by_view(std::declval<R>(), std::declval<Pred>());
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto
     operator()(R&& arg, Pred&& pred) RXX_CONST_CALL noexcept(noexcept(
-        chunk_by_view(std::forward<R>(arg), std::forward<Pred>(pred)))) {
-        return chunk_by_view(std::forward<R>(arg), std::forward<Pred>(pred));
+        chunk_by_view(__RXX forward<R>(arg), __RXX forward<Pred>(pred)))) {
+        return chunk_by_view(__RXX forward<R>(arg), __RXX forward<Pred>(pred));
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<chunk_by_t>::operator();
-    static constexpr int _S_arity = 2;
-    static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename Pred>
     requires std::constructible_from<std::decay_t<Pred>, Pred>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(Pred&& pred) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(Pred&& pred) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<Pred>, Pred>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(chunk_by_t{}),
-            std::forward<Pred>(pred));
+            __RXX forward<Pred>(pred));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

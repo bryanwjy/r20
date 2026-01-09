@@ -4,6 +4,7 @@
 #include "rxx/config.h"
 
 #include "rxx/tuple/tuple.h"
+#include "rxx/utility/forward.h"
 
 #include <functional>
 
@@ -14,7 +15,7 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
 constexpr tuple<std::unwrap_ref_decay_t<Types>...> make_tuple(
     Types&&... args) noexcept {
     return tuple<std::unwrap_ref_decay_t<Types>...>(
-        std::forward<Types>(args)...);
+        __RXX forward<Types>(args)...);
 }
 
 RXX_DEFAULT_NAMESPACE_END

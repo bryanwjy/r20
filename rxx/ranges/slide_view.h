@@ -8,7 +8,6 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
-#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
@@ -49,7 +48,7 @@ public:
         range_difference_t<V>
             num) noexcept(std::is_nothrow_move_constructible_v<V> &&
         std::is_nothrow_copy_constructible_v<range_difference_t<V>>)
-        : base_{std::move(base)}
+        : base_{__RXX move(base)}
         , num_{num} {
         assert(num > 0);
     }
@@ -63,7 +62,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -174,14 +173,14 @@ class slide_view<V>::iterator {
     __RXX_HIDE_FROM_ABI constexpr iterator(
         iterator_t<Base> current, range_difference_t<Base> num)
     requires (!details::slide_caches_first<Base>)
-        : current_{std::move(current)}
+        : current_{__RXX move(current)}
         , num_{num} {}
 
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator_t<Base> current,
         iterator_t<Base> last_ele, range_difference_t<Base> num)
     requires details::slide_caches_first<Base>
-        : current_{std::move(current)}
-        , last_ele_{std::move(last_ele)}
+        : current_{__RXX move(current)}
+        , last_ele_{__RXX move(last_ele)}
         , num_{num} {}
 
     static consteval auto make_iterator_concept() noexcept {
@@ -208,7 +207,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other) noexcept(
         std::is_nothrow_constructible_v<iterator_t<Base>, iterator_t<V>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
-        : current_{std::move(other.current)}
+        : current_{__RXX move(other.current)}
         , num_{other.num_} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -375,7 +374,7 @@ private:
         iterator_t<Base>, details::empty_cache>;
 
     iterator_t<Base> current_{};
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) Last last_ele_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) Last last_ele_ {};
     range_difference_t<Base> num_ = 0;
 };
 
@@ -386,7 +385,7 @@ class slide_view<V>::sentinel {
 
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(sentinel_t<V> end) noexcept(
         std::is_nothrow_move_constructible_v<sentinel_t<V>>)
-        : end_(std::move(end)) {}
+        : end_(__RXX move(end)) {}
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
@@ -423,28 +422,21 @@ namespace details {
 struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
     template <viewable_range R, typename D = range_difference_t<R>>
     requires requires { slide_view(std::declval<R>(), std::declval<D>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& range, std::type_identity_t<D> num) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(
+        R&& range, std::type_identity_t<D> num) RXX_CONST_CALL
         noexcept(noexcept(slide_view(std::declval<R>(), std::declval<D>()))) {
-        return slide_view(std::forward<R>(range), num);
+        return slide_view(__RXX forward<R>(range), num);
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<slide_t>::operator();
-    static constexpr int _S_arity = 2;
-    static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(D num) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(D num) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(slide_t{}), num);
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

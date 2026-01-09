@@ -102,7 +102,7 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr V base() && {
-        return std::move(view_);
+        return __RXX move(view_);
     }
 
 private:
@@ -146,7 +146,7 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other) noexcept(
         std::is_nothrow_move_constructible_v<iterator_t<Base>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
-        : current_{std::move(other.current_)}
+        : current_{__RXX move(other.current_)}
         , pos_{other.pos_} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -156,7 +156,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<Base>&& base() && noexcept {
-        return std::move(current_);
+        return __RXX move(current_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -280,7 +280,7 @@ private:
     __RXX_HIDE_FROM_ABI constexpr iterator(
         iterator_t<Base> current, difference_type pos) noexcept(std::
             is_nothrow_move_constructible_v<iterator_t<Base>>)
-        : current_{std::move(current)}
+        : current_{__RXX move(current)}
         , pos_{pos} {}
 
     iterator_t<Base> current_;
@@ -298,7 +298,7 @@ class enumerate_view<V>::sentinel {
     __RXX_HIDE_FROM_ABI constexpr explicit sentinel(
         sentinel_t<Base> end) noexcept(std::
             is_nothrow_move_constructible_v<sentinel_t<Base>>)
-        : end_{std::move(end)} {}
+        : end_{__RXX move(end)} {}
 
     template <bool OtherConst>
     __RXX_HIDE_FROM_ABI static constexpr decltype(auto) get_iter_current(
@@ -312,7 +312,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr sentinel(sentinel<!Const> other)
     requires Const && std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
-        : end_{std::move(other.end_)} {}
+        : end_{__RXX move(other.end_)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr sentinel_t<Base> base() const { return end_; }
@@ -320,7 +320,8 @@ public:
     template <bool OtherConst>
     requires std::sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         iterator<OtherConst> const& iter, sentinel const& self) {
         return get_iter_current(iter) == self.end_;
     }
@@ -328,9 +329,8 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, V>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<details::const_if<OtherConst, V>>
     operator-(iterator<OtherConst> const& iter, sentinel const& self) {
         return get_iter_current(iter) - self.end_;
     }
@@ -338,9 +338,8 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<sentinel_t<Base>,
         iterator_t<details::const_if<OtherConst, V>>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, V>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<details::const_if<OtherConst, V>>
     operator-(sentinel const& self, iterator<OtherConst> const& iter) {
         return -(iter - self);
     }
@@ -354,11 +353,11 @@ namespace details {
 struct enumerate_t : __RXX ranges::details::adaptor_closure<enumerate_t> {
     template <viewable_range R>
     requires requires { enumerate_view<all_t<R>>(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& arg) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(R&& arg) RXX_CONST_CALL
         noexcept(noexcept(enumerate_view<all_t<R>>(std::declval<R>())))
             -> decltype(enumerate_view<all_t<R>>(std::declval<R>())) {
-        return enumerate_view<all_t<R>>(std::forward<R>(arg));
+        return enumerate_view<all_t<R>>(__RXX forward<R>(arg));
     }
 
 #if RXX_LIBSTDCXX

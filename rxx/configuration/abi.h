@@ -3,12 +3,20 @@
 #pragma once
 
 #include "rxx/configuration/attributes.h"
-#include "rxx/configuration/compiler.h"
+#include "rxx/configuration/compiler.h" // IWYU pragma: keep
 #include "rxx/configuration/exceptions.h"
 #include "rxx/configuration/standard.h"
-#include "rxx/configuration/target.h"
-#include "rxx/preprocessor/concatenation.h"
+#include "rxx/configuration/target.h"       // IWYU pragma: keep
+#include "rxx/preprocessor/concatenation.h" // IWYU pragma: keep
 #include "rxx/preprocessor/to_string.h"
+
+#ifndef RXX_DEFAULT_ABI_PREFIX
+#  define RXX_DEFAULT_ABI_PREFIX RXX_TO_STRING(RXX)
+#  if RXX_CXX
+/* Ensure that the default tag is a string */
+static_assert(true, RXX_DEFAULT_ABI_PREFIX);
+#  endif
+#endif
 
 #if RXX_COMPILER_MSVC
 
@@ -55,11 +63,11 @@
 #  define __RXX_ATTRIBUTE__PUBLIC_TEMPLATE (VISIBILITY("default"))
 #  define __RXX_ATTRIBUTE_TYPE_AGGREGATE__PUBLIC_TEMPLATE
 #  define __RXX_PUBLIC_TYPE_VISIBILITY
-#  define __RXX_PRIVTAE_TYPE_VISIBILITY
+#  define __RXX_PRIVATE_TYPE_VISIBILITY
 #else
 #  define __RXX_PUBLIC_TYPE_VISIBILITY \
       __attribute__((__type_visibility__("default")))
-#  define __RXX_PRIVTAE_TYPE_VISIBILITY \
+#  define __RXX_PRIVATE_TYPE_VISIBILITY \
       __attribute__((__type_visibility__("hidden")))
 #  define __RXX_PUBLIC_TEMPLATE
 #  define __RXX_ATTRIBUTE__PUBLIC_TEMPLATE
@@ -68,11 +76,12 @@
 #  endif
 #endif
 
+#define __RXX_ABI_TAG_DELIMITER "_"
 #define __RXX_ODR_SIGNATURE_1(_0, _1, _2) _0##_1##_2
-#define __RXX_ODR_SIGNATURE_0(_0, _1, _2) __RXX_ODR_SIGNATURE_1(_0, _1, _2)
-#define __RXX_ODR_SIGNATURE              \
-    RXX_TO_STRING(__RXX_ODR_SIGNATURE_0( \
-        CXX, __RXX_HARDENING_MODE, __RXX_ABI_EXCEPTION_TAG))
+#define __RXX_ODR_SIGNATURE_0(_0, _1, _2) _0 _1 _2
+#define __RXX_ODR_SIGNATURE                                        \
+    RXX_DEFAULT_ABI_PREFIX "_" RXX_TO_STRING(__RXX_HARDENING_MODE) \
+        RXX_TO_STRING(__RXX_ABI_EXCEPTION_TAG)
 
 #if RXX_HAS_GNU_ATTRIBUTE(__exclude_from_explicit_instantiation__)
 #  define __RXX_EXCLUDE_FROM_EXPLICIT_INSTANTIATION \
@@ -113,15 +122,11 @@
 #  define __RXX_ABI_EXCEPTION_TAG n
 #endif
 
-#ifndef RXX_COMPILER_TAG
-#  error Undefined compiler tag
-#endif
-
 #ifndef __RXX_ABI_EXCEPTION_TAG
 #  error Undefined exception tag
 #endif
 
-/* TODO: Use debug/opt level */
+/* Currently no other hardening mode */
 #define __RXX_HARDENING_MODE n
 
 #if RXX_CXX

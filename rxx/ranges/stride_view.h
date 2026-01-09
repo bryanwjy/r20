@@ -9,7 +9,6 @@
 #include "rxx/details/iterator_category_of.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/to_unsigned_like.h"
-#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
@@ -36,7 +35,7 @@ public:
         range_difference_t<V>
             stride) noexcept(std::is_nothrow_move_constructible_v<V> &&
         std::is_nothrow_move_constructible_v<range_difference_t<V>>)
-        : base_{std::move(base)}
+        : base_{__RXX move(base)}
         , stride_{stride} {
         assert(stride > 0);
     }
@@ -54,7 +53,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -186,15 +185,15 @@ public:
     __RXX_HIDE_FROM_ABI constexpr iterator(iterator<!Const> other)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>> &&
                  std::convertible_to<sentinel_t<V>, sentinel_t<Base>>
-        : current_{std::move(other.current_)}
-        , end_{std::move(other.end_)}
+        : current_{__RXX move(other.current_)}
+        , end_{__RXX move(other.end_)}
         , stride_{other.stride_}
         , missing_{other.missing_} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<Base> base() && noexcept(
         std::is_nothrow_move_constructible_v<iterator_t<Base>>) {
-        return std::move(current_);
+        return __RXX move(current_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -396,7 +395,7 @@ public:
 private:
     __RXX_HIDE_FROM_ABI constexpr iterator(Parent& parent,
         iterator_t<Base> current, range_difference_t<Base> missing = 0)
-        : current_{std::move(current)}
+        : current_{__RXX move(current)}
         , end_{ranges::end(parent.base_)}
         , stride_{parent.stride_}
         , missing_{missing} {}
@@ -413,29 +412,22 @@ struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
 
     template <viewable_range R, typename D = range_difference_t<R>>
     requires requires { stride_view(std::declval<R>(), std::declval<D>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& arg, std::type_identity_t<D> size) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(
+        R&& arg, std::type_identity_t<D> size) RXX_CONST_CALL
         noexcept(noexcept(stride_view(std::declval<R>(), std::declval<D>()))) {
-        return stride_view(std::forward<R>(arg), size);
+        return stride_view(__RXX forward<R>(arg), size);
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<stride_t>::operator();
-    static constexpr bool _S_has_simple_extra_args = true;
-    static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(D&& size) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(D&& size) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<D>, D>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(stride_t{}),
-            std::forward<D>(size));
+            __RXX forward<D>(size));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

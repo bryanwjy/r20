@@ -4,9 +4,9 @@
 #include "rxx/config.h"
 
 #include "rxx/algorithm/return_types.h"
-#include "rxx/details/construct_at.h"
-#include "rxx/details/destroy_at.h"
 #include "rxx/iterator/iter_traits.h"
+#include "rxx/memory/construct_at.h"
+#include "rxx/memory/destroy_at.h"
 #include "rxx/ranges/borrow_traits.h"
 #include "rxx/ranges/primitives.h"
 
@@ -32,12 +32,12 @@ namespace details {
 struct construct_at_t {
     template <typename T, typename... Args>
     requires requires(void* ptr, Args&&... args) {
-        ::new (ptr) T(std::forward<Args>(args)...);
+        ::new (ptr) T(__RXX forward<Args>(args)...);
     }
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr T* operator()(
         T* location, Args&&... args) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<T, Args...>) {
-        return construct_at(location, std::forward<Args>(args)...);
+        return construct_at(location, __RXX forward<Args>(args)...);
     }
 };
 struct destroy_at_t {
@@ -121,7 +121,7 @@ private:
         O idx = ofirst;
         RXX_TRY {
             for (; ifirst != ilast && !stop_copying(idx);
-                 (void)++ifirst, (void)++idx) {
+                (void)++ifirst, (void)++idx) {
                 ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
                     V(*ifirst);
             }
@@ -130,7 +130,7 @@ private:
             RXX_RETHROW();
         }
 
-        return {std::move(ifirst), std::move(idx)};
+        return {__RXX move(ifirst), __RXX move(idx)};
     }
 
 public:
@@ -142,8 +142,9 @@ public:
         operator()(I ifirst, S1 ilast, O ofirst, S2 olast) RXX_CONST_CALL {
         using value_type = std::remove_reference_t<iter_reference_t<O>>;
 
-        return impl<value_type>(std::move(ifirst), std::move(ilast),
-            std::move(ofirst), [&](auto&& iter) { return iter == olast; });
+        return impl<value_type>(
+            __RXX move(ifirst), __RXX move(ilast),
+            __RXX move(ofirst), [&](auto&& iter) { return iter == olast; });
     }
 
     template <input_range I, nothrow_forward_range O>
@@ -164,7 +165,7 @@ private:
         O idx = ofirst;
         RXX_TRY {
             for (; count > 0 && !stop_copying(idx);
-                 ++ifirst, (void)++idx, --count)
+                ++ifirst, (void)++idx, --count)
                 ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
                     V(*ifirst);
         } RXX_CATCH(...) {
@@ -172,7 +173,7 @@ private:
             RXX_RETHROW();
         }
 
-        return {std::move(ifirst), std::move(idx)};
+        return {__RXX move(ifirst), __RXX move(idx)};
     }
 
 public:
@@ -184,8 +185,9 @@ public:
         operator()(I ifirst, iter_difference_t<I> count, O ofirst,
             S olast) RXX_CONST_CALL {
         using value_type = std::remove_reference_t<iter_reference_t<O>>;
-        return impl<value_type>(std::move(ifirst), count, std::move(ofirst),
-            [&](auto&& iter) { return iter == olast; });
+        return impl<value_type>(
+            __RXX move(ifirst), count,
+            __RXX move(ofirst), [&](auto&& iter) { return iter == olast; });
     }
 };
 
@@ -198,7 +200,7 @@ private:
         auto idx = ofirst;
         RXX_TRY {
             for (; ifirst != ilast && !stop_moving(idx);
-                 ++idx, (void)++ifirst) {
+                ++idx, (void)++ifirst) {
                 ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
                     V(imove(ifirst));
             }
@@ -207,7 +209,7 @@ private:
             RXX_RETHROW();
         }
 
-        return {std::move(ifirst), std::move(idx)};
+        return {__RXX move(ifirst), __RXX move(idx)};
     }
 
 public:
@@ -220,7 +222,7 @@ public:
         operator()(I ifirst, S1 ilast, O ofirst, S2 olast) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<O>>;
         return impl<V>(
-            std::move(ifirst), std::move(ilast), std::move(ofirst),
+            __RXX move(ifirst), __RXX move(ilast), __RXX move(ofirst),
             [&](auto&& iter) { return iter == olast; }, ranges::iter_move);
     }
 
@@ -244,7 +246,7 @@ private:
         auto idx = ofirst;
         RXX_TRY {
             for (; count > 0 && !stop_moving(idx);
-                 ++ifirst, (void)++idx, --count) {
+                ++ifirst, (void)++idx, --count) {
                 ::new (static_cast<void*>(RXX_BUILTIN_addressof(*idx)))
                     V(imove(ifirst));
             }
@@ -253,7 +255,7 @@ private:
             RXX_RETHROW();
         }
 
-        return {std::move(ifirst), std::move(idx)};
+        return {__RXX move(ifirst), __RXX move(idx)};
     }
 
 public:
@@ -267,7 +269,7 @@ public:
             S olast) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<O>>;
         return impl<V>(
-            std::move(ifirst), count, std::move(ofirst),
+            __RXX move(ifirst), count, __RXX move(ofirst),
             [&](auto&& iter) { return iter == olast; }, ranges::iter_move);
     }
 };
@@ -294,7 +296,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr I operator()(
         I first, S last) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<I>>;
-        return impl<V>(std::move(first), std::move(last));
+        return impl<V>(__RXX move(first), __RXX move(last));
     }
 
     template <nothrow_forward_range R>
@@ -329,7 +331,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr I operator()(
         I first, iter_difference_t<I> count) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<I>>;
-        return impl<V>(std::move(first), count);
+        return impl<V>(__RXX move(first), count);
     }
 };
 
@@ -356,7 +358,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL I operator()(
         I first, S last, T const& val) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<I>>;
-        return impl<V>(std::move(first), std::move(last), val);
+        return impl<V>(__RXX move(first), __RXX move(last), val);
     }
 
     template <nothrow_forward_range R, typename T>
@@ -390,7 +392,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL I operator()(
         I first, iter_difference_t<I> count, T const& val) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<I>>;
-        return impl<V>(std::move(first), count, val);
+        return impl<V>(__RXX move(first), count, val);
     }
 };
 
@@ -416,7 +418,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr I operator()(
         I first, S last) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<I>>;
-        return impl<V>(std::move(first), std::move(last));
+        return impl<V>(__RXX move(first), __RXX move(last));
     }
 
     template <nothrow_forward_range R>
@@ -451,7 +453,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr I operator()(
         I first, iter_difference_t<I> count) RXX_CONST_CALL {
         using V = std::remove_reference_t<iter_reference_t<I>>;
-        return impl<V>(std::move(first), count);
+        return impl<V>(__RXX move(first), count);
     }
 };
 

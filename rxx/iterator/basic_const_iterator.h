@@ -3,7 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "iter_traits.h"
+#include "rxx/iterator/iter_traits.h"
+#include "rxx/utility/forward.h"
+#include "rxx/utility/move.h"
 
 #include <concepts>
 #include <iterator>
@@ -75,18 +77,18 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr basic_const_iterator(It other) noexcept(
         std::is_nothrow_move_constructible_v<It>)
-        : current_{std::move(other)} {}
+        : current_{__RXX move(other)} {}
 
     template <std::convertible_to<It> U>
     __RXX_HIDE_FROM_ABI constexpr basic_const_iterator(basic_const_iterator<U>
             other) noexcept(std::is_nothrow_constructible_v<It, U>)
-        : current_{std::move(other.current_)} {}
+        : current_{__RXX move(other.current_)} {}
 
     template <details::different_from<basic_const_iterator> T>
     requires std::convertible_to<T, It>
     __RXX_HIDE_FROM_ABI constexpr basic_const_iterator(T&& other) noexcept(
         std::is_nothrow_constructible_v<It, T>)
-        : current_{std::forward<T>(other)} {}
+        : current_{__RXX forward<T>(other)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr It base() const& noexcept(
@@ -98,7 +100,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr It base() && noexcept(std::is_nothrow_move_constructible_v<It>) {
-        return std::move(current_);
+        return __RXX move(current_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -202,8 +204,8 @@ public:
     requires details::constant_iterator<Ot> && std::convertible_to<It, Ot>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr operator Ot() && noexcept(
-        noexcept(static_cast<Ot>(std::move(current_)))) {
-        return static_cast<Ot>(std::move(current_));
+        noexcept(static_cast<Ot>(__RXX move(current_)))) {
+        return static_cast<Ot>(__RXX move(current_));
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)

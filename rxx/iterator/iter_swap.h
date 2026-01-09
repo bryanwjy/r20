@@ -20,9 +20,8 @@ void iter_swap(I1, I2) = delete;
 
 template <typename T1, typename T2>
 concept unqualified_iter_swap = (class_or_enum<std::remove_cvref_t<T1>> ||
-    class_or_enum<std::remove_cvref_t<T2>>)&&requires {
-    iter_swap(std::declval<T1>(), std::declval<T2>());
-};
+                                    class_or_enum<std::remove_cvref_t<T2>>) &&
+    requires { iter_swap(std::declval<T1>(), std::declval<T2>()); };
 
 template <typename T1, typename T2>
 concept readable_swappable =
@@ -34,16 +33,16 @@ struct iter_swap_t {
     requires unqualified_iter_swap<T1, T2>
     __RXX_HIDE_FROM_ABI constexpr void operator()(T1&& left, T2&& right) const
         noexcept(noexcept(
-            iter_swap(std::forward<T1>(left), std::forward<T2>(right)))) {
-        (void)iter_swap(std::forward<T1>(left), std::forward<T2>(right));
+            iter_swap(__RXX forward<T1>(left), __RXX forward<T2>(right)))) {
+        (void)iter_swap(__RXX forward<T1>(left), __RXX forward<T2>(right));
     }
 
     template <typename T1, typename T2>
     requires (!unqualified_iter_swap<T1, T2>) && readable_swappable<T1, T2>
     __RXX_HIDE_FROM_ABI constexpr void operator()(T1&& left, T2&& right) const
-        noexcept(noexcept(
-            ranges::swap(*std::forward<T1>(left), *std::forward<T2>(right)))) {
-        ranges::swap(*std::forward<T1>(left), *std::forward<T2>(right));
+        noexcept(noexcept(ranges::swap(
+            *__RXX forward<T1>(left), *__RXX forward<T2>(right)))) {
+        ranges::swap(*__RXX forward<T1>(left), *__RXX forward<T2>(right));
     }
 
     template <typename T1, typename T2>
@@ -54,11 +53,11 @@ struct iter_swap_t {
     __RXX_HIDE_FROM_ABI constexpr void operator()(T1&& left, T2&& right) const
         noexcept(noexcept(iter_value_t<T2>(ranges::iter_move(right))) && //
             noexcept(*right = ranges::iter_move(left)) &&                //
-            noexcept(
-                *std::forward<T1>(left) = std::declval<iter_value_t<T2>>())) {
+            noexcept(*__RXX forward<T1>(
+                         left) = std::declval<iter_value_t<T2>>())) {
         iter_value_t<T2> old(ranges::iter_move(right));
         *right = ranges::iter_move(left);
-        *std::forward<T1>(left) = std::move(old);
+        *__RXX forward<T1>(left) = __RXX move(old);
     }
 };
 } // namespace details

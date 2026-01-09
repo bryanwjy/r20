@@ -12,7 +12,7 @@ struct identity {
     template <typename T>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     RXX_STATIC_CALL constexpr T&& operator()(T&& arg) RXX_CONST_CALL noexcept {
-        return std::forward<T>(arg);
+        return __RXX forward<T>(arg);
     }
 };
 RXX_DEFAULT_NAMESPACE_END

@@ -2,5 +2,5 @@
 #pragma once
 
 // IWYU pragma: begin_exports
-#include "random/generate_random.h"
+#include "rxx/random/generate_random.h"
 // IWYU pragma: end_exports

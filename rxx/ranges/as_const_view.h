@@ -3,6 +3,8 @@
 
 #include "rxx/config.h"
 
+#include "rxx/optional/fwd.h"
+
 #include "rxx/details/adaptor_closure.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/details/view_traits.h"
@@ -14,8 +16,6 @@
 #include "rxx/ranges/ref_view.h"
 #include "rxx/ranges/view_interface.h"
 #include "rxx/utility.h"
-
-#include <span>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
@@ -32,7 +32,7 @@ public:
 
     __RXX_HIDE_FROM_ABI explicit constexpr as_const_view(V base) noexcept(
         std::is_nothrow_move_constructible_v<V>)
-        : base_{std::move(base)} {}
+        : base_{__RXX move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -43,7 +43,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -103,28 +103,65 @@ inline constexpr bool is_constable_ref_view = false;
 template <typename R>
 inline constexpr bool is_constable_ref_view<ref_view<R>> =
     constant_range<R const>;
+#if RXX_SUPPORTS_OPTIONAL_REFERENCES
+template <typename T>
+inline constexpr bool is_optional_ref = false;
+template <typename T>
+inline constexpr bool is_optional_ref<__RXX nua::optional<T&>> = true;
+template <typename T>
+inline constexpr bool is_optional_ref<__RXX gcc::optional<T&>> = true;
+template <template <typename> class Opt, typename T>
+inline constexpr bool is_optional_ref<Opt<T&>> =
+    requires(Opt<T&>* ptr) { ptr->~optional(); };
+
+template <typename>
+struct as_const_ref_optional;
+
+template <typename T>
+using as_const_ref_optional_t = typename as_const_ref_optional<T>::type;
+
+template <typename T>
+struct as_const_ref_optional<__RXX gcc::optional<T&>> {
+    using type = __RXX gcc::optional<T const&>;
+};
+template <typename T>
+struct as_const_ref_optional<__RXX nua::optional<T&>> {
+    using type = __RXX nua::optional<T const&>;
+};
+template <template <typename> class Opt, typename T>
+struct as_const_ref_optional<Opt<T&>> {
+    using type = Opt<T const&>;
+};
+#endif
 
 struct as_const_t : __RXX ranges::details::adaptor_closure<as_const_t> {
     template <viewable_range R>
     requires requires { as_const_view(std::declval<R>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& arg) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(R&& arg) RXX_CONST_CALL
         noexcept(noexcept(as_const_view(std::declval<R>()))) {
         using Type = std::remove_cvref_t<R>;
         using Element = std::remove_reference_t<range_reference_t<R>>;
         if constexpr (constant_range<all_t<R>>) {
-            return views::all(std::forward<R>(arg));
+            return views::all(__RXX forward<R>(arg));
         } else if constexpr (__RXX ranges::details::is_empty_view<Type>) {
             return views::empty<Element const>;
-        } else if constexpr (__RXX ranges::details::is_span<Type>) {
-            return std::span<Element const, Type::extent>(std::forward<R>(arg));
+        }
+#if RXX_SUPPORTS_OPTIONAL_REFERENCES
+        else if constexpr (is_optional_ref<Type>) {
+            return as_const_ref_optional_t<Type>(arg);
+        }
+#endif
+        else if constexpr (__RXX ranges::details::is_span<Type>) {
+            return std::span<Element const, Type::extent>(
+                __RXX forward<R>(arg));
         } else if constexpr (is_constable_ref_view<R>) {
-            return ref_view(std::as_const(std::forward<R>(arg).base()));
+            return ref_view(std::as_const(__RXX forward<R>(arg).base()));
         } else if constexpr (std::is_lvalue_reference_v<R> &&
             constant_range<Type const> && !view<Type>) {
             return ref_view(static_cast<Type const&>(arg));
         } else {
-            return as_const_view(std::forward<R>(arg));
+            return as_const_view(__RXX forward<R>(arg));
         }
     }
 };

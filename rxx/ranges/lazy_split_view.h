@@ -10,7 +10,6 @@
 #include "rxx/details/non_propagating_cache.h"
 #include "rxx/details/simple_view.h"
 #include "rxx/functional.h"
-#include "rxx/functional/bind_back.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/all.h"
@@ -60,16 +59,16 @@ public:
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         V base, P pattern) noexcept(std::is_nothrow_move_constructible_v<V> &&
         std::is_nothrow_move_constructible_v<P>)
-        : base_{std::move(base)}
-        , pattern_{std::move(pattern)} {}
+        : base_{__RXX move(base)}
+        , pattern_{__RXX move(pattern)} {}
 
     template <input_range R>
     requires std::constructible_from<V, views::all_t<R>> &&
                  std::constructible_from<P, single_view<range_value_t<R>>>
     __RXX_HIDE_FROM_ABI explicit constexpr lazy_split_view(
         R&& range, range_value_t<R> pattern)
-        : base_{views::all(std::forward<R>(range))}
-        , pattern_{views::single(std::move(pattern))} {}
+        : base_{views::all(__RXX forward<R>(range))}
+        , pattern_{views::single(__RXX move(pattern))} {}
 
     __RXX_HIDE_FROM_ABI constexpr V base() const& noexcept(
         std::is_nothrow_copy_constructible_v<V>)
@@ -80,7 +79,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr V base() && noexcept(
         std::is_nothrow_move_constructible_v<V>) {
-        return std::move(base_);
+        return __RXX move(base_);
     }
 
     __RXX_HIDE_FROM_ABI constexpr auto begin() {
@@ -118,13 +117,20 @@ public:
     }
 
 private:
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_{};
-    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) P pattern_{};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) V base_ {};
+    RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS) P pattern_ {};
     RXX_ATTRIBUTE(NO_UNIQUE_ADDRESS)
     std::conditional_t<!forward_range<V>,
         details::non_propagating_cache<iterator_t<V>>, details::empty_cache>
         current_;
 };
+
+template <typename R, typename P>
+lazy_split_view(R&&, P&&) -> lazy_split_view<views::all_t<R>, views::all_t<P>>;
+
+template <input_range R>
+lazy_split_view(R&&, range_value_t<R>)
+    -> lazy_split_view<views::all_t<R>, single_view<range_value_t<R>>>;
 
 namespace details {
 template <bool, typename>
@@ -160,7 +166,7 @@ public:
         __RXX_HIDE_FROM_ABI explicit constexpr value_type(
             outer_iterator iter) noexcept(std::
                 is_nothrow_move_constructible_v<outer_iterator>)
-            : iter_{std::move(iter)} {}
+            : iter_{__RXX move(iter)} {}
 
         RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
         constexpr inner_iterator<Const> begin() const
@@ -191,14 +197,14 @@ public:
             is_nothrow_move_constructible_v<iterator_t<Base>>)
     requires forward_range<Base>
         : parent_{RXX_BUILTIN_addressof(parent)}
-        , current_{std::move(current)} {}
+        , current_{__RXX move(current)} {}
 
     __RXX_HIDE_FROM_ABI constexpr outer_iterator(
         outer_iterator<!Const> other) noexcept(!forward_range<Base> ||
         std::is_nothrow_constructible_v<iterator_t<Base>, iterator_t<V>>)
     requires Const && std::convertible_to<iterator_t<V>, iterator_t<Base>>
         : parent_{other.parent_}
-        , current_{std::move(other.current_)}
+        , current_{__RXX move(other.current_)}
         , trailing_empty_{other.trailing_empty_} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -218,7 +224,7 @@ public:
         if (pbegin == pend) {
             ++cur();
         } else if constexpr (details::tiny_range<P>) {
-            cur() = ranges::find(std::move(cur()), end, *pbegin);
+            cur() = ranges::find(__RXX move(cur()), end, *pbegin);
             if (cur() != end) {
                 ++cur();
                 if (cur() == end) {
@@ -340,7 +346,7 @@ public:
     __RXX_HIDE_FROM_ABI explicit constexpr inner_iterator(
         outer_iterator<Const> iter) noexcept(std::
             is_nothrow_move_constructible_v<outer_iterator<Const>>)
-        : iter_{std::move(iter)} {}
+        : iter_{__RXX move(iter)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr iterator_t<Base> const& base() const& noexcept {
@@ -352,7 +358,7 @@ public:
         std::is_nothrow_move_constructible_v<iterator_t<Base>>)
     requires forward_range<V>
     {
-        return std::move(iter_.cur());
+        return __RXX move(iter_.cur());
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -460,13 +466,6 @@ private:
     bool incremented_ = false;
 };
 
-template <typename R, typename P>
-lazy_split_view(R&&, P&&) -> lazy_split_view<views::all_t<R>, views::all_t<P>>;
-
-template <input_range R>
-lazy_split_view(R&&, range_value_t<R>)
-    -> lazy_split_view<views::all_t<R>, single_view<range_value_t<R>>>;
-
 namespace views {
 namespace details {
 
@@ -474,32 +473,24 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
 
     template <typename R, typename P>
     requires requires { lazy_split_view(std::declval<R>(), std::declval<P>()); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(R&& range, P&& pattern) RXX_CONST_CALL noexcept(
-        noexcept(lazy_split_view(std::declval<R>(), std::declval<P>()))) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(
+        R&& range, P&& pattern) RXX_CONST_CALL
+        noexcept(
+            noexcept(lazy_split_view(std::declval<R>(), std::declval<P>()))) {
         return lazy_split_view(
-            std::forward<R>(range), std::forward<P>(pattern));
+            __RXX forward<R>(range), __RXX forward<P>(pattern));
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<lazy_split_t>::operator();
-    template <typename P>
-    static constexpr bool _S_has_simple_extra_args =
-        std::is_scalar_v<P> || (view<P> && std::copy_constructible<P>);
-    static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename P>
     requires std::constructible_from<std::decay_t<P>, P>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(P&& pattern) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(P&& pattern) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(lazy_split_t{}),
-            std::forward<P>(pattern));
+            __RXX forward<P>(pattern));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

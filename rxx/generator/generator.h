@@ -3,15 +3,18 @@
 
 #include "rxx/config.h"
 
+#include "rxx/variant/variant.h"
+
 #if __has_include(<coroutine>)
 
 #  define RXX_SUPPORTS_GENERATOR 1
 
-#  include "rxx/details/variant_base.h"
+#  include "rxx/concepts/common_reference_with.h"
 #  include "rxx/ranges/elements_of.h"
 #  include "rxx/ranges/primitives.h"
 #  include "rxx/ranges/view_interface.h"
 #  include "rxx/utility/exchange.h"
+#  include "rxx/variant.h"
 
 #  include <coroutine>
 #  include <cstdint>
@@ -104,24 +107,25 @@ public:
 
     template <typename R2, typename V2, typename A2, typename Unused>
     requires std::same_as<yielded_for<R2, V2>, Y>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    auto yield_value(
         ranges::elements_of<__RXX generator<R2, V2, A2>&&, Unused>
             elements) noexcept {
-        return nested_awaiter{std::move(elements.range)};
+        return nested_awaiter{__RXX move(elements.range)};
     }
 
     template <typename R2, typename V2, typename A2, typename Unused>
     requires std::same_as<yielded_for<R2, V2>, Y>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
-        ranges::elements_of<__RXX generator<R2, V2, A2>&, Unused>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    auto yield_value(ranges::elements_of<__RXX generator<R2, V2, A2>&, Unused>
             elements) noexcept {
-        return nested_awaiter{std::move(elements.range)};
+        return nested_awaiter{__RXX move(elements.range)};
     }
 
     template <ranges::input_range R, typename Alloc>
     requires std::convertible_to<ranges::range_reference_t<R>, Y>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) auto yield_value(
-        ranges::elements_of<R, Alloc> elements) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    auto yield_value(ranges::elements_of<R, Alloc> elements) {
         auto executor = [](::std::allocator_arg_t, Alloc,
                             ranges::iterator_t<R> it,
                             ranges::sentinel_t<R> sentinel)
@@ -175,8 +179,7 @@ class promise_base<Y>::stack_descriptor {
         handle_type top;
         pointer value = nullptr;
     };
-    using stack_type RXX_NODEBUG =
-        __RXX ranges::details::variant_base<bottom_frame, stack_frame>;
+    using stack_type RXX_NODEBUG = __RXX variant<bottom_frame, stack_frame>;
 
 public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) bool is_bottom() const noexcept {
@@ -184,15 +187,13 @@ public:
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) handle_type& top() noexcept {
-        if (stack_.index() == template_index_v<stack_frame, stack_type>) {
-            constexpr auto idx = template_index_v<stack_frame, stack_type>;
-            return stack_.template value_ref<idx>()
+        if (__RXX holds_alternative<stack_frame>(stack_)) {
+            return __RXX get<stack_frame>(stack_)
                 .bottom.promise()
                 .nested_.top();
         } else {
-            constexpr auto idx = template_index_v<bottom_frame, stack_type>;
-            assert(stack_.index() == idx);
-            return stack_.template value_ref<idx>().top;
+            assert(__RXX holds_alternative<bottom_frame>(stack_));
+            return __RXX get<bottom_frame>(stack_).top;
         }
     }
 
@@ -207,9 +208,8 @@ public:
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     std::coroutine_handle<> pop() noexcept {
 
-        if (stack_.index() == template_index_v<stack_frame, stack_type>) {
-            constexpr auto idx = template_index_v<stack_frame, stack_type>;
-            auto handle = this->top() = stack_.template value_ref<idx>().parent;
+        if (__RXX holds_alternative<stack_frame>(stack_)) {
+            auto handle = this->top() = __RXX get<stack_frame>(stack_).parent;
             return handle;
         }
 
@@ -226,10 +226,8 @@ public:
         others_nested.top() = latest;
 
         auto new_bottom = others;
-        if (others_nested.stack_.index() ==
-            template_index_v<stack_frame, stack_type>) {
-            constexpr auto idx = template_index_v<stack_frame, stack_type>;
-            new_bottom = others_nested.stack_.template value_ref<idx>().bottom;
+        if (__RXX holds_alternative<stack_frame>(others_nested.stack_)) {
+            new_bottom = __RXX get<stack_frame>(others_nested.stack_).bottom;
         }
 
         this->stack_ = stack_frame{.bottom = new_bottom, .parent = others};
@@ -239,23 +237,21 @@ public:
     pointer& bottom_value(promise_base& current [[maybe_unused]]) noexcept {
         assert(&current.nested_ == this);
 
-        if (stack_.index() == template_index_v<bottom_frame, stack_type>) {
+        if (__RXX holds_alternative<bottom_frame>(stack_)) {
             constexpr auto idx = template_index_v<bottom_frame, stack_type>;
-            return stack_.template value_ref<idx>().value;
+            return __RXX get<bottom_frame>(stack_).value;
         }
 
-        constexpr auto idx = template_index_v<stack_frame, stack_type>;
-        assert(stack_.index() == idx);
-        auto& promise = stack_.template value_ref<idx>().bottom.promise();
+        assert(__RXX holds_alternative<stack_frame>(stack_));
+        auto& promise = __RXX get<stack_frame>(stack_).bottom.promise();
         return promise.nested_.value(promise);
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     pointer& value(promise_base& current [[maybe_unused]]) noexcept {
         assert(&current.nested_ == this);
-        assert((stack_.index() == template_index_v<bottom_frame, stack_type>));
-        constexpr auto idx = template_index_v<bottom_frame, stack_type>;
-        return stack_.template value_ref<idx>().value;
+        assert(__RXX holds_alternative<bottom_frame>(stack_));
+        return __RXX get<bottom_frame>(stack_).value;
     }
 
 private:
@@ -303,7 +299,7 @@ struct promise_base<Y>::nested_awaiter {
     static_assert(std::same_as<typename Generator::yielded, Y>);
 
     __RXX_HIDE_FROM_ABI nested_awaiter(Generator generator) noexcept
-        : generator(std::move(generator)) {
+        : generator(__RXX move(generator)) {
         this->generator.activate();
     }
 
@@ -396,7 +392,7 @@ class promise_allocator {
             auto* const ptr = alloc.allocate(block_count);
             auto const address = reinterpret_cast<uintptr_t>(ptr);
             auto* alloc_ptr = allocator_address(address, size_bytes);
-            ::new (alloc_ptr) allocator_type(std::move(alloc));
+            ::new (alloc_ptr) allocator_type(__RXX move(alloc));
             return ptr;
         }
     }
@@ -435,7 +431,7 @@ public:
                 allocation_block::count(allocation_size_bytes(count));
             auto const address = reinterpret_cast<uintptr_t>(ptr);
             auto* alloc_ptr = allocator_address(address, count);
-            allocator_type alloc(std::move(*alloc_ptr));
+            allocator_type alloc(__RXX move(*alloc_ptr));
             alloc_ptr->~allocator_type();
             alloc.deallocate(
                 reinterpret_cast<allocation_block*>(ptr), block_count);
@@ -499,7 +495,7 @@ class promise_allocator<void> {
         } else {
             auto const address = reinterpret_cast<uintptr_t>(ptr);
             auto const alloc_ptr = allocator_address<A>(address, size);
-            A alloc(std::move(*alloc_ptr));
+            A alloc(__RXX move(*alloc_ptr));
             alloc_ptr->~A();
             alloc.deallocate(
                 reinterpret_cast<allocation_block*>(ptr), block_count);
@@ -523,7 +519,7 @@ class promise_allocator<void> {
         *deallocator_address(address, size) = &deallocate<allocator_type>;
         if constexpr (!stateless_allocator<allocator_type>) {
             auto alloc_ptr = allocator_address<allocator_type>(address, size);
-            ::new (alloc_ptr) allocator_type(std::move(alloc));
+            ::new (alloc_ptr) allocator_type(__RXX move(alloc));
         }
         return ptr;
     }
@@ -575,9 +571,9 @@ class generator : public ranges::view_interface<generator<Ref, V, Allocator>> {
     static_assert(std::is_reference_v<reference> ||
         !std::is_const_v<reference> && !std::is_volatile_v<reference> &&
             std::is_object_v<reference> && std::copy_constructible<reference>);
-    static_assert(std::common_reference_with<reference&&, value&> &&
-        std::common_reference_with<reference&&, RRef&&> &&
-        std::common_reference_with<RRef&&, value const&>);
+    static_assert(__RXX common_reference_with<reference&&, value&> &&
+        __RXX common_reference_with<reference&&, RRef&&> &&
+        __RXX common_reference_with<RRef&&, value const&>);
 
     class iterator;
 
@@ -632,7 +628,7 @@ private:
 
     __RXX_HIDE_FROM_ABI generator(
         std::coroutine_handle<promise_type> coroutine) noexcept
-        : coroutine_{std::move(coroutine)} {}
+        : coroutine_{__RXX move(coroutine)} {}
 
     __RXX_HIDE_FROM_ABI void activate() noexcept {
         assert(!this->active_);

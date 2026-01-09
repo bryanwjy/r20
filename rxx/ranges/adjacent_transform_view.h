@@ -7,7 +7,6 @@
 #include "rxx/details/const_if.h"
 #include "rxx/details/movable_box.h"
 #include "rxx/details/referenceable.h"
-#include "rxx/functional/bind_back.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/adjacent_view.h"
 #include "rxx/ranges/all.h"
@@ -29,23 +28,23 @@ namespace details {
 
 template <typename F, typename V, size_t... Is>
 __RXX_HIDE_FROM_ABI consteval auto repeat_regular_invocable_impl(
-    std::index_sequence<Is...>) noexcept {
+    __RXX index_sequence<Is...>) noexcept {
     return std::regular_invocable<F, always_type<Is, V>...>;
 }
 
 template <typename F, typename V, size_t N>
 concept repeat_regular_invocable =
-    repeat_regular_invocable_impl<F, V>(std::make_index_sequence<N>{});
+    repeat_regular_invocable_impl<F, V>(__RXX make_index_sequence_v<N>);
 
 template <typename F, typename V, size_t... Is>
 __RXX_HIDE_FROM_ABI auto repeat_invoke_result(
-    std::index_sequence<Is...>) noexcept
+    __RXX index_sequence<Is...>) noexcept
     -> std::invoke_result<F, always_type<Is, V>...>;
 
 template <typename F, typename V, size_t N>
 using repeat_invoke_result_t RXX_NODEBUG =
     typename decltype(repeat_invoke_result<F, V>(
-        std::make_index_sequence<N>{}))::type;
+        __RXX make_index_sequence_v<N>))::type;
 
 } // namespace details
 
@@ -74,8 +73,8 @@ public:
     __RXX_HIDE_FROM_ABI constexpr adjacent_transform_view(
         V base, F func) noexcept(std::is_nothrow_move_constructible_v<F> &&
         std::is_nothrow_move_constructible_v<InnerView>)
-        : func_{std::move(func)}
-        , inner_{std::move(base)} {}
+        : func_{__RXX move(func)}
+        , inner_{__RXX move(base)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr V base() const& noexcept(std::is_nothrow_copy_constructible_v<V>)
@@ -86,7 +85,7 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto base() && noexcept(std::is_nothrow_move_constructible_v<V>) {
-        return std::move(inner_.base());
+        return __RXX move(inner_.base());
     }
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -162,7 +161,7 @@ class adjacent_transform_view<V, F, N>::iterator {
         Parent& parent, inner_iterator<Const> inner) noexcept(std::
             is_nothrow_move_constructible_v<inner_iterator<Const>>)
         : parent_{RXX_BUILTIN_addressof(parent)}
-        , inner_{std::move(inner)} {}
+        , inner_{__RXX move(inner)} {}
 
     static consteval auto make_iterator_category() noexcept {
         using result_type =
@@ -203,7 +202,7 @@ public:
                  std::convertible_to<inner_iterator<false>,
                      inner_iterator<Const>>
         : parent_{other.parent_}
-        , inner_{std::move(other.inner_)} {}
+        , inner_{__RXX move(other.inner_)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr decltype(auto) operator*() const {
@@ -368,7 +367,7 @@ class adjacent_transform_view<V, F, N>::sentinel {
     __RXX_HIDE_FROM_ABI explicit constexpr sentinel(
         inner_sentinel<Const> inner) noexcept(std::
             is_nothrow_move_constructible_v<inner_sentinel<Const>>)
-        : inner_{std::move(inner)} {}
+        : inner_{__RXX move(inner)} {}
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
@@ -380,12 +379,13 @@ public:
             inner_sentinel<false>>)
     requires Const
         && std::convertible_to<inner_sentinel<false>, inner_sentinel<Const>>
-        : inner_(std::move(other.inner_)) {}
+        : inner_(__RXX move(other.inner_)) {}
 
     template <bool OtherConst>
     requires std::sentinel_for<inner_sentinel<Const>,
         inner_iterator<OtherConst>>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         iterator<OtherConst> const& left, sentinel const& right) {
         return left.inner_ == right.inner_;
     }
@@ -393,9 +393,9 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<inner_sentinel<Const>,
         inner_sentinel<OtherConst>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, InnerView>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<
+        details::const_if<OtherConst, InnerView>>
     operator-(iterator<OtherConst> const& iter, sentinel const& end) {
         return iter.inner_ - end.inner_;
     }
@@ -403,9 +403,9 @@ public:
     template <bool OtherConst>
     requires std::sized_sentinel_for<inner_sentinel<Const>,
         inner_sentinel<OtherConst>>
-    RXX_ATTRIBUTES(
-        _HIDE_FROM_ABI, NODISCARD) friend constexpr range_difference_t<details::
-            const_if<OtherConst, InnerView>>
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr range_difference_t<
+        details::const_if<OtherConst, InnerView>>
     operator-(sentinel const& end, iterator<OtherConst> const& iter) {
         return end.inner_ - iter.inner_;
     }
@@ -426,12 +426,12 @@ struct adjacent_transform_t :
         adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
             std::declval<V>(), std::declval<F>());
     }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(V&& arg, F&& func) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(V&& arg, F&& func) RXX_CONST_CALL
         noexcept(noexcept(adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
             std::declval<V>(), std::declval<F>()))) {
         return adjacent_transform_view<all_t<V>, std::decay_t<F>, N>(
-            std::forward<V>(arg), std::forward<F>(func));
+            __RXX forward<V>(arg), __RXX forward<F>(func));
     }
 
     template <viewable_range V, typename F>
@@ -440,27 +440,18 @@ struct adjacent_transform_t :
         noexcept(noexcept(zip_transform(std::declval<F>())))
     requires (N == 0)
     {
-        return zip_transform(std::forward<F>(func));
+        return zip_transform(__RXX forward<F>(func));
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<
-        adjacent_transform_t<N>>::operator();
-    static constexpr int _S_arity = 2;
-    static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename F>
     requires std::constructible_from<std::decay_t<F>, F>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(F&& func) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(F&& func) RXX_CONST_CALL
         noexcept(std::is_nothrow_constructible_v<std::decay_t<F>, F>) {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(adjacent_transform_t{}),
-            std::forward<F>(func));
+            __RXX forward<F>(func));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

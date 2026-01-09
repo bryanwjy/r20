@@ -9,7 +9,6 @@
 #include "rxx/functional/identity.h"
 #include "rxx/iterator.h"
 #include "rxx/ranges/concepts.h"
-#include "rxx/ranges/primitives.h"
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
@@ -20,19 +19,21 @@ struct contains_t {
         typename Proj = identity, typename T = projected_value_t<I, Proj>>
     requires std::indirect_binary_predicate<equal_to, std::projected<I, Proj>,
         T const*>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(I first, S last, T const& value, Proj proj = {}) RXX_CONST_CALL {
-        return ranges::find(std::move(first), last, value, proj) != last;
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(
+        I first, S last, T const& value, Proj proj = {}) RXX_CONST_CALL {
+        return ranges::find(__RXX move(first), last, value, proj) != last;
     }
 
     template <input_range R, typename Proj = identity,
         typename T = projected_value_t<iterator_t<R>, Proj>>
     requires std::indirect_binary_predicate<equal_to,
         std::projected<iterator_t<R>, Proj>, T const*>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(R&& r, T const& value, Proj proj = {}) RXX_CONST_CALL {
-        return ranges::find(std::move(ranges::begin(r)), ranges::end(r), value,
-                   proj) != ranges::end(r);
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(
+        R&& r, T const& value, Proj proj = {}) RXX_CONST_CALL {
+        return ranges::find(__RXX move(ranges::begin(r)), ranges::end(r),
+                   value, proj) != ranges::end(r);
     }
 };
 
@@ -44,8 +45,8 @@ private:
     static constexpr bool impl(I1&& first1, S1&& last1, I2&& first2, S2&& last2,
         Pred&& pred, Proj1&& proj1, Proj2&& proj2) {
         return (first2 == last2) ||
-            !ranges::search(first1, last1, first2, last2, std::move(pred),
-                std::move(proj1), std::move(proj2))
+            !ranges::search(first1, last1, first2, last2, __RXX move(pred),
+                __RXX move(proj1), __RXX move(proj2))
                  .empty();
     }
 
@@ -55,24 +56,25 @@ public:
         typename Pred = equal_to, typename Proj1 = identity,
         typename Proj2 = identity>
     requires std::indirectly_comparable<I1, I2, Pred, Proj1, Proj2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(I1 first1, S1 last1, I2 first2, S2 last2, Pred pred = {},
-        Proj1 proj1 = {}, Proj2 proj2 = {}) RXX_CONST_CALL {
-        return impl(std::move(first1), std::move(last1), std::move(first2),
-            std::move(last2), std::move(pred), std::move(proj1),
-            std::move(proj2));
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(I1 first1, S1 last1, I2 first2,
+        S2 last2, Pred pred = {}, Proj1 proj1 = {},
+        Proj2 proj2 = {}) RXX_CONST_CALL {
+        return impl(__RXX move(first1), __RXX move(last1), __RXX move(first2),
+            __RXX move(last2), __RXX move(pred), __RXX move(proj1),
+            __RXX move(proj2));
     }
 
     template <forward_range R1, forward_range R2, typename Pred = equal_to,
         typename Proj1 = identity, typename Proj2 = identity>
     requires std::indirectly_comparable<iterator_t<R1>, iterator_t<R2>, Pred,
         Proj1, Proj2>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(R1&& r1, R2&& r2, Pred pred = {}, Proj1 proj1 = {},
-        Proj2 proj2 = {}) RXX_CONST_CALL {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(R1&& r1, R2&& r2, Pred pred = {},
+        Proj1 proj1 = {}, Proj2 proj2 = {}) RXX_CONST_CALL {
         return impl(ranges::begin(r1), ranges::end(r1), ranges::begin(r2),
-            ranges::end(r2), std::move(pred), std::move(proj1),
-            std::move(proj2));
+            ranges::end(r2), __RXX move(pred), __RXX move(proj1),
+            __RXX move(proj2));
     }
 };
 } // namespace details

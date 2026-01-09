@@ -16,11 +16,12 @@ struct equal_to {
 
     template <typename L, typename R>
     requires equality_comparable_with<L, R>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool
     operator()(L&& left, R&& right) RXX_CONST_CALL noexcept(
         noexcept(static_cast<bool>(std::declval<L>() == std::declval<R>()))) {
         return static_cast<bool>(
-            std::forward<L>(left) == std::forward<R>(right));
+            __RXX forward<L>(left) == __RXX forward<R>(right));
     }
 };
 

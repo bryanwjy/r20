@@ -29,8 +29,8 @@ namespace details {
 
 template <typename... Rs>
 concept zip_common = (sizeof...(Rs) == 1 && (... && common_range<Rs>)) ||
-    (!(... && bidirectional_range<Rs>)&&(... && common_range<Rs>)) ||
-    ((... && random_access_range<Rs>)&&(... && sized_range<Rs>));
+    (!(... && bidirectional_range<Rs>) && (... && common_range<Rs>)) ||
+    ((... && random_access_range<Rs>) && (... && sized_range<Rs>));
 
 template <typename Tuple1, typename Tuple2>
 RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -63,7 +63,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr explicit zip_view(Rs... views) noexcept(
         (... && std::is_nothrow_move_constructible_v<Rs>))
-        : views_{std::move(views)...} {}
+        : views_{__RXX move(views)...} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     constexpr auto begin()
@@ -163,7 +163,7 @@ class zip_view<Rs...>::iterator :
     __RXX_HIDE_FROM_ABI constexpr explicit iterator(
         current_type current) noexcept(std::
             is_nothrow_move_constructible_v<current_type>)
-        : current_(std::move(current)) {}
+        : current_(__RXX move(current)) {}
 
     template <bool>
     friend class zip_view<Rs...>::iterator;
@@ -203,7 +203,7 @@ public:
         (... &&
             std::convertible_to<iterator_t<Rs>,
                 iterator_t<details::const_if<Const, Rs>>>)
-        : current_{std::move(other.current_)} {}
+        : current_{__RXX move(other.current_)} {}
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto operator*() const {
         return details::transform(
@@ -341,8 +341,9 @@ public:
 
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
     friend constexpr auto iter_move(iterator const& self) noexcept(
-        (...&& noexcept(ranges::iter_move(std::declval<
-            iterator_t<details::const_if<Const, Rs>> const&>()))) &&
+        (... &&
+            noexcept(ranges::iter_move(std::declval<
+                iterator_t<details::const_if<Const, Rs>> const&>()))) &&
         (std::is_nothrow_move_constructible_v<
              range_rvalue_reference_t<details::const_if<Const, Rs>>> &&
             ...)) {
@@ -375,7 +376,7 @@ class zip_view<Rs...>::sentinel {
 
     __RXX_HIDE_FROM_ABI constexpr explicit sentinel(end_type end) noexcept(
         std::is_nothrow_move_constructible_v<end_type>)
-        : end_(std::move(end)) {}
+        : end_(__RXX move(end)) {}
 
 public:
     __RXX_HIDE_FROM_ABI constexpr sentinel() noexcept(
@@ -386,13 +387,14 @@ public:
         (... &&
             std::convertible_to<sentinel_t<Rs>,
                 sentinel_t<details::const_if<Const, Rs>>>)
-        : end_{std::move(other.end_)} {}
+        : end_{__RXX move(other.end_)} {}
 
     template <bool OtherConst>
     requires (... &&
         std::sentinel_for<sentinel_t<details::const_if<Const, Rs>>,
             iterator_t<details::const_if<OtherConst, Rs>>>)
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr bool operator==(
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr bool operator==(
         iterator<OtherConst> const& iter, sentinel const& self) {
         return details::any_equals(get_current(iter), self.end_);
     }
@@ -401,9 +403,10 @@ public:
     requires (... &&
         std::sized_sentinel_for<sentinel_t<details::const_if<Const, Rs>>,
             iterator_t<details::const_if<OtherConst, Rs>>>)
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr std::
-        common_type_t<range_difference_t<details::const_if<OtherConst, Rs>>...>
-        operator-(iterator<OtherConst> const& iter, sentinel const& self) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr std::common_type_t<
+        range_difference_t<details::const_if<OtherConst, Rs>>...>
+    operator-(iterator<OtherConst> const& iter, sentinel const& self) {
         auto const diff =
             details::transform(std::minus<>{}, get_current(iter), self.end_);
         return apply(
@@ -421,9 +424,10 @@ public:
     requires (... &&
         std::sized_sentinel_for<sentinel_t<details::const_if<Const, Rs>>,
             iterator_t<details::const_if<OtherConst, Rs>>>)
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) friend constexpr std::
-        common_type_t<range_difference_t<details::const_if<OtherConst, Rs>>...>
-        operator-(sentinel const& self, iterator<OtherConst> const& iter) {
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    friend constexpr std::common_type_t<
+        range_difference_t<details::const_if<OtherConst, Rs>>...>
+    operator-(sentinel const& self, iterator<OtherConst> const& iter) {
         return -(iter - self);
     }
 
@@ -441,11 +445,11 @@ struct zip_t {
 
     template <typename... Rs>
     requires requires { zip_view<all_t<Rs>...>(std::declval<Rs>()...); }
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr auto
-    operator()(Rs&&... args) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr auto operator()(Rs&&... args) RXX_CONST_CALL
         noexcept(noexcept(zip_view<all_t<Rs>...>(std::declval<Rs>()...)))
             -> decltype(zip_view<all_t<Rs>...>(std::declval<Rs>()...)) {
-        return zip_view<all_t<Rs>...>(std::forward<Rs>(args)...);
+        return zip_view<all_t<Rs>...>(__RXX forward<Rs>(args)...);
     }
 };
 } // namespace details

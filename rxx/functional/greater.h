@@ -15,10 +15,12 @@ struct greater : private less {
 
     template <typename L, typename R>
     requires totally_ordered_with<L, R>
-    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) RXX_STATIC_CALL constexpr bool
-    operator()(L&& left, R&& right) RXX_CONST_CALL
+    RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+    RXX_STATIC_CALL constexpr bool operator()(
+        L&& left, R&& right) RXX_CONST_CALL
         noexcept(noexcept(std::declval<R>() < std::declval<L>())) {
-        return less::operator()(std::forward<R>(right), std::forward<L>(left));
+        return less::operator()(
+            __RXX forward<R>(right), __RXX forward<L>(left));
     }
 };
 

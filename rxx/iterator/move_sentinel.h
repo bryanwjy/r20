@@ -3,10 +3,9 @@
 
 #include "rxx/config.h"
 
-#include "iter_traits.h"
+#include "rxx/utility/move.h"
 
 #include <concepts>
-#include <iterator>
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -19,7 +18,7 @@ public:
 
     __RXX_HIDE_FROM_ABI constexpr explicit move_sentinel(S sent) noexcept(
         std::is_nothrow_move_constructible_v<S>)
-        : last_(std::move(sent)) {}
+        : last_(__RXX move(sent)) {}
 
     template <typename S2>
     requires std::convertible_to<const S2&, S>

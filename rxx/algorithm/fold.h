@@ -5,13 +5,13 @@
 
 #include "rxx/algorithm/return_types.h"
 #include "rxx/iterator.h"
+#include "rxx/optional/optional_nua.h"
 #include "rxx/ranges/access.h"
 #include "rxx/ranges/borrow_traits.h"
 #include "rxx/utility.h"
 
 #include <concepts>
 #include <functional>
-#include <optional>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace ranges {
@@ -46,16 +46,16 @@ protected:
             std::decay_t<std::invoke_result_t<F&, T, iter_reference_t<I>>>;
         using Result = fold_left_with_iter_result<O, SecondType>;
         if (first == last) {
-            return Result{std::move(first), SecondType(std::move(init))};
+            return Result{__RXX move(first), SecondType(__RXX move(init))};
         }
 
-        SecondType accum = std::invoke(func, std::move(init), *first);
+        SecondType accum = std::invoke(func, __RXX move(init), *first);
 
         for (++first; first != last; ++first) {
-            accum = std::invoke(func, std::move(accum), *first);
+            accum = std::invoke(func, __RXX move(accum), *first);
         }
 
-        return Result{std::move(first), std::move(accum)};
+        return Result{__RXX move(first), __RXX move(accum)};
     }
 
 public:
@@ -63,8 +63,8 @@ public:
         typename T = iter_value_t<I>, indirectly_binary_left_foldable<T, I> F>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         I first, S last, T init, F func) RXX_CONST_CALL {
-        return impl<I>(std::move(first), std::move(last), std::move(init),
-            std::move(func));
+        return impl<I>(__RXX move(first), __RXX move(last), __RXX move(init),
+            __RXX move(func));
     }
 
     template <ranges::input_range R, typename T = ranges::range_value_t<R>,
@@ -72,7 +72,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         R&& range, T init, F func) RXX_CONST_CALL {
         return impl<borrowed_iterator_t<R>>(ranges::begin(range),
-            ranges::end(range), std::move(init), std::move(func));
+            ranges::end(range), __RXX move(init), __RXX move(func));
     }
 };
 
@@ -81,8 +81,8 @@ struct fold_left_t : private fold_left_with_iter_t {
         typename T = iter_value_t<I>, indirectly_binary_left_foldable<T, I> F>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         I first, S last, T init, F func) RXX_CONST_CALL {
-        return fold_left_with_iter_t::impl<I>(
-            std::move(first), std::move(last), std::move(init), std::move(func))
+        return fold_left_with_iter_t::impl<I>( __RXX move(first),
+            __RXX move(last), __RXX move(init), __RXX move(func))
             .value;
     }
 
@@ -91,7 +91,8 @@ struct fold_left_t : private fold_left_with_iter_t {
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         R&& r, T init, F func) RXX_CONST_CALL {
         return fold_left_with_iter_t::impl<borrowed_iterator_t<R>>(
-            ranges::begin(r), ranges::end(r), std::move(init), std::move(func))
+            ranges::begin(r), ranges::end(r), __RXX move(init),
+            __RXX move(func))
             .value;
     }
 };
@@ -101,19 +102,19 @@ protected:
     template <typename O, typename I, typename S, typename F>
     __RXX_HIDE_FROM_ABI static constexpr auto impl(I first, S last, F&& func) {
         using SecondType = decltype(fold_left_t{}(
-            std::move(first), last, iter_value_t<I>(*first), func));
+            __RXX move(first), last, iter_value_t<I>(*first), func));
         using Result = ranges::fold_left_first_with_iter_result<O,
-            std::optional<SecondType>>;
+            __RXX nua::optional<SecondType>>;
         if (first == last) {
-            return Result{std::move(first), std::optional<SecondType>()};
+            return Result{__RXX move(first), __RXX nua::optional<SecondType>()};
         }
 
-        std::optional<SecondType> init(std::in_place, *first);
+        __RXX nua::optional<SecondType> init(std::in_place, *first);
         for (++first; first != last; ++first) {
-            *init = std::invoke(func, std::move(*init), *first);
+            *init = std::invoke(func, __RXX move(*init), *first);
         }
 
-        return Result{std::move(first), std::move(init)};
+        return Result{__RXX move(first), __RXX move(init)};
     }
 
 public:
@@ -122,7 +123,7 @@ public:
     requires std::constructible_from<iter_value_t<I>, iter_reference_t<I>>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         I first, S last, F func) RXX_CONST_CALL {
-        return impl<I>(std::move(first), std::move(last), std::move(func));
+        return impl<I>(__RXX move(first), __RXX move(last), __RXX move(func));
     }
 
     template <input_range R,
@@ -131,7 +132,7 @@ public:
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         R&& range, F func) RXX_CONST_CALL {
         return impl<ranges::borrowed_iterator_t<R>>(
-            ranges::begin(range), ranges::end(range), std::move(func));
+            ranges::begin(range), ranges::end(range), __RXX move(func));
     }
 };
 
@@ -142,7 +143,7 @@ struct fold_left_first_t : private fold_left_first_with_iter_t {
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         I first, S last, F func) RXX_CONST_CALL {
         return fold_left_first_with_iter_t::impl<I>(
-            std::move(first), std::move(last), std::move(func))
+            __RXX move(first), __RXX move(last), __RXX move(func))
             .value;
     }
 
@@ -152,7 +153,7 @@ struct fold_left_first_t : private fold_left_first_with_iter_t {
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         R&& range, F func) RXX_CONST_CALL {
         return fold_left_first_with_iter_t::impl<borrowed_iterator_t<R>>(
-            ranges::begin(range), ranges::end(range), std::move(func))
+            ranges::begin(range), ranges::end(range), __RXX move(func))
             .value;
     }
 };
@@ -180,13 +181,13 @@ protected:
         using Result =
             std::decay_t<std::invoke_result_t<F&, iter_reference_t<I>, T>>;
         if (first == last) {
-            return Result(std::move(init));
+            return Result(__RXX move(init));
         }
 
         I tail = ranges::next(first, last);
-        Result accum = std::invoke(func, *--tail, std::move(init));
+        Result accum = std::invoke(func, *--tail, __RXX move(init));
         while (first != tail) {
-            accum = std::invoke(func, *--tail, std::move(accum));
+            accum = std::invoke(func, *--tail, __RXX move(accum));
         }
 
         return accum;
@@ -197,16 +198,16 @@ public:
         typename T = iter_value_t<I>, indirectly_binary_right_foldable<T, I> F>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         I first, S last, T init, F func) RXX_CONST_CALL {
-        return impl(std::move(first), std::move(last), std::move(init),
-            std::move(func));
+        return impl(__RXX move(first), __RXX move(last), __RXX move(init),
+            __RXX move(func));
     }
 
     template <bidirectional_range R, class T = ranges::range_value_t<R>,
         indirectly_binary_right_foldable<T, ranges::iterator_t<R>> F>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         R&& r, T init, F func) RXX_CONST_CALL {
-        return impl(
-            ranges::begin(r), ranges::end(r), std::move(init), std::move(func));
+        return impl(ranges::begin(r), ranges::end(r), __RXX move(init),
+            __RXX move(func));
     }
 };
 
@@ -215,16 +216,16 @@ private:
     template <typename I, typename S, typename F>
     __RXX_HIDE_FROM_ABI static constexpr auto impl(I first, S last, F&& func) {
         using Result = decltype(fold_right_t::impl(
-            first, last, iter_value_t<I>(*first), std::move(func)));
+            first, last, iter_value_t<I>(*first), __RXX move(func)));
 
         if (first == last) {
-            return std::optional<Result>();
+            return __RXX nua::optional<Result>();
         }
 
-        I tail = ranges::prev(ranges::next(first, std::move(last)));
-        return std::optional<Result>(std::in_place,
-            fold_right_t::impl(std::move(first), tail, iter_value_t<I>(*tail),
-                std::move(func)));
+        I tail = ranges::prev(ranges::next(first, __RXX move(last)));
+        return __RXX nua::optional<Result>(std::in_place,
+            fold_right_t::impl(__RXX move(first), tail,
+                iter_value_t<I>(*tail), __RXX move(func)));
     }
 
 public:
@@ -233,7 +234,7 @@ public:
     requires std::constructible_from<iter_value_t<I>, iter_reference_t<I>>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         I first, S last, F func) RXX_CONST_CALL {
-        return impl(std::move(first), std::move(last), std::move(func));
+        return impl(__RXX move(first), __RXX move(last), __RXX move(func));
     }
 
     template <bidirectional_range R,
@@ -241,7 +242,8 @@ public:
     requires std::constructible_from<range_value_t<R>, range_reference_t<R>>
     __RXX_HIDE_FROM_ABI RXX_STATIC_CALL constexpr auto operator()(
         R&& range, F func) RXX_CONST_CALL {
-        return impl(ranges::begin(range), ranges::end(range), std::move(func));
+        return impl(
+            ranges::begin(range), ranges::end(range), __RXX move(func));
     }
 };
 } // namespace details

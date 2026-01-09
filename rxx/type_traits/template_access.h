@@ -8,11 +8,36 @@
 
 RXX_DEFAULT_NAMESPACE_BEGIN
 
-namespace details {
-
 template <typename...>
 struct type_list {};
 
+#ifndef __cpp_pack_indexing
+#  define __cpp_pack_indexing 0
+#endif
+#if __cpp_pack_indexing >= 202311L & (RXX_CXX26 | RXX_COMPILER_CLANG)
+template <size_t I, typename List>
+struct template_element {};
+
+template <size_t I, typename List>
+struct template_element<I, List const> : template_element<I, List> {};
+template <size_t I, typename List>
+struct template_element<I, List volatile> : template_element<I, List> {};
+template <size_t I, typename List>
+struct template_element<I, List const volatile> : template_element<I, List> {};
+
+template <size_t I, typename List>
+using template_element_t RXX_NODEBUG = typename template_element<I, List>::type;
+#  if RXX_COMPILER_CLANG
+RXX_DISABLE_WARNING_PUSH()
+RXX_DISABLE_WARNING("-Wc++26-extensions")
+#  endif
+template <template <typename...> class List, size_t I, typename... Ts>
+requires (I < sizeof...(Ts))
+struct template_element<I, List<Ts...>> {
+    using type RXX_NODEBUG = Ts...[I]; // NOLINT
+};
+RXX_DISABLE_WARNING_POP()
+#else
 template <size_t I, typename List>
 struct template_element {};
 
@@ -28,15 +53,31 @@ template <size_t I, template <typename...> class List, typename Head,
     typename... Tail>
 struct template_element<I, List<Head, Tail...>> :
     template_element<I - 1, type_list<Tail...>> {};
-
+#endif
 template <typename List>
 inline constexpr size_t template_size_v = 0;
+template <typename List>
+inline constexpr size_t template_size_v<List const> = template_size_v<List>;
+template <typename List>
+inline constexpr size_t template_size_v<List volatile> = template_size_v<List>;
+template <typename List>
+inline constexpr size_t template_size_v<List const volatile> =
+    template_size_v<List>;
 
 template <template <typename...> class List, typename... Args>
 inline constexpr size_t template_size_v<List<Args...>> = sizeof...(Args);
 
 template <typename T, typename TList>
 inline constexpr size_t template_index_v = static_cast<size_t>(-1);
+template <typename T, typename List>
+inline constexpr size_t template_index_v<T, List const> =
+    template_index_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_index_v<T, List volatile> =
+    template_index_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_index_v<T, List const volatile> =
+    template_index_v<T, List>;
 
 template <typename T, template <typename...> class TList, typename... Tail>
 inline constexpr size_t template_index_v<T, TList<T, Tail...>> = 0;
@@ -48,6 +89,15 @@ inline constexpr size_t template_index_v<T, TList<Head, Tail...>> =
 
 template <typename T, typename TList>
 inline constexpr size_t template_count_v = 0;
+template <typename T, typename List>
+inline constexpr size_t template_count_v<T, List const> =
+    template_count_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_count_v<T, List volatile> =
+    template_count_v<T, List>;
+template <typename T, typename List>
+inline constexpr size_t template_count_v<T, List const volatile> =
+    template_count_v<T, List>;
 
 template <typename T, template <typename...> class List, typename... Args>
 inline constexpr size_t template_count_v<T, List<T, Args...>> =
@@ -71,7 +121,5 @@ struct template_count {};
 template <typename T, template <typename...> class List, typename... Args>
 struct template_count<T, List<Args...>> :
     std::integral_constant<size_t, template_count_v<T, List<Args...>>> {};
-
-} // namespace details
 
 RXX_DEFAULT_NAMESPACE_END

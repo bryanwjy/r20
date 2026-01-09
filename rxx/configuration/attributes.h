@@ -342,8 +342,9 @@
 #if RXX_HAS_CPP_ATTRIBUTE(clang::vectorcall)
 #  define __RXX_ATTRIBUTE_VECTORCALL clang::vectorcall
 #  define __RXX_ATTRIBUTE_TYPE_CPP_VECTORCALL
-#elif RXX_HAS_KEYWORD(__vectorcall)
-#  define RXX_NODISCARD __vectorcall
-#  define __RXX_ATTRIBUTE_VECTORCALL __vectorcall
-#  define __RXX_ATTRIBUTE_TYPE_MSVC_EXT_VECTORCALL
 #endif /* RXX_HAS_CPP_ATTRIBUTE(clang::vectorcall) */
+
+#if RXX_HAS_DECLSPEC(empty_bases)
+#  define __RXX_ATTRIBUTE_EMPTY_BASES empty_bases
+#  define __RXX_ATTRIBUTE_TYPE_DECLSPEC_EMPTY_BASES
+#endif

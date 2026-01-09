@@ -30,13 +30,13 @@ template <typename Container, typename Ref>
 constexpr bool container_appendable =
     requires(Container& container, Ref&& ref) {
         requires (
-            requires { container.emplace_back(std::forward<Ref>(ref)); } ||
-            requires { container.push_back(std::forward<Ref>(ref)); } ||
+            requires { container.emplace_back(__RXX forward<Ref>(ref)); } ||
+            requires { container.push_back(__RXX forward<Ref>(ref)); } ||
             requires {
-                container.emplace(container.end(), std::forward<Ref>(ref));
+                container.emplace(container.end(), __RXX forward<Ref>(ref));
             } ||
             requires {
-                container.insert(container.end(), std::forward<Ref>(ref));
+                container.insert(container.end(), __RXX forward<Ref>(ref));
             });
     };
 
@@ -58,8 +58,8 @@ concept constructible_from_iter_pair = common_range<R> &&
 
 template <typename C, input_range R, typename... Args>
 requires (!view<C>)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
-    to(R&& range, Args&&... args) {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr C to(R&& range, Args&&... args) {
     static_assert(
         !std::is_const_v<C>, "The target container cannot be const-qualified");
     static_assert(!std::is_volatile_v<C>,
@@ -70,14 +70,14 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
     if constexpr (details::try_non_recursive_conversion<C, R>) {
         // Case 1 -- construct directly from the given range.
         if constexpr (std::constructible_from<C, R, Args...>) {
-            return C(std::forward<R>(range), std::forward<Args>(args)...);
+            return C(__RXX forward<R>(range), __RXX forward<Args>(args)...);
         }
 #if RXX_SUPPORTS_FROM_RANGE
         // Case 2 -- construct using the `from_range_t` tagged constructor.
         else if constexpr (std::constructible_from<C, std::from_range_t, R,
                                Args...>) {
-            return C(std::from_range, std::forward<R>(range),
-                std::forward<Args>(args)...);
+            return C(std::from_range, __RXX forward<R>(range),
+                __RXX forward<Args>(args)...);
         }
 #endif
 
@@ -85,7 +85,7 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
         else if constexpr (details::constructible_from_iter_pair<C, R,
                                Args...>) {
             return C(ranges::begin(range), ranges::end(range),
-                std::forward<Args>(args)...);
+                __RXX forward<Args>(args)...);
         }
 
         // Case 4 -- default-construct (or construct from the extra arguments)
@@ -95,7 +95,7 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
                     details::container_appendable<C, range_reference_t<R>>,
                 "ranges::to: unable to convert to the given container type.");
 
-            C result(std::forward<Args>(args)...);
+            C result(__RXX forward<Args>(args)...);
             if constexpr (sized_range<R> && details::reservable_container<C>) {
                 result.reserve(
                     static_cast<range_size_t<C>>(ranges::size(range)));
@@ -107,20 +107,20 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
                     requires {
                         result.emplace_back(std::declval<RefType>());
                     }) {
-                    result.emplace_back(std::forward<RefType>(ref));
+                    result.emplace_back(__RXX forward<RefType>(ref));
                 } else if constexpr ( //
                     requires { result.push_back(std::declval<RefType>()); }) {
-                    result.push_back(std::forward<RefType>(ref));
+                    result.push_back(__RXX forward<RefType>(ref));
                 } else if constexpr ( //
                     requires {
                         result.emplace(result.end(), std::declval<RefType>());
                     }) {
-                    result.emplace(result.end(), std::forward<RefType>(ref));
+                    result.emplace(result.end(), __RXX forward<RefType>(ref));
                 } else {
                     static_assert(requires {
                         result.insert(result.end(), std::declval<RefType>());
                     });
-                    result.insert(result.end(), std::forward<RefType>(ref));
+                    result.insert(result.end(), __RXX forward<RefType>(ref));
                 }
             }
             return result;
@@ -130,9 +130,9 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr C
             "ranges::to: unable to convert to the given container type.");
         return ranges::to<C>(
             ref_view(range) | views::transform([]<typename T>(T&& item) {
-                return ranges::to<range_value_t<C>>(std::forward<T>(item));
+                return ranges::to<range_value_t<C>>(__RXX forward<T>(item));
             }),
-            std::forward<Args>(args)...);
+            __RXX forward<Args>(args)...);
     }
 }
 
@@ -209,12 +209,13 @@ constexpr auto to(R&& range, Args&&... args) {
     using deduced_expr =
         typename details::template_deducer<C, R, Args...>::type;
     return ranges::to<deduced_expr>(
-        std::forward<R>(range), std::forward<Args>(args)...);
+        __RXX forward<R>(range), __RXX forward<Args>(args)...);
 }
 
 template <typename C, typename... Args>
 requires (!view<C>)
-RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto to(Args&&... args) {
+RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
+constexpr auto to(Args&&... args) {
     static_assert(!std::is_const_v<C>,
         "The target container cannot be const-qualified, please remove the "
         "const");
@@ -228,13 +229,14 @@ RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD) constexpr auto to(Args&&... args) {
         []<input_range R, typename... Tail>(R&& range, Tail&&... tail)
             RXX_STATIC_CALL
         requires requires { //
-            ranges::to<C>(std::forward<R>(range), std::forward<Tail>(tail)...);
+            ranges::to<C>(
+                __RXX forward<R>(range), __RXX forward<Tail>(tail)...);
         }
         {
             return ranges::to<C>(
-                std::forward<R>(range), std::forward<Tail>(tail)...);
+                __RXX forward<R>(range), __RXX forward<Tail>(tail)...);
         },
-        std::forward<Args>(args)...));
+        __RXX forward<Args>(args)...));
 }
 
 template <template <typename...> class C, typename... Args>
@@ -245,14 +247,17 @@ constexpr auto to(Args&&... args) {
     return details::make_pipeable(__RXX bind_back(
         []<input_range R, typename... Tail,
             typename D = typename template_deducer<C, R, Tail...>::type>(
-            R && ranges,
-            Tail && ... tail) RXX_STATIC_CALL requires requires { //
-            ranges::to<D>(std::forward<R>(ranges), std::forward<Tail>(tail)...);
-        } {
+            R&& ranges,
+            Tail&&... tail) RXX_STATIC_CALL
+        requires requires { //
+            ranges::to<D>(
+                __RXX forward<R>(ranges), __RXX forward<Tail>(tail)...);
+        }
+        {
             return ranges::to<D>(
-                std::forward<R>(ranges), std::forward<Tail>(tail)...);
+                __RXX forward<R>(ranges), __RXX forward<Tail>(tail)...);
         },
-        std::forward<Args>(args)...));
+        __RXX forward<Args>(args)...));
 }
 
 } // namespace ranges

@@ -3,9 +3,30 @@
 
 #include "rxx/config.h"
 
-#include "rxx/details/copy_cvref.h"
+#include "rxx/type_traits/copy_cvref.h"
 
-#include <concepts>
+// IWYU pragma: begin_exports
+#if RXX_LIBCXX
+
+#  if __has_include(<__type_traits/common_reference.h>)
+#    include <__type_traits/common_reference.h>
+#  else
+#    include <type_traits>
+#  endif
+
+#  if __has_include(<__type_traits/common_type.h>)
+#    include <__type_traits/common_type.h>
+#  else
+#    include <type_traits>
+#  endif
+
+#else
+
+#  include <type_traits>
+
+#endif
+// IWYU pragma: end_exports
+
 #include <type_traits>
 
 RXX_DEFAULT_NAMESPACE_BEGIN
@@ -143,12 +164,6 @@ requires requires { typename details::common_reference::impl<T, U>::type; }
 struct __RXX_PUBLIC_TEMPLATE common_reference<T, U, Vs...> :
     common_reference<common_reference_t<T, U>, Vs...> {};
 
-template <typename T, typename U>
-concept common_reference_with =
-    std::same_as<common_reference_t<T, U>, common_reference_t<U, T>> &&
-    std::convertible_to<T, common_reference_t<T, U>> &&
-    std::convertible_to<U, common_reference_t<T, U>>;
-
 RXX_DEFAULT_NAMESPACE_END
 
 #ifndef __cpp_lib_tuple_like
@@ -156,14 +171,32 @@ RXX_DEFAULT_NAMESPACE_END
 #endif
 
 #if !RXX_CXX23
-
-#  if RXX_LIBSTDCXX & __has_include(<bits/stl_pair.h>)
-#    include <bits/stl_pair.h>
-#  elif RXX_LIBCXX & __has_include(<__fwd/pair.h>)
-#    include <__fwd/pair.h>
+#  define __RXX_DEFINES_COMMON_PAIR
+#elif RXX_LIBSTDCXX
+#  ifndef __glibcxx_ranges_zip
+#    define __RXX_DEFINES_COMMON_PAIR
 #  else
-#    include <utility>
+#    if !__glibcxx_ranges_zip
+#      define __RXX_DEFINES_COMMON_PAIR
+#    endif
 #  endif
+#elif RXX_LIBCXX
+#  if !RXX_LIBCXX_AT_LEAST(15, 0, 0)
+#    define __RXX_DEFINES_COMMON_PAIR
+#  endif
+#else
+#  ifndef __cpp_lib_ranges_zip
+#    define __RXX_DEFINES_COMMON_PAIR
+#  else
+#    if __cpp_lib_ranges_zip < 202110L
+#      define __RXX_DEFINES_COMMON_PAIR
+#    endif
+#  endif
+#endif
+
+#ifdef __RXX_DEFINES_COMMON_PAIR
+
+#  include "rxx/utility/pair.h" // IWYU pragma: keep
 
 template <typename T1, typename T2, typename U1, typename U2,
     template <typename> class TQual, template <typename> class UQual>
@@ -186,4 +219,8 @@ struct std::common_type<std::pair<T1, T2>, std::pair<U1, U2>> {
         std::pair<std::common_type_t<T1, U1>, std::common_type_t<T2, U2>>;
 };
 
+#endif
+
+#ifdef __RXX_DEFINES_COMMON_PAIR
+#  undef __RXX_DEFINES_COMMON_PAIR
 #endif

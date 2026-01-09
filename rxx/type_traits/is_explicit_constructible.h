@@ -6,6 +6,11 @@
 
 #include <type_traits>
 
+#if RXX_COMPILER_CLANG
+RXX_DISABLE_WARNING_PUSH()
+RXX_DISABLE_WARNING("-Wdeprecated-volatile")
+#endif
+
 RXX_DEFAULT_NAMESPACE_BEGIN
 namespace details {
 template <typename T>
@@ -35,3 +40,7 @@ inline constexpr bool is_explicit_constructible_v<T> =
     !requires { details::implicit_conv<T>({}); };
 
 RXX_DEFAULT_NAMESPACE_END
+
+#if RXX_COMPILER_CLANG
+RXX_DISABLE_WARNING_POP()
+#endif
