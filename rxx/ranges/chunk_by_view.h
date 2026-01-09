@@ -210,11 +210,6 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
         return chunk_by_view(__RXX forward<R>(arg), __RXX forward<Pred>(pred));
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<chunk_by_t>::operator();
-    static constexpr int _S_arity = 2;
-    static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename Pred>
     requires std::constructible_from<std::decay_t<Pred>, Pred>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -224,9 +219,6 @@ struct chunk_by_t : ranges::details::adaptor_non_closure<chunk_by_t> {
             __RXX ranges::details::set_arity<2>(chunk_by_t{}),
             __RXX forward<Pred>(pred));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

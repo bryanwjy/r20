@@ -420,11 +420,6 @@ struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
         return stride_view(__RXX forward<R>(arg), size);
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<stride_t>::operator();
-    static constexpr bool _S_has_simple_extra_args = true;
-    static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -434,9 +429,6 @@ struct stride_t : ranges::details::adaptor_non_closure<stride_t> {
             __RXX ranges::details::set_arity<2>(stride_t{}),
             __RXX forward<D>(size));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

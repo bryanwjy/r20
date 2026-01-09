@@ -13,6 +13,9 @@ RXX_DEFAULT_NAMESPACE_BEGIN
 
 namespace ranges::details {
 
+template <typename F, size_t N>
+class set_arity_t;
+
 template <typename F, typename... Ts>
 class bind_back_t {
 public:
@@ -118,6 +121,10 @@ private:
 template <typename F, size_t N>
 class set_arity_t {
 public:
+#if RXX_LIBSTDCXX
+    static constexpr int _S_arity = N;
+#endif
+
     __RXX_HIDE_FROM_ABI constexpr set_arity_t() noexcept(
         std::is_nothrow_default_constructible_v<F>) = default;
 

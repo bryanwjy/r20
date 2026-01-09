@@ -593,13 +593,6 @@ struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
         return join_with_view(std::forward<R>(range), std::forward<P>(pattern));
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<join_with_t>::operator();
-    template <typename T>
-    static constexpr bool _S_has_simple_extra_args =
-        std::is_scalar_v<T> || (view<T> && std::copy_constructible<T>);
-    static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -609,9 +602,6 @@ struct join_with_t : ranges::details::adaptor_non_closure<join_with_t> {
             __RXX ranges::details::set_arity<2>(join_with_t{}),
             std::forward<D>(delimiter));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

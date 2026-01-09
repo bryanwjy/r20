@@ -134,13 +134,6 @@ struct take_t : ranges::details::adaptor_non_closure<take_t> {
         return take_view(__RXX forward<V>(view), __RXX forward<N>(num));
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<take_t>::operator();
-    template <typename T>
-    static constexpr bool _S_has_simple_extra_args =
-        __RXX ranges::details::integer_like<T>;
-    static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename N>
     requires std::constructible_from<std::decay_t<N>, N>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -150,9 +143,6 @@ struct take_t : ranges::details::adaptor_non_closure<take_t> {
             __RXX ranges::details::set_arity<2>(take_t{}),
             __RXX forward<N>(num));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 inline namespace cpo {

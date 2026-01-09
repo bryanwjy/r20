@@ -483,13 +483,6 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
             __RXX forward<R>(range), __RXX forward<P>(pattern));
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<lazy_split_t>::operator();
-    template <typename P>
-    static constexpr bool _S_has_simple_extra_args =
-        std::is_scalar_v<P> || (view<P> && std::copy_constructible<P>);
-    static constexpr int _S_arity = 2;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename P>
     requires std::constructible_from<std::decay_t<P>, P>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -499,9 +492,6 @@ struct lazy_split_t : ranges::details::adaptor_non_closure<lazy_split_t> {
             __RXX ranges::details::set_arity<2>(lazy_split_t{}),
             __RXX forward<P>(pattern));
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 

@@ -430,11 +430,6 @@ struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
         return slide_view(__RXX forward<R>(range), num);
     }
 
-#if RXX_LIBSTDCXX
-    using ranges::details::adaptor_non_closure<slide_t>::operator();
-    static constexpr int _S_arity = 2;
-    static constexpr bool _S_has_simple_extra_args = true;
-#elif RXX_LIBCXX | RXX_MSVC_STL
     template <typename D>
     requires std::constructible_from<std::decay_t<D>, D>
     RXX_ATTRIBUTES(_HIDE_FROM_ABI, NODISCARD)
@@ -443,9 +438,6 @@ struct slide_t : ranges::details::adaptor_non_closure<slide_t> {
         return __RXX ranges::details::make_pipeable(
             __RXX ranges::details::set_arity<2>(slide_t{}), num);
     }
-#else
-#  error "Unsupported"
-#endif
 };
 } // namespace details
 
