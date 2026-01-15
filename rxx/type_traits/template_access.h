@@ -36,7 +36,9 @@ requires (I < sizeof...(Ts))
 struct template_element<I, List<Ts...>> {
     using type RXX_NODEBUG = Ts...[I]; // NOLINT
 };
+#  if RXX_COMPILER_CLANG
 RXX_DISABLE_WARNING_POP()
+#  endif
 #else
 template <size_t I, typename List>
 struct template_element {};
